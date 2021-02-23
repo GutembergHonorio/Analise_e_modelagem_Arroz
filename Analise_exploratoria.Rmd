@@ -263,3 +263,37 @@ Temporario<- Temporario[,c(8,12,17,20,21,22,23,24,25,26,31,32)] # retirando as v
 boxplot(Temporario, horizontal = T, las = 1, cex.axis=0.55, main = "Boxplot com os valores das médias por genótipo/ensaio para Sudeste")
 
 ```
+## Matrix de correlação
+
+```{r}
+Temporario<-IRR_Medio[,c(-1,-2,-3)]
+chart.Correlation(Temporario, histogram = T)
+title("Matrix de correlação", line = 1)
+
+Temporario<- subset(IRR_Medio, (REGIAO == "Centro_Oeste"))
+Temporario<- Temporario[,c(-1,-2,-3)]
+chart.Correlation(Temporario, histogram = T)
+title("Matrix de correlação Centro-oeste", line = 1)
+
+Temporario<- subset(IRR_Medio, (REGIAO == "Norte"))
+Temporario<- Temporario[,c(-1,-2,-3)]
+chart.Correlation(Temporario, histogram = T)
+title("Matrix de correlação Norte", line = 1)
+
+Temporario<- subset(IRR_Medio, (REGIAO == "Nordeste"))
+Temporario<- Temporario[,c(-1,-2,-3)]
+chart.Correlation(Temporario, histogram = T)
+title("Matrix de correlação Nordeste", line = 1)
+
+Temporario<- subset(IRR_Medio, (REGIAO == "Sul"))
+Temporario<- Temporario[,c(-1,-2,-3)]
+chart.Correlation(Temporario, histogram = T)
+title("Matrix de correlação Sul", line = 1)
+
+Temporario<- subset(IRR_Medio, (REGIAO == "Sudeste"))
+Temporario<- Temporario[,c(-1,-2,-3)]
+chart.Correlation(Temporario, histogram = T)
+title("Matrix de correlação Sudeste", line = 1)
+```
+
+
