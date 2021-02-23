@@ -41,7 +41,7 @@ if(!require(factoextra)) install.packages("factoextra")
 
 # DIRETÓRIO DOS DADOS 
 
-Tabelabruta<- read.csv("d:/Users/Cristiane Resende/Desktop/Gutemberg Honorio/Mestrado/Repositorio_4\Analise_e_modelagem_Arroz/Merge_1980_2018.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE) # tabela com os dados originais
+Tabelabruta<- read.csv("d:/Users/Cristiane Resende/Desktop/Gutemberg Honorio/Mestrado/Repositorio_4/Analise_e_modelagem_Arroz/Merge_1980_2018.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE) # tabela com os dados originais
 
 # criando coluna com macrorregiões
 
@@ -171,6 +171,14 @@ ggplot(IRR)+
   geom_boxplot(aes(y=FLO_E , x = REGIAO))+
     labs(x = "Macrorregião", y = "Dias após a emergencia (DAE)", title = "Data de florescimento por região")
 boxplot(IRR$FLO_E)
+
+hist(Centro_oeste$FLO_M, main= "Data de florescimento não regionalizado")
+hist(Centro_oeste$FLO_M, main= "Data de florescimento para região Centro-oeste")
+hist(Norte$FLO_M, main= "Data de florescimento  para região Norte")
+hist(Nordeste$FLO_M, main= "Data de florescimento  para região Nordeste")
+hist(Sul$FLO_M, main= "Data de florescimento  para região Sul")
+hist(Sudeste$FLO_M, main= "Data de florescimento  para região Sudeste")
+
 
 ```
 ```{r}
