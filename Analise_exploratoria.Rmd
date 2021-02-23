@@ -297,3 +297,73 @@ title("Matrix de correlação Sudeste", line = 1)
 ```
 
 
+##  Predictive Power Score (PPS)
+
+```{r}
+
+Temporario<-IRR_Medio[,c(-1,-2,-3)]
+ppsr :: visualize_pps ( df = Temporario, y  = "FLO_M" ) + 
+ ggplot2 :: labs ( title  =  'PPS com dados não regionalizados' )
+
+
+Temporario<- subset(IRR_Medio, (REGIAO == "Centro_Oeste"))
+Temporario<- Temporario[,c(-1,-2,-3)]
+ppsr :: visualize_pps ( df = Temporario, y  = "FLO_M" ) + 
+ ggplot2 :: labs ( title  =  'PPS Centro-Oeste' )
+
+Temporario<- subset(IRR_Medio, (REGIAO == "Norte"))
+Temporario<- Temporario[,c(-1,-2,-3)]
+ppsr :: visualize_pps ( df = Temporario, y  = "FLO_M"  ) + 
+ ggplot2 :: labs ( title  =  'PPS Norte' )
+
+Temporario<- subset(IRR_Medio, (REGIAO == "Nordeste"))
+Temporario<- Temporario[,c(-1,-2,-3)]
+ppsr :: visualize_pps ( df = Temporario, y  = "FLO_M" ) + 
+ ggplot2 :: labs ( title  =  'PPS Nordeste' )
+
+Temporario<- subset(IRR_Medio, (REGIAO == "Sul"))
+Temporario<- Temporario[,c(-1,-2,-3)]
+ppsr :: visualize_pps ( df = Temporario, y  = "FLO_M" ) + 
+ ggplot2 :: labs ( title  =  'PPS Sul' )
+
+Temporario<- subset(IRR_Medio, (REGIAO == "Sudeste"))
+Temporario<- Temporario[,c(-1,-2,-3)]
+ppsr :: visualize_pps ( df = Temporario, y  = "FLO_M") + 
+ ggplot2 :: labs ( title  =  'PPS Sudeste' )
+
+```
+
+```{r}
+
+
+Temporario<-IRR_Medio[,c(-1,-2,-3)]
+ppsr :: visualize_pps ( df = Temporario) + 
+ ggplot2 :: labs ( title  =  'PPS com dados não regionalizados' )
+
+Temporario<- subset(IRR_Medio, (REGIAO == "Centro_Oeste"))
+Temporario<- Temporario[,c(-1,-2,-3)]
+ppsr :: visualize_pps ( df = Temporario ) + 
+ ggplot2 :: labs ( title  =  'PPS Centro-Oeste' )
+
+Temporario<- subset(IRR_Medio, (REGIAO == "Norte"))
+Temporario<- Temporario[,c(-1,-2,-3)]
+ppsr :: visualize_pps ( df = Temporario ) + 
+ ggplot2 :: labs ( title  =  'PPS Norte' )
+
+Temporario<- subset(IRR_Medio, (REGIAO == "Nordeste"))
+Temporario<- Temporario[,c(-1,-2,-3)]
+ppsr :: visualize_pps ( df = Temporario ) + 
+ ggplot2 :: labs ( title  =  'PPS Nordeste' )
+
+Temporario<- subset(IRR_Medio, (REGIAO == "Sul"))
+Temporario<- Temporario[,c(-1,-2,-3)]
+ppsr :: visualize_pps ( df = Temporario ) + 
+ ggplot2 :: labs ( title  =  'PPS Sul' )
+
+Temporario<- subset(IRR_Medio, (REGIAO == "Sudeste"))
+Temporario<- Temporario[,c(-1,-2,-3)]
+ppsr :: visualize_pps ( df = Temporario ) + 
+ ggplot2 :: labs ( title  =  'PPS Sudeste' )
+
+```
+
