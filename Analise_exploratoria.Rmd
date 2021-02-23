@@ -113,3 +113,153 @@ rm(Brasil, latTA,latIRR)
 ```{r , echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Mapa
 ```
+## Ensaios
+
+Número de ensáios realizados por macrorregião.
+```{r}
+
+macrorregiao_Ensaios<-apply(with(IRR,table(REGIAO,ID_ENSAIO))>0,1:1,sum)
+macrorregiao_Ensaios
+```
+
+TOTAL de 238 ensaios realizados
+
+
+Número de ensáios realizados por estado.
+```{r}
+
+Estados_Ensaios<-apply(with(IRR,table(UF,ID_ENSAIO))>0,1:1,sum)
+Estados_Ensaios
+```
+```{r}
+barplot(macrorregiao_Ensaios, cex.names =  0.7, main = "Ensaios realizados por macrorregião")
+barplot(Estados_Ensaios, cex.names =  0.7, main = "Ensaios realizados por estado")
+```
+## Genótipos
+### Número de genótipos testados por macrorregião.
+```{r}
+
+macrorregiao_Genotipo<-apply(with(IRR,table(REGIAO,GENOTIPO))>0,1:1,sum)
+macrorregiao_Genotipo
+```
+
+TOTAL de 91 genótipos testados
+
+```{r}
+ggplot(IRR)+
+  geom_point(aes(x = GENOTIPO, y= REGIAO))
+barplot(macrorregiao_Genotipo, cex.names =  0.7, main = "Número de genótipos testados por macrorregião")
+```
+
+### Número de genótipos testados por estado.
+```{r}
+
+Estados_Genotipo<-apply(with(IRR,table(UF,GENOTIPO))>0,1:1,sum)
+Estados_Genotipo
+```
+```{r}
+ggplot(IRR)+
+  geom_point(aes(x = GENOTIPO, y= UF))
+barplot(Estados_Genotipo, cex.names =  0.7, main = "Número de genótipos testados por estado")
+
+```
+
+## Florescimento
+
+```{r}
+ggplot(IRR)+
+  geom_boxplot(aes(y=FLO_E , x = REGIAO))+
+    labs(x = "Macrorregião", y = "Dias após a emergencia (DAE)", title = "Data de florescimento por região")
+boxplot(IRR$FLO_E)
+
+```
+```{r}
+cv<-function(x){coef<-sd(x)/mean(x)*100 
+return(coef)}
+
+CV<- IRR %>% group_by(GENOTIPO) %>% summarise(FLO_M = mean(FLO_E), Coef_var = cv(FLO_E))
+
+boxplot(CV$Coef_var, main = "Coeficiente de variação para data de florescimento por genótipo")
+```
+
+
+```{r, message=F}
+cv<-function(x){coef<-sd(x)/mean(x)*100 
+return(coef)}
+
+CV<- IRR %>% group_by(ID_ENSAIO,REGIAO) %>% summarise(FLO_M = mean(FLO_E), Coef_var = cv(FLO_E))
+ggplot(CV)+
+  geom_boxplot(aes(y=Coef_var , x = REGIAO))+
+    labs(x = "Macrorregião", y = "CV", title = "Coeficiente de variação para data de florescimento por ensaio")
+
+CV<- IRR %>% group_by(GENOTIPO,REGIAO) %>% summarise(FLO_M = mean(FLO_E), Coef_var = cv(FLO_E))
+ggplot(CV)+
+  geom_boxplot(aes(y=Coef_var , x = REGIAO))+
+    labs(x = "Macrorregião", y = "CV", title = "Coeficiente de variação para data de florescimento por genótipo")
+
+CV<- IRR %>% group_by(GENOTIPO,ID_ENSAIO,REGIAO) %>% summarise(FLO_M = mean(FLO_E), Coef_var = cv(FLO_E))
+ggplot(CV)+
+  geom_boxplot(aes(y=Coef_var , x = REGIAO))+
+    labs(x = "Macrorregião", y = "CV", title = "Coeficiente de variação para data de florescimento por genótipo dentro do ensaio")
+```
+```{r, message=F}
+CV<- IRR %>% group_by(GENOTIPO,ID_ENSAIO,REGIAO) %>% summarise(FLO_M = mean(FLO_E), Coef_var = cv(FLO_E))
+CV
+```
+
+## Boxplot
+
+
+```{r}
+# Variáveis com escala menor
+Temporario<- IRR[,c(-1,-2,-3,-4,-5,-6,-7,-11,-15,-20,-23,-24,-25,-26,-27,-28,-29,-34,-35)] # retirando as variáveis com escala maior
+
+boxplot(Temporario, horizontal = T, las = 1, cex.axis=0.55, main = "Boxplot com os valores originais")
+
+Temporario<- IRR_Medio[,c(-1,-2,-3,-4,-8,-12,-17,-20,-21,-22,-23,-24,-25,-26,-31,-32)] # retirando as variáveis com escala maior
+
+boxplot(Temporario, horizontal = T, las = 1, cex.axis=0.55, main = "Boxplot com os valores das médias por genótipo/ensaio/região")
+
+# filtrando por região
+Temporario<- subset(IRR_Medio, (REGIAO == "Centro_Oeste"))
+Temporario<- Temporario[,c(-1,-2,-3,-4,-8,-12,-17,-20,-21,-22,-23,-24,-25,-26,-31,-32)] # retirando as variáveis com escala maior
+boxplot(Temporario, horizontal = T, las = 1, cex.axis=0.55, main = "Boxplot com os valores das médias por genótipo/ensaio para Centro-oeste")
+Temporario<- subset(IRR_Medio, (REGIAO == "Norte"))
+Temporario<- Temporario[,c(-1,-2,-3,-4,-8,-12,-17,-20,-21,-22,-23,-24,-25,-26,-31,-32)] # retirando as variáveis com escala maior
+boxplot(Temporario, horizontal = T, las = 1, cex.axis=0.55, main = "Boxplot com os valores das médias por genótipo/ensaio para Norte")
+Temporario<- subset(IRR_Medio, (REGIAO == "Nordeste"))
+Temporario<- Temporario[,c(-1,-2,-3,-4,-8,-12,-17,-20,-21,-22,-23,-24,-25,-26,-31,-32)] # retirando as variáveis com escala maior
+boxplot(Temporario, horizontal = T, las = 1, cex.axis=0.55, main = "Boxplot com os valores das médias por genótipo/ensaio para Nordeste")
+Temporario<- subset(IRR_Medio, (REGIAO == "Sul"))
+Temporario<- Temporario[,c(-1,-2,-3,-4,-8,-12,-17,-20,-21,-22,-23,-24,-25,-26,-31,-32)] # retirando as variáveis com escala maior
+boxplot(Temporario, horizontal = T, las = 1, cex.axis=0.55, main = "Boxplot com os valores das médias por genótipo/ensaio para Sul")
+Temporario<- subset(IRR_Medio, (REGIAO == "Sudeste"))
+Temporario<- Temporario[,c(-1,-2,-3,-4,-8,-12,-17,-20,-21,-22,-23,-24,-25,-26,-31,-32)] # retirando as variáveis com escala maior
+boxplot(Temporario, horizontal = T, las = 1, cex.axis=0.55, main = "Boxplot com os valores das médias por genótipo/ensaio para Sudeste")
+
+```
+```{r}
+# variáveis com escala maior
+Temporario<- IRR[,c(11,15,20,23,24,25,26,27,28,29,34,35)] # retirando as variáveis com escala maior
+boxplot(Temporario, horizontal = T, las = 1, cex.axis=0.55, main = "Boxplot com os valores originais")
+Temporario<- IRR_Medio[,c(8,12,17,20,21,22,23,24,25,26,31,32)] # retirando as variáveis com escala maior
+boxplot(Temporario, horizontal = T, las = 1, cex.axis=0.55, main = "Boxplot com os valores das médias por genótipo/ensaio/região")
+
+# filtrando por região
+Temporario<- subset(IRR_Medio, (REGIAO == "Centro_Oeste"))
+Temporario<- Temporario[,c(8,12,17,20,21,22,23,24,25,26,31,32)] # retirando as variáveis com escala maior
+boxplot(Temporario, horizontal = T, las = 1, cex.axis=0.55, main = "Boxplot com os valores das médias por genótipo/ensaio para Centro-oeste")
+Temporario<- subset(IRR_Medio, (REGIAO == "Norte"))
+Temporario<- Temporario[,c(8,12,17,20,21,22,23,24,25,26,31,32)] # retirando as variáveis com escala maior
+boxplot(Temporario, horizontal = T, las = 1, cex.axis=0.55, main = "Boxplot com os valores das médias por genótipo/ensaio para Norte")
+Temporario<- subset(IRR_Medio, (REGIAO == "Nordeste"))
+Temporario<- Temporario[,c(8,12,17,20,21,22,23,24,25,26,31,32)] # retirando as variáveis com escala maior
+boxplot(Temporario, horizontal = T, las = 1, cex.axis=0.55, main = "Boxplot com os valores das médias por genótipo/ensaio para Nordeste")
+Temporario<- subset(IRR_Medio, (REGIAO == "Sul"))
+Temporario<- Temporario[,c(8,12,17,20,21,22,23,24,25,26,31,32)] # retirando as variáveis com escala maior
+boxplot(Temporario, horizontal = T, las = 1, cex.axis=0.55, main = "Boxplot com os valores das médias por genótipo/ensaio para Sul")
+Temporario<- subset(IRR_Medio, (REGIAO == "Sudeste"))
+Temporario<- Temporario[,c(8,12,17,20,21,22,23,24,25,26,31,32)] # retirando as variáveis com escala maior
+boxplot(Temporario, horizontal = T, las = 1, cex.axis=0.55, main = "Boxplot com os valores das médias por genótipo/ensaio para Sudeste")
+
+```
