@@ -367,3 +367,65 @@ ppsr :: visualize_pps ( df = Temporario ) +
 
 ```
 
+## Analise de componentes principais (PCA)
+
+```{r}
+Temporario<-IRR_Medio[,c(-1,-2,-3)]
+res_pca<- PCA(Temporario, graph = F)
+fviz_eig(res_pca,addlabels = T)+
+  theme_bw()+
+  labs(title = "PCA com os dados não regionálizados")
+fviz_pca_biplot(res_pca,geom.ind = "point") +
+  theme_bw()+
+  labs(title = "PCA com os dados não regionálizados")
+
+Temporario<-Centro_oeste[,c(-1,-2,-3)]
+res_pca<- PCA(Temporario, graph = F)
+fviz_eig(res_pca,addlabels = T)+
+  theme_bw()+
+  labs(title = "PCA  Centro-oeste")
+fviz_pca_biplot(res_pca,geom.ind = "point") +
+  theme_bw()+
+  labs(title = "PCA  Centro-oeste")
+
+Temporario<-Norte[,c(-1,-2,-3)]
+res_pca<- PCA(Temporario, graph = F)
+fviz_eig(res_pca,addlabels = T)+
+  theme_bw()+
+  labs(title = "PCA  Norte")
+fviz_pca_biplot(res_pca,geom.ind = "point") +
+  theme_bw()+
+  labs(title = "PCA  Norte")
+
+Temporario<-Nordeste[,c(-1,-2,-3)]
+res_pca<- PCA(Temporario, graph = F)
+fviz_eig(res_pca,addlabels = T)+
+  theme_bw()+
+  labs(title = "PCA  Nordeste")
+fviz_pca_biplot(res_pca,geom.ind = "point") +
+  theme_bw()+
+  labs(title = "PCA  Nordeste")
+
+Temporario<-Sul[,c(-1,-2,-3)]
+res_pca<- PCA(Temporario, graph = F)
+fviz_eig(res_pca,addlabels = T)+
+  theme_bw()+
+  labs(title = "PCA  Sul")
+fviz_pca_biplot(res_pca,geom.ind = "point") +
+  theme_bw()+
+  labs(title = "PCA  Sul")
+
+Temporario<-Sudeste[,c(-1,-2,-3)]
+res_pca<- PCA(Temporario, graph = F)
+fviz_eig(res_pca,addlabels = T)+
+  theme_bw()+
+  labs(title = "PCA  Sudeste")
+fviz_pca_biplot(res_pca,geom.ind = "point") +
+  theme_bw()+
+  labs(title = "PCA  Sudeste")
+
+
+
+```
+
+
