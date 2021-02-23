@@ -88,4 +88,28 @@ Sudeste<- subset(IRR_Medio, (REGIAO == "Sudeste")) # filtrando por região
 
 ```
 
+# Visão geral
+## Mapa
 
+```{r , include=F}
+Brasil<- read_state(code_state="all",year=2010)
+
+latIRR<- IRR %>%
+  group_by(latitude, longitude) %>% 
+  count()
+names(latIRR) <- c("latitude", "longitude", "Nº_de_ensaios")
+  
+Mapa<-ggplot(Brasil) +
+  geom_sf(aes(group = code_state), data = Brasil, size = 0.1 , fill = "#FFF7C2") +
+  geom_point(aes(x = longitude, y = latitude, size = Nº_de_ensaios, colour = "Irrigado"), data = latIRR)+
+  scale_colour_manual(values = c("blue"))+
+  labs(x = "Longitude", y = "Latitude", title = "   Distribuição geográfica dos ensaios", color = "Legenda") +
+  annotation_north_arrow(style=north_arrow_fancy_orienteering)+
+  annotation_scale(location="br", height = unit(0.15,"cm"))+
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.5))
+rm(Brasil, latTA,latIRR)
+```
+```{r , echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
+Mapa
+```
