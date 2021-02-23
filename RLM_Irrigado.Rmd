@@ -62,3 +62,85 @@ Sul<- subset(IRR_Medio, (REGIAO == "Sul")) # filtrando por região
 Sudeste<- subset(IRR_Medio, (REGIAO == "Sudeste")) # filtrando por região
 
 ```
+
+## CENTRO-OESTE
+
+### Modelo inicial
+```{r}
+
+Temporario <- Centro_oeste[,c(-1,-3)] # retirando as vaiáveis REGIAO e ID_ENSAIO
+
+modelo<-lm(log(FLO_M)~., Temporario) # modelo inicial
+summary(modelo)
+```
+
+### Remoção de não significantes
+
+Ordem da remoção das variáveis numéricas
+
+UR_V (p-valor = 0,928726); Rad_ACC_V (p-valor = 0,922699); Tmin_fld_m	(p-valor = 0,826268); UR_R (p-valor=	0,813551); Rad_ACC_R	(p-valor = 0,736153); UR_Media	(p-valor = 0,748104); Tmax_ACC_V	(p-valor = 0,61396); Tmax_V	(p-valor = 0,873557); Tmin_Media	(p-valor = 0,29712); Tmin_V	(p-valor =	0,356285); Rad_ACC (p-valor = 0.221836); Tmax_Maxima (p-valor = 0.206061); Tmax_Minima (p-valor = 0.170111); UR_fld_m (p-valor = 0.188216)
+
+```{r}
+Temporario1<-Temporario %>% select(-UR_V, - Rad_ACC_V,-Tmin_fld_m, -UR_R, -Rad_ACC_R, -UR_Media, -Tmax_ACC_V, -Tmax_V, -Tmin_Media, -Tmin_V, -Rad_ACC, -Tmax_Maxima, -Tmax_Minima, -UR_fld_m)
+modelo<-lm(log(FLO_M)~., Temporario1) # modelo inicial
+summary(modelo)
+```
+Substituindo genótipos não significativos e > que 10% por "nao_significante"
+
+O genótipo BR IRGA 409 é o intercepto
+
+```{r}
+Genotipos  <- Temporario1$GENOTIPO
+SELECAO_GEN <- c("IRGA 425",	"PR498",	"EMPASC 102",	"BR IRGA 410",	"IRGA 426",	"BRS JACANA",	"IRGA97-28",	"IRGA 424 RI",	"SC240",	"BRS A701 CL",	"PR631",	"IRGA 424",	"SC250",	"BRS FRONTEIRA",	"EPAGRI97-06",	"BRS CIRAD 302",	"BRS SINUELO CL",	"JEQUITIBA",	"EPAGRI97-05",	"BRS A702 CL",	"IRGA 427",	"PR306",	"BRS PELOTA",	"PR349",	"EPAGRI97-01",	"IRGA 417",	"BRS PAMPA",	"SC237",	"BRS 7 TAIM")
+
+Temporario1$GENOTIPO <- c(ifelse(Temporario1$GENOTIPO %in% SELECAO_GEN, "Nao_significativo" , Genotipos))
+modelo<-lm(log(FLO_M)~., Temporario1) 
+summary(modelo)
+```
+
+Remoção dos genótipos que não significantes remanecentes.
+
+```{r}
+Genotipos  <- Temporario1$GENOTIPO
+SELECAO_GEN <- c("SG11551",	"SCSBRS 111",	"JAVAE",	"IRGA 422 CL",	"IRGA97-11","Nao_significativo")
+
+Temporario1$GENOTIPO <- c(ifelse(Temporario1$GENOTIPO %in% SELECAO_GEN, "Nao_significativo" , Genotipos))
+modelo<-lm(log(FLO_M)~., Temporario1) 
+summary(modelo)
+```
+Remoção da variável Tmax_ACC_R que perdeu significancia
+
+```{r}
+Temporario1<-Temporario1 %>% select(-Tmax_ACC_R)
+modelo<-lm(log(FLO_M)~., Temporario1)
+summary(modelo)
+```
+Remoção da variável Tmax_fld_m que perdeu significancia
+
+```{r}
+Temporario1<-Temporario1 %>% select(-Tmax_fld_m)
+modelo<-lm(log(FLO_M)~., Temporario1)
+summary(modelo)
+```
+Remoção da variável Chuva_ACC_R que perdeu significancia
+
+```{r}
+Temporario1<-Temporario1 %>% select(-Chuva_ACC_R)
+modelo<-lm(log(FLO_M)~., Temporario1)
+summary(modelo)
+```
+Remoção do genótipo IRGA 429 que perdeu significancia.
+
+```{r}
+Genotipos  <- Temporario1$GENOTIPO
+SELECAO_GEN <- c("IRGA 429")
+
+Temporario1$GENOTIPO <- c(ifelse(Temporario1$GENOTIPO %in% SELECAO_GEN, "Nao_significativo" , Genotipos))
+modelo<-lm(log(FLO_M)~., Temporario1) 
+summary(modelo)
+```
+### Residuos
+
+```{r}
+
+```
