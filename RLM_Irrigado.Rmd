@@ -187,7 +187,7 @@ plot(modelo_Centro_oeste)
 #
 fit.model <- modelo_Centro_oeste
 attach(Temporario1)
-source("envel_norm.txt")
+source("envel_norm_corrigido.txt")
 #
 # A saída será o gráfico de envelope para o resíduo
 # padronizado. Para colocar  um  título no gráfico após a
@@ -214,7 +214,7 @@ for(i in 1:100){
      e[,i] <- (ident - H)%*%epsilon[,i]
      u <- diag(ident - H)
      e[,i] <- e[,i]/sqrt(u)
-     e[,i] <- sort(e[,i]) }
+     e[,i] <- sort(e[,i],na.last = TRUE)}
 #
 for(i in 1:n){
      eo <- sort(e[i,])
@@ -222,7 +222,7 @@ for(i in 1:n){
      e2[i] <- (eo[97]+eo[98])/2 }
 #
 med <- apply(e,1,mean)
-faixa <- range(tsi,e1,e2)
+faixa <- range(tsi,e1,e2,na.rm = TRUE)
 #
 par(pty="s")
 qqnorm(tsi,xlab="Percentil da N(0,1)",
@@ -245,7 +245,7 @@ qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
 #
  fit.model <- modelo_Centro_oeste
 attach(Temporario1)
- source("diag_norm.txt")
+ source("diag_norm_corrigido.txt")
 #
 # A saída terá quatro gráficos: de pontos de alavanca, 
 # de pontos influentes  e  dois de resíduos. Para identificar
@@ -272,6 +272,13 @@ ts <- r/(s*sqrt(1-h))
 di <- (1/p)*(h/(1-h))*(ts^2)
 si <- lm.influence(fit.model)$sigma
 tsi <- r/(si*sqrt(1-h))
+fitted.model <- fitted(fit.model)
+ir = which(is.nan(tsi))
+if(length(ir) > 0){
+        tsi = tsi[-ir]
+        fitted.model = fitted.model[-ir]
+}
+
 a <- max(tsi)
 b <- min(tsi)
 par(mfrow=c(2,2))
@@ -290,7 +297,7 @@ abline(2,0,lty=2)
 abline(-2,0,lty=2)
 #identify(tsi, n=1)
 #
-plot(fitted(fit.model),tsi,xlab="Valor Ajustado", 
+plot(fitted.model,tsi,xlab="Valor Ajustado", 
 ylab="Resíduo Padronizado", ylim=c(b-1,a+1), pch=16)
 abline(2,0,lty=2)
 abline(-2,0,lty=2)
@@ -384,7 +391,7 @@ plot(modelo_Norte)
 #
 fit.model <- modelo_Norte
 attach(Temporario1)
-source("envel_norm.txt")
+source("envel_norm_corrigido.txt")
 #
 # A saída será o gráfico de envelope para o resíduo
 # padronizado. Para colocar  um  título no gráfico após a
@@ -411,7 +418,7 @@ for(i in 1:100){
      e[,i] <- (ident - H)%*%epsilon[,i]
      u <- diag(ident - H)
      e[,i] <- e[,i]/sqrt(u)
-     e[,i] <- sort(e[,i]) }
+     e[,i] <- sort(e[,i],na.last = TRUE)}
 #
 for(i in 1:n){
      eo <- sort(e[i,])
@@ -419,7 +426,7 @@ for(i in 1:n){
      e2[i] <- (eo[97]+eo[98])/2 }
 #
 med <- apply(e,1,mean)
-faixa <- range(tsi,e1,e2)
+faixa <- range(tsi,e1,e2,na.rm = TRUE)
 #
 par(pty="s")
 qqnorm(tsi,xlab="Percentil da N(0,1)",
@@ -442,7 +449,7 @@ qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
 #
  fit.model <- modelo_Norte
 attach(Temporario1)
- source("diag_norm.txt")
+ source("diag_norm_corrigido.txt")
 #
 # A saída terá quatro gráficos: de pontos de alavanca, 
 # de pontos influentes  e  dois de resíduos. Para identificar
@@ -469,6 +476,13 @@ ts <- r/(s*sqrt(1-h))
 di <- (1/p)*(h/(1-h))*(ts^2)
 si <- lm.influence(fit.model)$sigma
 tsi <- r/(si*sqrt(1-h))
+fitted.model <- fitted(fit.model)
+ir = which(is.nan(tsi))
+if(length(ir) > 0){
+        tsi = tsi[-ir]
+        fitted.model = fitted.model[-ir]
+}
+
 a <- max(tsi)
 b <- min(tsi)
 par(mfrow=c(2,2))
@@ -487,7 +501,7 @@ abline(2,0,lty=2)
 abline(-2,0,lty=2)
 #identify(tsi, n=1)
 #
-plot(fitted(fit.model),tsi,xlab="Valor Ajustado", 
+plot(fitted.model,tsi,xlab="Valor Ajustado", 
 ylab="Resíduo Padronizado", ylim=c(b-1,a+1), pch=16)
 abline(2,0,lty=2)
 abline(-2,0,lty=2)
@@ -888,4 +902,15 @@ Temporario <- Sul[,c(-1,-3)] # retirando as vaiáveis REGIAO e ID_ENSAIO
 modelo<-lm(FLO_M~., Temporario) # modelo inicial
 summary(modelo)
 ```
+# SUDESTE
+
+### Modelo inicial
+```{r}
+
+Temporario <- Sudeste[,c(-1,-3)] # retirando as vaiáveis REGIAO e ID_ENSAIO
+
+modelo<-lm(FLO_M~., Temporario) # modelo inicial
+summary(modelo)
+```
+
 
