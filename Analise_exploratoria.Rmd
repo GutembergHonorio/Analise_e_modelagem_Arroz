@@ -172,12 +172,14 @@ ggplot(IRR)+
     labs(x = "Macrorregião", y = "Dias após a emergencia (DAE)", title = "Data de florescimento por região")
 boxplot(IRR$FLO_E)
 
-hist(Centro_oeste$FLO_M, main= "Data de florescimento não regionalizado")
-hist(Centro_oeste$FLO_M, main= "Data de florescimento para região Centro-oeste")
-hist(Norte$FLO_M, main= "Data de florescimento  para região Norte")
-hist(Nordeste$FLO_M, main= "Data de florescimento  para região Nordeste")
-hist(Sul$FLO_M, main= "Data de florescimento  para região Sul")
-hist(Sudeste$FLO_M, main= "Data de florescimento  para região Sudeste")
+par(mfrow=c(3,3))
+
+hist(IRR_Medio$FLO_M, main="Não regionalizado" , xlab= "Data de florescimento")
+hist(Centro_oeste$FLO_M, main= "Centro-oeste", xlab= "Data de florescimento")
+hist(Norte$FLO_M, main= "Norte", xlab= "Data de florescimento")
+hist(Nordeste$FLO_M, main= "Nordeste", xlab= "Data de florescimento")
+hist(Sul$FLO_M, main= "Sul", xlab= "Data de florescimento")
+hist(Sudeste$FLO_M, main= "Sudeste", xlab= "Data de florescimento")
 
 
 ```
@@ -212,7 +214,7 @@ ggplot(CV)+
 ```
 ```{r, message=F}
 CV<- IRR %>% group_by(GENOTIPO,ID_ENSAIO,REGIAO) %>% summarise(FLO_M = mean(FLO_E), Coef_var = cv(FLO_E))
-CV
+View(CV)
 ```
 
 ## Boxplot
