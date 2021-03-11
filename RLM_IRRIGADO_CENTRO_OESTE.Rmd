@@ -492,16 +492,24 @@ testeF.CB(fit.model,m.C1)
 ```{r}
 
 #
-# Predict usando mediana
+# Predict 
 #
+
+# Função para calcular a moda
+calcModa = function(x) {
+     ux <- unique(x)
+     ux[which.max(tabulate(match(x, ux)))]
+}
 
 variaveis = c('Tmax_Maxima','Tmax_fld_m',
               'Tmax_R','Tmax_ACC_R',
               'Tmax_Minima','Tmax_Media',
               'Tmin_Maxima','Tmin_ACC_V',
               'Tmin_R','Tmin_ACC_R',
-              'Chuva_ACC_V')
+              'longitude','Chuva_ACC_V')
+
 predictMediana = NULL
+predictModa = NULL
 
 for(variavel in variaveis){
         # Selecionando colunas
@@ -509,19 +517,34 @@ for(variavel in variaveis){
         tempData = Temporario[,indexVar]
         
         # Calculando mediana
-        mediana= lapply(Temporario[,-indexVar],median)
+        mediana = lapply(Temporario[,-indexVar],median)
         mediana = do.call('cbind',mediana)
         mediana = as.data.frame(mediana)
         
-        # Rodando predict
-        tempData = cbind(tempData,mediana)
-        predictMediana = cbind(predictMediana,predict(fit.model,tempData))
+        # Calculando moda
+        moda = lapply(Temporario[,-indexVar],calcModa)
+        moda = do.call('cbind',moda)
+        moda = as.data.frame(moda)
+        
+        # Predict mediana
+        tempMed = cbind(tempData,mediana)
+        predictMediana = cbind(predictMediana,predict(fit.model,tempMed))
+        
+        # Predict moda
+        tempModa = cbind(tempData,moda)
+        predictModa = cbind(predictModa,predict(fit.model,tempModa))
 }
 
 # Renomeando colunas
 colnames(predictMediana) = variaveis
+colnames(predictModa) = variaveis
+
+# Convertendo para data.frame
 predictMediana = as.data.frame(predictMediana)
+predictModa = as.data.frame(predictModa)
+
 predictMediana
+predictModa
 ```
 
 ```{r}
@@ -541,7 +564,8 @@ variaveis = c('Tmax_Maxima','Tmax_fld_m',
               'Tmax_Minima','Tmax_Media',
               'Tmin_Maxima','Tmin_ACC_V',
               'Tmin_R','Tmin_ACC_R',
-              'Chuva_ACC_V')
+              'longitude','Chuva_ACC_V')
+
 predictModa = NULL
 
 for(variavel in variaveis){
@@ -550,12 +574,12 @@ for(variavel in variaveis){
         tempData = Temporario[,indexVar]
         
         # Calculando mediana
-        mediana= lapply(Temporario[,-indexVar],median)
-        mediana = do.call('cbind',mediana)
-        mediana = as.data.frame(mediana)
+        calcModa = lapply(Temporario[,-indexVar],moda)
+        calcModa = do.call('cbind',calcModa)
+        calcModa = as.data.frame(calcModa)
         
         # Rodando predict
-        tempData = cbind(tempData,mediana)
+        tempData = cbind(tempData,calcModa)
         predictModa = cbind(predictModa,predict(fit.model,tempData))
 }
 
