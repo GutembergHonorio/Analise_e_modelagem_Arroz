@@ -338,12 +338,12 @@ Chuva_ACC_V (p = 0.051460) e posteriomente Tmax_Minima (p = 0.051559)
 
 ```{r}
 Temporario<-Temporario1 %>% select(-Chuva_ACC_V,-Tmax_Minima)
-modelo<-lm(FLO_M~., Temporario[c(-115,-70),])
+modelo<-lm(FLO_M~., Temporario[c(-116,-70),])
 summary(modelo)
 
 
 ```
-Removendo outro genótipo não significativo
+Agrupando outro genótipo não significativo
 
 ```{r}
 Genotipos  <- Temporario$GENOTIPO
@@ -447,41 +447,10 @@ Anova
 ```
 
 ```{r}
-#ols_test_breusch_pagan(modelo)
-car::ols_test_breusch_pagan(modelo, rhs = TRUE, multiple = TRUE, p.adj = 'sidak')
-```
-```{r}
-# Testes de hipóteses de interesse
-# Comparacoes multiplas
-
-# fit.model: saída do modelo ajustado
-# m.C: matriz de interesse
-
-testeF.CB <- function(fit.model,m.C)
-
-{
-
-v.beta <-  cbind(fit.model$coef)
-
-n <- nrow(model.matrix(fit.model))
-
-e.p <- nrow(v.beta)
-
-e.q <- nrow(m.C)
-
-m.cov.beta <- (vcov(fit.model))
-
-e.F <- t(m.C%*%v.beta)%*%solve(m.C%*%m.cov.beta%*%t(m.C))%*%(m.C%*%v.beta)/e.q
-
-e.pvalor <- 1-pf(e.F,e.q,n-e.p)
-
-cat("Estatistica F = ",round(e.F,2),"\n")
-
-cat("pvalor = ",round(e.pvalor,4),"
+ols_test_breusch_pagan(modelo)
+ install.packages( "olsrr")
+library( olsrr)
+ols_test_breusch_pagan(modelo, rhs = TRUE, multiple = TRUE, p.adj = 'sidak')
 ```
 
-m.C2 <- rbind(cbind(0,1,0,0,0),cbind(0,0,1,0,0))
-
-m.C1 <- cbind(0,1,0,0,0)
-testeF.CB(fit.model,m.C1)
 
