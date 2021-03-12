@@ -1,0 +1,505 @@
+---
+title: "C beta"
+author: "Gutemberg Resende Honorio Filho"
+date: "11/03/2021"
+output: html_document
+---
+
+# Pacotes
+
+```{r}
+if(!require(tidyverse)) install.packages("tidyverse")
+
+# Teste de normalidade 
+if(!require(tseries)) install.packages("tseries")
+
+# Teste de homocesdasticidade 
+if(!require(lmtest)) install.packages("lmtest")
+
+
+
+
+
+```
+
+# DADOS
+```{r Diretório} 
+
+# DIRETÓRIO DOS DADOS 
+
+Tabelabruta<- read.csv("d:/Users/Cristiane Resende/Desktop/Gutemberg Honorio/Mestrado/Repositorio_4/Analise_e_modelagem_Arroz/Merge_1980_2018.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE) # tabela com os dados originais
+
+# criando coluna com macrorregiões
+
+Tabelabruta<- mutate(Tabelabruta,REGIAO = case_when(UF == 'GO'| UF == 'DF' |UF == 'MS' | UF == 'MT' ~ 'Centro_Oeste',
+                              UF == 'AL'| UF == 'BA' |UF == 'CE' | UF == 'MA' | UF == 'PB' | UF == 'PE' | UF == 'PI' | UF == 'RN' | UF == 'SE' ~ 'Nordeste',
+                              UF == 'AC' | UF == 'AM' | UF == 'AP' | UF == 'PA' | UF == 'RO' | UF == 'RR' | UF == 'TO' ~ 'Norte',
+                              UF == 'ES' | UF == 'MG' | UF == 'SP' | UF == 'RJ' ~ 'Sudeste',
+                              UF == 'RS' | UF == 'SC' | UF == 'PR' ~ 'Sul'))
+
+# Tabelas acessório
+
+TabelabrutaIRR = subset(Tabelabruta, SIST_CULT == "IRRIGATED") # Somente Irrigado
+TabelabrutaTA = subset(Tabelabruta, SIST_CULT == "UPLAND") # Somente Terras altas
+
+# Filtrando os dados
+
+
+IRR<-TabelabrutaIRR %>% mutate(UR_Media=(umidade_Media),UR_V=	(umidade_V), UR_fld_m=	(umidade_fld_m),	UR_R=	(umidade_R), Graus_dia_ciclo=(graus_dia_ciclo), Graus_dia_FLO=(graus_dia_FLO+graus_dia_IP))
+
+IRR <- select(IRR,latitude, longitude, GENOTIPO, ID_ENSAIO, REGIAO, UF, FLO_E, Tmax_Maxima ,Tmax_fld_m ,	Tmax_R,	Tmax_ACC_R, Tmax_Minima,	Tmax_Media,Tmax_V ,Tmax_ACC_V,	Tmin_Maxima,Tmin_Minima ,	Tmin_Media ,	Tmin_V ,	Tmin_ACC_V , Tmin_fld_m ,	Tmin_R,	Tmin_ACC_R , Chuva_ACC ,	Chuva_ACC_V, Chuva_ACC_R, Rad_ACC_R ,	Rad_ACC ,	Rad_ACC_V, UR_Media, UR_V, UR_fld_m,	UR_R, Graus_dia_ciclo, Graus_dia_FLO)
+
+
+rm(TabelabrutaIRR,TabelabrutaTA,Tabelabruta)
+
+# Removendo os genótipos que não serão estudados
+
+IRR = IRR[IRR$GENOTIPO %in% c("ALIANCA",	"AVAXI CL",	"BR IRGA 409",	"BR IRGA 410",	"BR IRGA 412",	"BR IRGA 414",	"BRS 7 TAIM",	"BRS A701 CL",	"BRS A702 CL",	"BRS A704",	"BRS ALVORADA",	"BRS BIGUA",	"BRS CATIANA",	"BRS CIRAD 302",	"BRS FORMOSO",	"BRS FRONTEIRA",	"BRS GUARA",	"BRS JABURU",	"BRS JACANA",	"BRS PAMPA",	"BRS PAMPEIRA",	"BRS PELOTA",	"BRS QUERENCIA",	"BRS SINUELO CL",	"BRS TROPICAL",	"BRSMG RUBELITA",	"CICA 8",	"CT8452",	"DIAMANTE",	"EEA34",	"EMPASC 101",	"EMPASC 102",	"EPAGRI 108",	"EPAGRI 109",	"EPAGRI97-01",	"EPAGRI97-05",	"EPAGRI97-06",	"H6",	"H7 CL",	"IAC1289",	"IAC1298",	"IAC1299",	"IAC1307",	"IAC1311",	"IAPAR 58",	"IRGA 417",	"IRGA 422 CL",	"IRGA 424",	"IRGA 424 RI",	"IRGA 425",	"IRGA 426",	"IRGA 427",	"IRGA 428",	"IRGA 429",	"IRGA 430",	"IRGA97-05",	"IRGA97-10",	"IRGA97-11",	"IRGA97-28",	"JAVAE",	"JEQUITIBA",	"MARAJO",	"METICA 1",	"MOXOTO",	"OUROMINAS",	"PR267",	"PR268",	"PR306",	"PR331",	"PR349",	"PR380",	"PR498",	"PR631",	"PR67",	"PUITA INTA CL",	"RORAIMA",	"SAO FRANCISCO",	"SC138",	"SC173",	"SC237",	"SC240",	"SC250",	"SCS 112",	"SCS 114 ANDOSAN",	"SCS 116 SATORU",	"SCS 121 CL",	"SCSBRS 111",	"SCSBRS 113 TIO TAKA",	"SCSBRS PIRACEMA",	"SG11551",	"URUCUI"),]
+IRR = IRR[IRR$UF!="MT",]
+
+# Filtrando e gerando médias
+
+IRR_Medio<- IRR %>% group_by(ID_ENSAIO, GENOTIPO, REGIAO) %>% summarise(  FLO_M= mean(FLO_E),  latitude= mean(latitude), longitude = mean(longitude), Tmax_Maxima = mean(Tmax_Maxima) ,Tmax_fld_m = mean(Tmax_fld_m ),	Tmax_R= mean( Tmax_R),	Tmax_ACC_R= mean(Tmax_ACC_R ), Tmax_Minima= mean(Tmax_Minima ),	Tmax_Media= mean( Tmax_Media),Tmax_V = mean(Tmax_V ),Tmax_ACC_V= mean(Tmax_ACC_V ),	Tmin_Maxima= mean(Tmin_Maxima ),Tmin_Minima = mean(Tmin_Minima ),	Tmin_Media = mean(Tmin_Media ),	Tmin_V = mean(Tmin_V ),	Tmin_ACC_V = mean(Tmin_ACC_V ), Tmin_fld_m = mean( Tmin_fld_m),	Tmin_R= mean(Tmin_R ),	Tmin_ACC_R = mean(Tmin_ACC_R ), Chuva_ACC = mean(Chuva_ACC ),	Chuva_ACC_V= mean(Chuva_ACC_V ), Chuva_ACC_R= mean(Chuva_ACC_R ), Rad_ACC_R = mean(Rad_ACC_R ),	Rad_ACC = mean(Rad_ACC ),	Rad_ACC_V= mean(Rad_ACC_V ), UR_Media= mean( UR_Media), UR_V= mean( UR_V), UR_fld_m= mean(UR_fld_m ),	UR_R= mean(UR_R ), Graus_dia_ciclo= mean(Graus_dia_ciclo ), Graus_dia_FLO= mean(Graus_dia_FLO ))
+
+# separando por macrorregião
+
+Centro_oeste<- subset(IRR_Medio, (REGIAO == "Centro_Oeste")) # filtrando por região
+```
+
+### Modelo inicial
+```{r}
+
+Temporario <- Centro_oeste[,c(-1,-3)] # retirando as vaiáveis REGIAO e ID_ENSAIO
+
+modelo1<-lm(FLO_M~., Temporario) # modelo inicial
+summary(modelo1)
+
+```
+
+### Remoção de não significantes
+```{r}
+# Testes de hip?teses de interesse
+
+source("teste-CB.txt")
+
+# Comparacoes multiplas
+
+# fit.model: sa?da do modelo ajustado
+# m.C: matriz de interesse
+
+testeF.CB <- function(fit.model,m.C)
+
+{
+
+v.beta <-  cbind(fit.model$coef)
+
+n <- nrow(model.matrix(fit.model))
+
+e.p <- nrow(v.beta)
+
+e.q <- nrow(m.C)
+
+m.cov.beta <- (vcov(fit.model))
+
+e.F <- t(m.C%*%v.beta)%*%solve(m.C%*%m.cov.beta%*%t(m.C))%*%(m.C%*%v.beta)/e.q
+
+e.pvalor <- 1-pf(e.F,e.q,n-e.p)
+
+cat("Estatistica F = ",round(e.F,2),"\n")
+
+cat("pvalor = ",round(e.pvalor,4),"\n")
+
+cat("Matriz C :","\n")
+
+print(m.C)
+
+}
+
+testeF.CB.poder <- function(fit.model,m.C,alpha)
+
+{
+
+v.beta <-  cbind(fit.model$coef)
+
+n <- nrow(model.matrix(fit.model))
+
+e.p <- nrow(v.beta)
+
+e.q <- nrow(m.C)
+
+m.cov.beta <- (vcov(fit.model))
+
+m.X <- model.matrix(fit.model)
+
+e.F <- t(m.C%*%v.beta)%*%solve(m.C%*%m.cov.beta%*%t(m.C))%*%(m.C%*%v.beta)/e.q   ##  m.cov.beta=sigma2(x?x)^-1 que tem dist.?qui-quadrado
+
+e.pvalor <- 1-pf(e.F,e.q,n-e.p)                                                  ##
+
+e.sigma2 <- deviance(fit.model)/df.residual(fit.model)                           ## sigma2 estimado
+
+e.delta <- (t(m.C%*%v.beta)%*%solve(m.C%*%solve(t(m.X)%*%m.X)%*%t(m.C))%*%(m.C%*%v.beta))/e.sigma2
+
+F.critico <- qf(1-alpha,e.q,n-e.p)       ## f cr?tico sob h0
+
+e.poder <- 1-pf(F.critico,e.q,n-e.p,ncp=e.delta)
+
+cat("Estatistica F = ",round(e.F,2),"\n")
+
+cat("pvalor = ",round(e.pvalor,4),"\n")
+
+cat("poder observado = ",round(e.poder,4),"\n")
+
+cat("Matriz C :","\n")
+
+print(m.C)
+
+}
+
+
+
+testeF.CBM <- function(fit.model,m.C,m.M)
+
+{
+
+v.beta <-  cbind(fit.model$coef)
+
+n <- nrow(model.matrix(fit.model))
+
+e.p <- nrow(v.beta)
+
+e.q <- nrow(m.C)
+
+m.cov.beta <- (vcov(fit.model))
+
+e.F <- t(m.C%*%v.beta-m.M)%*%solve(m.C%*%m.cov.beta%*%t(m.C))%*%(m.C%*%v.beta-m.M)/e.q
+
+e.pvalor <- 1-pf(e.F,e.q,n-e.p)
+
+cat("Estatistica F = ",round(e.F,2),"\n")
+
+cat("pvalor = ",round(e.pvalor,4),"\n")
+
+cat("Matriz C :","\n")
+
+print(m.C)
+
+cat("Matriz M :","\n")
+
+print(m.M)
+
+}
+```
+
+
+
+
+
+Ordem da remoção das variáveis numéricas
+
+Tmin_V (p = 0.919724)
+
+
+```{r}
+fit.model<-modelo1
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario1<-Temporario %>% select(-Tmin_V)
+modelo10<-lm(FLO_M~., Temporario1)
+summary(modelo1)
+```
+
+Chuva_ACC (p = 0.908085)
+
+
+```{r}
+fit.model<-modelo1
+rm(m.C)
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC)
+modelo2<-lm(FLO_M~., Temporario1)
+summary(modelo2)
+```
+
+UR_V (p = 0.843717)
+
+```{r}
+fit.model<-modelo2
+rm(m.C)
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V)
+modelo3<-lm(FLO_M~., Temporario1)
+summary(modelo3)
+```
+
+Rad_ACC_V (p = 0.799768)
+```{r}
+fit.model<-modelo3
+rm(m.C)
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V)
+modelo4<-lm(FLO_M~., Temporario1)
+summary(modelo4)
+```
+
+Tmin_Minima (p = 0.718204)
+```{r}
+fit.model<-modelo4
+rm(m.C)
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V, -Tmin_Minima)
+modelo5<-lm(FLO_M~., Temporario1)
+summary(modelo5)
+```
+
+Tmax_ACC_V (p = 0.753389)
+```{r}
+fit.model<-modelo5
+rm(m.C)
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V, -Tmin_Minima, -Tmax_ACC_V)
+modelo6<-lm(FLO_M~., Temporario1)
+summary(modelo6)
+```
+
+Tmax_V (p = 0.578615)
+```{r}
+fit.model<-modelo6
+rm(m.C)
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V, -Tmin_Minima, -Tmax_ACC_V, -Tmax_V)
+modelo7<-lm(FLO_M~., Temporario1)
+summary(modelo7)
+```
+
+UR_fld_m (p = 0.276400)
+```{r}
+fit.model<-modelo7
+rm(m.C)
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V, -Tmin_Minima, -Tmax_ACC_V, -Tmax_V, -UR_fld_m)
+modelo8<-lm(FLO_M~., Temporario1)
+summary(modelo8)
+```
+
+UR_R (p = 0.256317)
+```{r}
+fit.model<-modelo8
+rm(m.C)
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V, -Tmin_Minima, -Tmax_ACC_V, -Tmax_V, -UR_fld_m, -UR_R)
+modelo9<-lm(FLO_M~., Temporario1)
+summary(modelo9)
+```
+
+Rad_ACC_R (p = 0.336529)
+```{r}
+fit.model<-modelo9
+rm(m.C)
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V, -Tmin_Minima, -Tmax_ACC_V, -Tmax_V, -UR_fld_m, -UR_R, -Rad_ACC_R)
+modelo10<-lm(FLO_M~., Temporario1)
+summary(modelo10)
+```
+
+Rad_ACC (p = 0.352826)
+```{r}
+fit.model<-modelo10
+rm(m.C)
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V, -Tmin_Minima, -Tmax_ACC_V, -Tmax_V, -UR_fld_m, -UR_R, -Rad_ACC_R, -Rad_ACC)
+modelo11<-lm(FLO_M~., Temporario1)
+summary(modelo11)
+```
+
+Graus_dia_FLO (p = 0.540216)
+```{r}
+fit.model<-modelo11
+rm(m.C)
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V, -Tmin_Minima, -Tmax_ACC_V, -Tmax_V, -UR_fld_m, -UR_R, -Rad_ACC_R, -Rad_ACC, -Graus_dia_FLO)
+modelo12<-lm(FLO_M~., Temporario1)
+summary(modelo12)
+```
+
+Graus_dia_ciclo (p = 0.638808)
+```{r}
+fit.model<-modelo12
+rm(m.C)
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V, -Tmin_Minima, -Tmax_ACC_V, -Tmax_V, -UR_fld_m, -UR_R, -Rad_ACC_R, -Rad_ACC, -Graus_dia_FLO, -Graus_dia_ciclo)
+modelo13<-lm(FLO_M~., Temporario1)
+summary(modelo13)
+```
+
+Chuva_ACC_R (p = 0.109028)
+```{r}
+fit.model<-modelo13
+rm(m.C)
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V, -Tmin_Minima, -Tmax_ACC_V, -Tmax_V, -UR_fld_m, -UR_R, -Rad_ACC_R, -Rad_ACC, -Graus_dia_FLO, -Graus_dia_ciclo,-Chuva_ACC_R)
+modelo14<-lm(FLO_M~., Temporario1)
+summary(modelo14)
+```
+
+UR_Media (p = 0.100633)
+```{r}
+fit.model<-modelo14
+rm(m.C)
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V, -Tmin_Minima, -Tmax_ACC_V, -Tmax_V, -UR_fld_m, -UR_R, -Rad_ACC_R, -Rad_ACC, -Graus_dia_FLO, -Graus_dia_ciclo,-Chuva_ACC_R, -UR_Media)
+modelo15<-lm(FLO_M~., Temporario1)
+summary(modelo15)
+```
+
+latitude (p = 0.164901)
+```{r}
+fit.model<-modelo15
+rm(m.C)
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V, -Tmin_Minima, -Tmax_ACC_V, -Tmax_V, -UR_fld_m, -UR_R, -Rad_ACC_R, -Rad_ACC, -Graus_dia_FLO, -Graus_dia_ciclo,-Chuva_ACC_R, -UR_Media, -latitude)
+modelo16<-lm(FLO_M~., Temporario1)
+summary(modelo16)
+```
+
+Tmin_Media  (p = 0.290819)
+```{r}
+fit.model<-modelo16
+rm(m.C)
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V, -Tmin_Minima, -Tmax_ACC_V, -Tmax_V, -UR_fld_m, -UR_R, -Rad_ACC_R, -Rad_ACC, -Graus_dia_FLO, -Graus_dia_ciclo,-Chuva_ACC_R, -UR_Media, -latitude, -Tmin_Media)
+modelo17<-lm(FLO_M~., Temporario1)
+summary(modelo17)
+```
+
+Tmin_fld_m (p = 0.245857) 
+```{r}
+fit.model<-modelo17
+rm(m.C)
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V, -Tmin_Minima, -Tmax_ACC_V, -Tmax_V, -UR_fld_m, -UR_R, -Rad_ACC_R, -Rad_ACC, -Graus_dia_FLO, -Graus_dia_ciclo,-Chuva_ACC_R, -UR_Media, -latitude, -Tmin_Media, -Tmin_fld_m)
+modelo18<-lm(FLO_M~., Temporario1)
+summary(modelo18)
+```
+
+Junção dos genótipos não significativos
+
+Obs: O genótipo do intercepto é o BR IRGA 409
+
+
+```{r}
+fit.model<-modelo18
+
+m.C <- rbind(cbind(	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	))
+
+testeF.CB(fit.model,m.C)
+```
+
+
+```{r}
+Genotipos  <- Temporario1$GENOTIPO
+SELECAO_GEN <- c("BR IRGA 409", "BR IRGA 410",	"EMPASC 102",	"IRGA 425",	"IRGA 426",	"PR631",	"BRS A701 CL",	"BRS CIRAD 302",	"BRS SINUELO CL",	"SC240",	"IRGA97-28",	"IRGA 424 RI",	"JEQUITIBA",	"EPAGRI97-06",	"EPAGRI97-05",	"PR498",	"SC250",	"IRGA 424",	"PR349",	"BRS JACANA",	"IRGA 427",	"BRS A702 CL",	"BRS FRONTEIRA",	"PR306",	"BRS PAMPA",	"EPAGRI97-01",	"IRGA 417",	"BRS PELOTA",	"BRS 7 TAIM",	"SG11551",	"IRGA 422 CL")
+
+Temporario1$GENOTIPO <- c(ifelse(Temporario1$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo19<-lm(FLO_M~., Temporario1) 
+summary(modelo19)
+
+```
+
