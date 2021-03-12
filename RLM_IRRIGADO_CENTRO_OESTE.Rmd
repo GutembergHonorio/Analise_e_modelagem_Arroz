@@ -26,7 +26,7 @@ if(!require(lmtest)) install.packages("lmtest")
 
 # DIRETÓRIO DOS DADOS 
 
-Tabelabruta<- read.csv("d:/Users/Cristiane Resende/Desktop/Gutemberg Honorio/Mestrado/Repositorio_4/Analise_e_modelagem_Arroz/Merge_1980_2018.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE) # tabela com os dados originais
+Tabelabruta<- read.csv("Merge_1980_2018.csv", header = TRUE, sep = ";", stringsAsFactors = FALSE) # tabela com os dados originais
 
 # criando coluna com macrorregiões
 
@@ -133,7 +133,7 @@ plot(modelo)
 #
 fit.model <- modelo
 attach(Temporario1)
-source("envel_norm_corrigido.txt")
+#source("envel_norm_corrigido.txt")
 #
 # A saída será o gráfico de envelope para o resíduo
 # padronizado. Para colocar  um  título no gráfico após a
@@ -190,8 +190,8 @@ qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
 # A sequência de comandos é a seguinte:
 #
  fit.model <- modelo
-attach(Temporario1)
- source("diag_norm_corrigido.txt")
+ attach(Temporario1)
+#source("diag_norm_corrigido.txt")
 #
 # A saída terá quatro gráficos: de pontos de alavanca, 
 # de pontos influentes  e  dois de resíduos. Para identificar
@@ -256,6 +256,7 @@ Excluindo a linha 70 ,corespondente ao genótipo IRGA 428, e a linha 116 corresp
 
 ```{r}
 modelo<-lm(FLO_M~. , Temporario1[c(-70, -116),])
+
 summary(modelo)
 ```
 ```{r}
@@ -267,8 +268,8 @@ summary(modelo)
 # A sequência de comandos é a seguinte:
 #
  fit.model <- modelo
-attach(Temporario1)
- source("diag_norm_corrigido.txt")
+ attach(Temporario1)
+ #source("diag_norm_corrigido.txt")
 #
 # A saída terá quatro gráficos: de pontos de alavanca, 
 # de pontos influentes  e  dois de resíduos. Para identificar
@@ -350,7 +351,7 @@ Genotipos  <- Temporario$GENOTIPO
 SELECAO_GEN <- c("SC173")
 
 Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
-modelo<-lm(FLO_M~., Temporario[c(-116,-70),]) 
+modelo<-lm(FLO_M ~., Temporario[c(-116,-70),]) 
 summary(modelo)
 ```
 
@@ -363,8 +364,8 @@ summary(modelo)
 # A sequência de comandos é a seguinte:
 #
  fit.model <- modelo
-attach(Temporario1)
- source("diag_norm_corrigido.txt")
+ attach(Temporario1)
+ #source("diag_norm_corrigido.txt")
 #
 # A saída terá quatro gráficos: de pontos de alavanca, 
 # de pontos influentes  e  dois de resíduos. Para identificar
@@ -452,5 +453,100 @@ ols_test_breusch_pagan(modelo)
 library( olsrr)
 ols_test_breusch_pagan(modelo, rhs = TRUE, multiple = TRUE, p.adj = 'sidak')
 ```
+<<<<<<< HEAD
+=======
+```{r}
+# Testes de hipóteses de interesse
+# Comparacoes multiplas
 
+# fit.model: saída do modelo ajustado
+# m.C: matriz de interesse
+
+testeF.CB <- function(fit.model,m.C)
+
+{
+
+v.beta <-  cbind(fit.model$coef)
+
+n <- nrow(model.matrix(fit.model))
+
+e.p <- nrow(v.beta)
+
+e.q <- nrow(m.C)
+
+m.cov.beta <- (vcov(fit.model))
+
+e.F <- t(m.C%*%v.beta)%*%solve(m.C%*%m.cov.beta%*%t(m.C))%*%(m.C%*%v.beta)/e.q
+
+e.pvalor <- 1-pf(e.F,e.q,n-e.p)
+
+cat("Estatistica F = ",round(e.F,2),"\n")
+
+cat("pvalor = ",round(e.pvalor,4))
+
+}
+```
+
+m.C2 <- rbind(cbind(0,1,0,0,0),cbind(0,0,1,0,0))
+>>>>>>> f69acf6214117cc531207c4225d8f4bf350bf21f
+
+
+
+```{r}
+
+#
+# Predict 
+#
+
+# Função para calcular a moda
+calcModa = function(x) {
+     ux <- unique(x)
+     ux[which.max(tabulate(match(x, ux)))]
+}
+
+variaveis = c('Tmax_Maxima','Tmax_fld_m',
+              'Tmax_R','Tmax_ACC_R',
+              'Tmax_Minima','Tmax_Media',
+              'Tmin_Maxima','Tmin_ACC_V',
+              'Tmin_R','Tmin_ACC_R',
+              'longitude','Chuva_ACC_V')
+
+predictMediana = NULL
+predictModa = NULL
+
+for(variavel in variaveis){
+        # Selecionando colunas
+        indexVar = which(names(Temporario) %in%c('GENOTIPO','FLO_M','latitude',variavel))
+        tempData = Temporario[,indexVar]
+        
+        # Calculando mediana
+        mediana = lapply(Temporario[,-indexVar],median)
+        mediana = do.call('cbind',mediana)
+        mediana = as.data.frame(mediana)
+        
+        # Calculando moda
+        moda = lapply(Temporario[,-indexVar],calcModa)
+        moda = do.call('cbind',moda)
+        moda = as.data.frame(moda)
+        
+        # Predict mediana
+        tempMed = cbind(tempData,mediana)
+        predictMediana = cbind(predictMediana,predict(fit.model,tempMed))
+        
+        # Predict moda
+        tempModa = cbind(tempData,moda)
+        predictModa = cbind(predictModa,predict(fit.model,tempModa))
+}
+
+# Renomeando colunas
+colnames(predictMediana) = variaveis
+colnames(predictModa) = variaveis
+
+# Convertendo para data.frame
+predictMediana = as.data.frame(predictMediana)
+predictModa = as.data.frame(predictModa)
+
+predictMediana
+predictModa
+```
 
