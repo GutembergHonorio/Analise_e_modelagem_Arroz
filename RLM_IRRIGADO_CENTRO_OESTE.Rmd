@@ -503,10 +503,9 @@ calcModa = function(x) {
 
 variaveis = c('Tmax_Maxima','Tmax_fld_m',
               'Tmax_R','Tmax_ACC_R',
-              'Tmax_Minima','Tmax_Media',
-              'Tmin_Maxima','Tmin_ACC_V',
-              'Tmin_R','Tmin_ACC_R',
-              'longitude','Chuva_ACC_V')
+              'Tmax_Media','Tmin_Maxima',
+              'Tmin_ACC_V','Tmin_R',
+              'Tmin_ACC_R','longitude')
 
 predictMediana = NULL
 predictModa = NULL
