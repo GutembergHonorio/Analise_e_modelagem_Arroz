@@ -14,7 +14,9 @@ if(!require(tidyverse)) install.packages("tidyverse")
 if(!require(tseries)) install.packages("tseries")
 
 # Teste de homocesdasticidade 
-if(!require(lmtest)) install.packages("lmtest")
+if(!require(olsrr)) install.packages("olsrr")
+
+
 
 
 
@@ -71,8 +73,8 @@ Centro_oeste<- subset(IRR_Medio, (REGIAO == "Centro_Oeste")) # filtrando por reg
 
 Temporario <- Centro_oeste[,c(-1,-3)] # retirando as vaiáveis REGIAO e ID_ENSAIO
 
-modelo1<-lm(FLO_M~., Temporario) # modelo inicial
-summary(modelo1)
+modelo<-lm(FLO_M~., Temporario) # modelo inicial
+summary(modelo)
 
 ```
 
@@ -200,13 +202,13 @@ Tmin_V (p = 0.919724)
 
 
 ```{r}
-fit.model<-modelo1
+fit.model<-modelo
 m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
 testeF.CB(fit.model,m.C)
 ```
 ```{r}
 Temporario1<-Temporario %>% select(-Tmin_V)
-modelo10<-lm(FLO_M~., Temporario1)
+modelo1<-lm(FLO_M~., Temporario1)
 summary(modelo1)
 ```
 
@@ -216,7 +218,7 @@ Chuva_ACC (p = 0.908085)
 ```{r}
 fit.model<-modelo1
 rm(m.C)
-m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
 testeF.CB(fit.model,m.C)
 ```
 ```{r}
@@ -230,7 +232,7 @@ UR_V (p = 0.843717)
 ```{r}
 fit.model<-modelo2
 rm(m.C)
-m.C <- cbind()
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0)
 testeF.CB(fit.model,m.C)
 ```
 
@@ -244,7 +246,7 @@ Rad_ACC_V (p = 0.799768)
 ```{r}
 fit.model<-modelo3
 rm(m.C)
-m.C <- cbind()
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,		0,	0,	0,	0,	1,	0,		0,	0,	0,	0)
 testeF.CB(fit.model,m.C)
 ```
 
@@ -258,7 +260,7 @@ Tmin_Minima (p = 0.718204)
 ```{r}
 fit.model<-modelo4
 rm(m.C)
-m.C <- cbind()
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,		0,	0,	0,	0,		0,	0,	0,	0,		0,		0,	0,	0,	0)
 testeF.CB(fit.model,m.C)
 ```
 
@@ -272,7 +274,7 @@ Tmax_ACC_V (p = 0.753389)
 ```{r}
 fit.model<-modelo5
 rm(m.C)
-m.C <- cbind()
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,		0,		0,	0,	0,	0,		0,	0,	0,	0,		0,		0,	0,	0,	0)
 testeF.CB(fit.model,m.C)
 ```
 
@@ -286,7 +288,7 @@ Tmax_V (p = 0.578615)
 ```{r}
 fit.model<-modelo6
 rm(m.C)
-m.C <- cbind()
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,		0,		0,		0,	0,	0,	0,		0,	0,	0,	0,		0,		0,	0,	0,	0)
 testeF.CB(fit.model,m.C)
 ```
 
@@ -300,7 +302,7 @@ UR_fld_m (p = 0.276400)
 ```{r}
 fit.model<-modelo7
 rm(m.C)
-m.C <- cbind()
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,		0,		0,	0,	0,	0,		0,	0,	0,	0,		0,		1,	0,	0,	0)
 testeF.CB(fit.model,m.C)
 ```
 
@@ -314,7 +316,7 @@ UR_R (p = 0.256317)
 ```{r}
 fit.model<-modelo8
 rm(m.C)
-m.C <- cbind()
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,		0,		0,	0,	0,	0,		0,	0,	0,	0,		0,			1,	0,	0)
 testeF.CB(fit.model,m.C)
 ```
 
@@ -328,7 +330,7 @@ Rad_ACC_R (p = 0.336529)
 ```{r}
 fit.model<-modelo9
 rm(m.C)
-m.C <- cbind()
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,		0,		0,	0,	0,	0,		0,	0,	1,	0,		0,				0,	0)
 testeF.CB(fit.model,m.C)
 ```
 
@@ -342,7 +344,7 @@ Rad_ACC (p = 0.352826)
 ```{r}
 fit.model<-modelo10
 rm(m.C)
-m.C <- cbind()
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,		0,		0,	0,	0,	0,		0,	0,		1,		0,				0,	0)
 testeF.CB(fit.model,m.C)
 ```
 
@@ -356,7 +358,7 @@ Graus_dia_FLO (p = 0.540216)
 ```{r}
 fit.model<-modelo11
 rm(m.C)
-m.C <- cbind()
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,		0,		0,	0,	0,	0,		0,	0,				0,				0,	1)
 testeF.CB(fit.model,m.C)
 ```
 
@@ -370,7 +372,7 @@ Graus_dia_ciclo (p = 0.638808)
 ```{r}
 fit.model<-modelo12
 rm(m.C)
-m.C <- cbind()
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,		0,		0,	0,	0,	0,		0,	0,				0,				1)
 testeF.CB(fit.model,m.C)
 ```
 
@@ -384,7 +386,7 @@ Chuva_ACC_R (p = 0.109028)
 ```{r}
 fit.model<-modelo13
 rm(m.C)
-m.C <- cbind()
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,		0,		0,	0,	0,	0,		0,	1,				0)
 testeF.CB(fit.model,m.C)
 ```
 
@@ -398,7 +400,7 @@ UR_Media (p = 0.100633)
 ```{r}
 fit.model<-modelo14
 rm(m.C)
-m.C <- cbind()
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,		0,		0,	0,	0,	0,		0,					1)
 testeF.CB(fit.model,m.C)
 ```
 
@@ -412,7 +414,7 @@ latitude (p = 0.164901)
 ```{r}
 fit.model<-modelo15
 rm(m.C)
-m.C <- cbind()
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,			0,		0,		0,	0,	0,	0,		0)
 testeF.CB(fit.model,m.C)
 ```
 
@@ -426,7 +428,7 @@ Tmin_Media  (p = 0.290819)
 ```{r}
 fit.model<-modelo16
 rm(m.C)
-m.C <- cbind()
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,			0,		1,		0,	0,	0,	0,		0)
 testeF.CB(fit.model,m.C)
 ```
 
@@ -440,7 +442,7 @@ Tmin_fld_m (p = 0.245857)
 ```{r}
 fit.model<-modelo17
 rm(m.C)
-m.C <- cbind()
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,			0,				0,	1,	0,	0,		0)
 testeF.CB(fit.model,m.C)
 ```
 
@@ -502,4 +504,307 @@ modelo19<-lm(FLO_M~., Temporario1)
 summary(modelo19)
 
 ```
+
+Genótipos que continuaram não significativos
+
+```{r}
+fit.model<-modelo19
+
+m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1	,0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1	,0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0))
+
+testeF.CB(fit.model,m.C)
+```
+Os três não devem ser removidos conjuntamente
+
+!! Somente "SC237"
+
+```{r}
+fit.model<-modelo19
+
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1	,0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario1$GENOTIPO
+SELECAO_GEN <- c("SC237")
+
+Temporario1$GENOTIPO <- c(ifelse(Temporario1$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo20<-lm(FLO_M~., Temporario1) 
+summary(modelo20)
+```
+
+!! Somente "SCSBRS 111"
+
+```{r}
+fit.model<-modelo20
+
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+
+testeF.CB(fit.model,m.C)
+```
+
+
+```{r}
+Genotipos  <- Temporario1$GENOTIPO
+SELECAO_GEN <- c("SCSBRS 111")
+
+Temporario1$GENOTIPO <- c(ifelse(Temporario1$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo21<-lm(FLO_M~., Temporario1) 
+summary(modelo21)
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para  rodar este programa deixe no objeto fit.model a saída 
+# do ajuste da regressão do modelo normal linear.Deixe também
+# os dados disponíveis através do comando attach(...). Depois
+# use o comando source(...) no R ou S-plus para executar o 
+# programa. A sequência de comandos é a seguinte:
+#
+fit.model <- modelo21
+attach(Temporario1)
+#source("envel_norm_corrigido.txt")
+#
+# A saída será o gráfico de envelope para o resíduo
+# padronizado. Para colocar  um  título no gráfico após a
+# saída use o comando title("...").
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+si <- lm.influence(fit.model)$sigma
+r <- resid(fit.model)
+tsi <- r/(si*sqrt(1-h))
+#
+ident <- diag(n)
+epsilon <- matrix(0,n,100)
+e <- matrix(0,n,100)
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:100){
+     epsilon[,i] <- rnorm(n,0,1)
+     e[,i] <- (ident - H)%*%epsilon[,i]
+     u <- diag(ident - H)
+     e[,i] <- e[,i]/sqrt(u)
+     e[,i] <- sort(e[,i],na.last = TRUE)}
+#
+for(i in 1:n){
+     eo <- sort(e[i,])
+     e1[i] <- (eo[2]+eo[3])/2
+     e2[i] <- (eo[97]+eo[98])/2 }
+#
+med <- apply(e,1,mean)
+faixa <- range(tsi,e1,e2,na.rm = TRUE)
+#
+par(pty="s")
+qqnorm(tsi,xlab="Percentil da N(0,1)",
+ylab="Residuo Studentizado", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
+#------------------------------------------------------------#
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erro normal. Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+ fit.model <- modelo21
+ attach(Temporario1)
+#source("diag_norm_corrigido.txt")
+#
+# A saída terá quatro gráficos: de pontos de alavanca, 
+# de pontos influentes  e  dois de resíduos. Para identificar
+# os pontos que  mais  se destacam usar o comando 
+# identify(...). Se por exemplo se destacam três pontos no 
+# plot(fitted(fit.model),h,...), após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram traçados os limites ylim=c(a-1,b+1), em que a
+# é o menor valor e b o maior valor para o resíduo.Mude esses 
+# limites  se  necessário.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+lms <- summary(fit.model)
+s <- lms$sigma
+r <- resid(lms)
+ts <- r/(s*sqrt(1-h))
+di <- (1/p)*(h/(1-h))*(ts^2)
+si <- lm.influence(fit.model)$sigma
+tsi <- r/(si*sqrt(1-h))
+fitted.model <- fitted(fit.model)
+ir = which(is.nan(tsi))
+if(length(ir) > 0){
+        tsi = tsi[-ir]
+        fitted.model = fitted.model[-ir]
+}
+
+a <- max(tsi)
+b <- min(tsi)
+par(mfrow=c(2,2))
+plot(h,xlab="Índice", ylab="Medida h", pch=16, ylim=c(0,1))
+cut <- 2*p/n
+abline(cut,0,lty=2)
+identify(h, n=1)
+#title(sub="(a)")
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+identify(di, n=2)
+#
+plot(tsi,xlab="Índice", ylab="Resíduo Padronizado",
+ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(tsi, n=1)
+#
+plot(fitted.model,tsi,xlab="Valor Ajustado", 
+ylab="Resíduo Padronizado", ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),tsi, n=1)
+par(mfrow=c(1,1))
+#------------------------------------------------------------#
+```
+
+```{r}
+modelo21<-lm(FLO_M~., Temporario1[c(-116,-70),])
+summary(modelo21)
+```
+
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erro normal. Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+ fit.model <- modelo21
+ attach(Temporario1)
+ #source("diag_norm_corrigido.txt")
+#
+# A saída terá quatro gráficos: de pontos de alavanca, 
+# de pontos influentes  e  dois de resíduos. Para identificar
+# os pontos que  mais  se destacam usar o comando 
+# identify(...). Se por exemplo se destacam três pontos no 
+# plot(fitted(fit.model),h,...), após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram traçados os limites ylim=c(a-1,b+1), em que a
+# é o menor valor e b o maior valor para o resíduo.Mude esses 
+# limites  se  necessário.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+lms <- summary(fit.model)
+s <- lms$sigma
+r <- resid(lms)
+ts <- r/(s*sqrt(1-h))
+di <- (1/p)*(h/(1-h))*(ts^2)
+si <- lm.influence(fit.model)$sigma
+tsi <- r/(si*sqrt(1-h))
+fitted.model <- fitted(fit.model)
+ir = which(is.nan(tsi))
+if(length(ir) > 0){
+        tsi = tsi[-ir]
+        fitted.model = fitted.model[-ir]
+}
+
+a <- max(tsi)
+b <- min(tsi)
+par(mfrow=c(2,2))
+plot(h,xlab="Índice", ylab="Medida h", pch=16, ylim=c(0,1))
+cut <- 2*p/n
+abline(cut,0,lty=2)
+identify(h, n=1)
+#title(sub="(a)")
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+identify(di, n=2)
+#
+plot(tsi,xlab="Índice", ylab="Resíduo Padronizado",
+ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(tsi, n=1)
+#
+plot(fitted.model,tsi,xlab="Valor Ajustado", 
+ylab="Resíduo Padronizado", ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),tsi, n=1)
+par(mfrow=c(1,1))
+#------------------------------------------------------------#
+```
+
+Chuva_ACC_V (p = 0.063419)
+```{r}
+fit.model<-modelo21
+
+m.C <- cbind(0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1)
+
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+
+Temporario1<-Temporario1 %>% select(-Chuva_ACC_V)
+modelo22<-lm(FLO_M~., Temporario1[c(-116,-70),])
+summary(modelo22)
+```
+
+```{r}
+#Normalidade dos residuos
+jarque.bera.test(modelo22$residuals) # p > 0,05 = normal
+
+```
+```{r}
+# Homocedasticidade (Breusch-Pagan usando as variáveis independentes do modelo)
+ols_test_breusch_pagan(modelo22, rhs = TRUE)
+```
+
+```{r}
+Anova<- data.frame(anova(modelo22))
+Anova
+```
+```{r}
+
+ Importancia$variavel <- data.frame(c("variável" = "GENOTIPO"))
+ Importancia$importancia <- data.frame(c("variável" = "GENOTIPO"))"Importancia" = 0  ))
+
+
+
+
+```
+
+
 
