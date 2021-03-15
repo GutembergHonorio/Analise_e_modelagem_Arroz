@@ -26,7 +26,7 @@ if(!require(lmtest)) install.packages("lmtest")
 
 # DIRETÓRIO DOS DADOS 
 
-Tabelabruta<- read.csv("Merge_1980_2018.csv", header = TRUE, sep = ";", stringsAsFactors = FALSE) # tabela com os dados originais
+Tabelabruta<- read.csv("d:/Users/Cristiane Resende/Desktop/Gutemberg Honorio/Mestrado/Repositorio_4/Analise_e_modelagem_Arroz/Merge_1980_2018.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE) # tabela com os dados originais
 
 # criando coluna com macrorregiões
 
