@@ -105,7 +105,7 @@ SELECAO_GEN <- c("H6","IAC1289","PR67","SCSBRS 111")
 
 Temporario1$GENOTIPO <- c(ifelse(Temporario1$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
 modelo<-lm(FLO_M~., Temporario1) 
-#summary(modelo)
+summary(modelo)
 
 Genotipos  <- Temporario1$GENOTIPO
 SELECAO_GEN <- c("SC237")
@@ -457,7 +457,6 @@ Anova
 
 
 ```{r}
-
 #
 # Predict 
 #
@@ -497,13 +496,38 @@ for(variavel in variaveis){
         predictModa = cbind(predictModa,predict(fit.model,tempModa))
 }
 # Renomeando colunas
-colnames(predictMediana) = variaveis
-colnames(predictModa) = variaveis
+colnames(predictMediana) = paste(variaveis,"predict",sep = "_")
+colnames(predictModa) = paste(variaveis,"predict",sep = "_")
 # Convertendo para data.frame
 predictMediana = as.data.frame(predictMediana)
 predictModa = as.data.frame(predictModa)
+# Jutando colunas com data.frame
+predictMediana = cbind(Temporario1,predictMediana)
+predictModa = cbind(Temporario1,predictModa)
+# Ordenando colunas
+ordemColunas = c("GENOTIPO","FLO_M",
+                 "longitude","longitude_predict",
+                 "Tmax_Maxima","Tmax_Maxima_predict",
+                 "Tmax_fld_m","Tmax_fld_m_predict",
+                 "Tmax_R","Tmax_R_predict",
+                 "Tmax_ACC_R","Tmax_ACC_R_predict",
+                 "Tmax_Media","Tmax_Media_predict",
+                 "Tmin_Maxima","Tmin_Maxima_predict",
+                 "Tmin_ACC_V","Tmin_ACC_V_predict",
+                 "Tmin_R","Tmin_R_predict",
+                 "Tmin_ACC_R","Tmin_ACC_R_predict")
+# Selecionando colunas
+predictMediana = predictMediana[,ordemColunas]
+predictModa = predictModa[,ordemColunas]
 predictMediana
 predictModa
+```
+
+
+```{r}
+
+
+
 ```
 
 
