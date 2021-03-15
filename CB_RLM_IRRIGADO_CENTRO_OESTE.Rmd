@@ -17,6 +17,8 @@ if(!require(tseries)) install.packages("tseries")
 if(!require(olsrr)) install.packages("olsrr")
 
 
+if(!require(scales)) install.packages("scales")
+
 
 
 
@@ -793,18 +795,89 @@ ols_test_breusch_pagan(modelo22, rhs = TRUE)
 ```
 
 ```{r}
-Anova<- data.frame(anova(modelo22))
-Anova
+Anova<- anova(modelo22)
+variaveis<-data.frame("variaveis" = row.names(Anova), "importancia" = (Anova$`Sum Sq`/sum(Anova$`Sum Sq`)))
+options(scipen = 999)
+variaveis
+```
+```{r}
+ggplot(aes(x=variaveis, y = importancia),data = variaveis)+
+  geom_col()+
+  labs(y = "Capacidade explicativa" )+
+   scale_y_continuous(labels = percent_format()) +
+        theme_classic()+
+  theme(axis.text.x = element_text(angle=45, hjust=1, vjust = 1))
 ```
 ```{r}
 
- Importancia$variavel <- data.frame(c("variável" = "GENOTIPO"))
- Importancia$importancia <- data.frame(c("variável" = "GENOTIPO"))"Importancia" = 0  ))
-
-
-
-
+#
+# Predict 
+#
+# Função para calcular a moda
+calcModa = function(x) {
+     ux <- unique(x)
+     ux[which.max(tabulate(match(x, ux)))]
+}
+variaveis = c('Tmax_Maxima','Tmax_fld_m',
+              'Tmax_R','Tmax_ACC_R',
+              'Tmax_Media','Tmin_Maxima',
+              'Tmin_ACC_V','Tmin_R',
+              'Tmin_ACC_R','longitude')
+predictMediana = NULL
+predictModa = NULL
+for(variavel in variaveis){
+        # Selecionando colunas
+        indexVar = which(names(Temporario) %in%c('GENOTIPO','FLO_M','latitude',variavel))
+        tempData = Temporario[,indexVar]
+        
+        # Calculando mediana
+        mediana = lapply(Temporario[,-indexVar],median)
+        mediana = do.call('cbind',mediana)
+        mediana = as.data.frame(mediana)
+        
+        # Calculando moda
+        moda = lapply(Temporario[,-indexVar],calcModa)
+        moda = do.call('cbind',moda)
+        moda = as.data.frame(moda)
+        
+        # Predict mediana
+        tempMed = cbind(tempData,mediana)
+        predictMediana = cbind(predictMediana,predict(fit.model,tempMed))
+        
+        # Predict moda
+        tempModa = cbind(tempData,moda)
+        predictModa = cbind(predictModa,predict(fit.model,tempModa))
+}
+# Renomeando colunas
+colnames(predictMediana) = paste(variaveis,"predict",sep = "_")
+colnames(predictModa) = paste(variaveis,"predict",sep = "_")
+# Convertendo para data.frame
+predictMediana = as.data.frame(predictMediana)
+predictModa = as.data.frame(predictModa)
+# Jutando colunas com data.frame
+predictMediana = cbind(Temporario1,predictMediana)
+predictModa = cbind(Temporario1,predictModa)
+# Ordenando colunas
+ordemColunas = c("GENOTIPO","FLO_M",
+                 "longitude","longitude_predict",
+                 "Tmax_Maxima","Tmax_Maxima_predict",
+                 "Tmax_fld_m","Tmax_fld_m_predict",
+                 "Tmax_R","Tmax_R_predict",
+                 "Tmax_ACC_R","Tmax_ACC_R_predict",
+                 "Tmax_Media","Tmax_Media_predict",
+                 "Tmin_Maxima","Tmin_Maxima_predict",
+                 "Tmin_ACC_V","Tmin_ACC_V_predict",
+                 "Tmin_R","Tmin_R_predict",
+                 "Tmin_ACC_R","Tmin_ACC_R_predict")
+# Selecionando colunas
+predictMediana = predictMediana[,ordemColunas]
+predictModa = predictModa[,ordemColunas]
+predictMediana
+predictModa
 ```
+```
+
+
 
 
 
