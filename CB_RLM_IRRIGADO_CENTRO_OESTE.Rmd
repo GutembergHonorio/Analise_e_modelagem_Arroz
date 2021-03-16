@@ -19,7 +19,7 @@ if(!require(olsrr)) install.packages("olsrr")
 
 if(!require(scales)) install.packages("scales")
 
-
+if(!require(reshape2)) install.packages("reshape2")
 
 
 
@@ -514,9 +514,10 @@ fit.model<-modelo19
 
 m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
 ,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
-,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
-,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1	,0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
-,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1	,0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0))
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0))
+
 
 testeF.CB(fit.model,m.C)
 ```
@@ -541,12 +542,14 @@ modelo20<-lm(FLO_M~., Temporario1)
 summary(modelo20)
 ```
 
-!! Somente "SCSBRS 111"
+!! Somente "SCSBRS 111" e "IAC1289"
 
 ```{r}
 fit.model<-modelo20
 
-m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0))
+
 
 testeF.CB(fit.model,m.C)
 ```
@@ -554,12 +557,35 @@ testeF.CB(fit.model,m.C)
 
 ```{r}
 Genotipos  <- Temporario1$GENOTIPO
-SELECAO_GEN <- c("SCSBRS 111")
+SELECAO_GEN <- c("SCSBRS 111","IAC1289")
 
 Temporario1$GENOTIPO <- c(ifelse(Temporario1$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
 modelo21<-lm(FLO_M~., Temporario1) 
 summary(modelo21)
 ```
+
+!! Somente "PR67"
+
+```{r}
+fit.model<-modelo21
+
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+
+
+testeF.CB(fit.model,m.C)
+```
+
+
+```{r}
+Genotipos  <- Temporario1$GENOTIPO
+SELECAO_GEN <- c("PR67")
+
+Temporario1$GENOTIPO <- c(ifelse(Temporario1$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo22<-lm(FLO_M~., Temporario1) 
+summary(modelo22)
+```
+
+
 
 ```{r}
 #------------------------------------------------------------#
@@ -569,7 +595,7 @@ summary(modelo21)
 # use o comando source(...) no R ou S-plus para executar o 
 # programa. A sequência de comandos é a seguinte:
 #
-fit.model <- modelo21
+fit.model <- modelo22
 attach(Temporario1)
 #source("envel_norm_corrigido.txt")
 #
@@ -628,7 +654,7 @@ qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
 # comando source(...) no S-Plus ou R para executar o programa. 
 # A sequência de comandos é a seguinte:
 #
- fit.model <- modelo21
+ fit.model <- modelo22
  attach(Temporario1)
 #source("diag_norm_corrigido.txt")
 #
@@ -692,8 +718,8 @@ par(mfrow=c(1,1))
 ```
 
 ```{r}
-modelo21<-lm(FLO_M~., Temporario1[c(-116,-70),])
-summary(modelo21)
+modelo22<-lm(FLO_M~., Temporario1[c(-116,-70,-57),])
+summary(modelo22)
 ```
 
 
@@ -705,7 +731,7 @@ summary(modelo21)
 # comando source(...) no S-Plus ou R para executar o programa. 
 # A sequência de comandos é a seguinte:
 #
- fit.model <- modelo21
+ fit.model <- modelo22
  attach(Temporario1)
  #source("diag_norm_corrigido.txt")
 #
@@ -770,46 +796,234 @@ par(mfrow=c(1,1))
 
 Chuva_ACC_V (p = 0.063419)
 ```{r}
-fit.model<-modelo21
+fit.model<-modelo22
 
-m.C <- cbind(0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1)
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1)
 
 testeF.CB(fit.model,m.C)
 ```
 
 ```{r}
+Temporario1<-Temporario1[c(-116,-70,-57),]
 
 Temporario1<-Temporario1 %>% select(-Chuva_ACC_V)
-modelo22<-lm(FLO_M~., Temporario1[c(-116,-70),])
-summary(modelo22)
+modelo23<-lm(FLO_M~., Temporario1)
+summary(modelo23)
 ```
+
+```{r}
+#------------------------------------------------------------#
+# Para  rodar este programa deixe no objeto fit.model a saída 
+# do ajuste da regressão do modelo normal linear.Deixe também
+# os dados disponíveis através do comando attach(...). Depois
+# use o comando source(...) no R ou S-plus para executar o 
+# programa. A sequência de comandos é a seguinte:
+fit.model <- modelo23
+attach(Temporario1)
+#source("envel_norm_corrigido.txt")
+#
+# A saída será o gráfico de envelope para o resíduo
+# padronizado. Para colocar  um  título no gráfico após a
+# saída use o comando title("...").
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+si <- lm.influence(fit.model)$sigma
+r <- resid(fit.model)
+tsi <- r/(si*sqrt(1-h))
+#
+ident <- diag(n)
+epsilon <- matrix(0,n,100)
+e <- matrix(0,n,100)
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:100){
+     epsilon[,i] <- rnorm(n,0,1)
+     e[,i] <- (ident - H)%*%epsilon[,i]
+     u <- diag(ident - H)
+     e[,i] <- e[,i]/sqrt(u)
+     e[,i] <- sort(e[,i],na.last = TRUE)}
+#
+for(i in 1:n){
+     eo <- sort(e[i,])
+     e1[i] <- (eo[2]+eo[3])/2
+     e2[i] <- (eo[97]+eo[98])/2 }
+#
+med <- apply(e,1,mean)
+faixa <- range(tsi,e1,e2,na.rm = TRUE)
+#
+par(pty="s")
+qqnorm(tsi,xlab="Percentil da N(0,1)",
+ylab="Residuo Studentizado", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
+
+#------------------------------------------------------------#
+```
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erro normal. Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+ fit.model <- modelo23
+ attach(Temporario1)
+ #source("diag_norm_corrigido.txt")
+#
+# A saída terá quatro gráficos: de pontos de alavanca, 
+# de pontos influentes  e  dois de resíduos. Para identificar
+# os pontos que  mais  se destacam usar o comando 
+# identify(...). Se por exemplo se destacam três pontos no 
+# plot(fitted(fit.model),h,...), após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram traçados os limites ylim=c(a-1,b+1), em que a
+# é o menor valor e b o maior valor para o resíduo.Mude esses 
+# limites  se  necessário.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+lms <- summary(fit.model)
+s <- lms$sigma
+r <- resid(lms)
+ts <- r/(s*sqrt(1-h))
+di <- (1/p)*(h/(1-h))*(ts^2)
+si <- lm.influence(fit.model)$sigma
+tsi <- r/(si*sqrt(1-h))
+fitted.model <- fitted(fit.model)
+ir = which(is.nan(tsi))
+if(length(ir) > 0){
+        tsi = tsi[-ir]
+        fitted.model = fitted.model[-ir]
+}
+
+a <- max(tsi)
+b <- min(tsi)
+par(mfrow=c(2,2))
+plot(h,xlab="Índice", ylab="Medida h", pch=16, ylim=c(0,1))
+cut <- 2*p/n
+abline(cut,0,lty=2)
+identify(h, n=1)
+#title(sub="(a)")
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+identify(di, n=2)
+#
+plot(tsi,xlab="Índice", ylab="Resíduo Padronizado",
+ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(tsi, n=1)
+#
+plot(fitted.model,tsi,xlab="Valor Ajustado", 
+ylab="Resíduo Padronizado", ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),tsi, n=1)
+par(mfrow=c(1,1))
+#------------------------------------------------------------#
+```
+
 
 ```{r}
 #Normalidade dos residuos
-jarque.bera.test(modelo22$residuals) # p > 0,05 = normal
+jarque.bera.test(tsi) #Residuo Studentizado # p > 0,05 = normal
 
 ```
 ```{r}
-# Homocedasticidade (Breusch-Pagan usando as variáveis independentes do modelo)
-ols_test_breusch_pagan(modelo22, rhs = TRUE)
+# Homocedasticidade (Breusch-Pagan)
+ols_test_breusch_pagan(modelo23)
 ```
 
 ```{r}
-Anova<- anova(modelo22)
-variaveis<-data.frame("variaveis" = row.names(Anova), "importancia" = (Anova$`Sum Sq`/sum(Anova$`Sum Sq`)))
+Anova<- anova(modelo23)
+C_E<-data.frame("Variaveis" = row.names(Anova), "importancia" = (Anova$`Sum Sq`/sum(Anova$`Sum Sq`)))
+C_E<- C_E %>% arrange(desc(importancia))
 options(scipen = 999)
-variaveis
+C_E
 ```
 ```{r}
-ggplot(aes(x=variaveis, y = importancia),data = variaveis)+
-  geom_col()+
-  labs(y = "Capacidade explicativa" )+
+ggplot(aes(x=reorder(Variaveis,-importancia ), y = importancia ),data = C_E)+
+  geom_col(stat = "identity")+
+  labs(y = "Capacidade explicativa", x="" )+
    scale_y_continuous(labels = percent_format()) +
         theme_classic()+
   theme(axis.text.x = element_text(angle=45, hjust=1, vjust = 1))
 ```
-```{r}
 
+```{r}
+# Calculando coeficiente de variação e médias considerando os valores relacionados aos GENOTIPOs contidos no AA
+
+# filtro
+Temporario = subset(Temporario1, GENOTIPO %in% "AA" )
+
+# Coeficiente de variação
+coef_var = function(x) {
+  coefi<-sd(x)/mean(x)*100
+  return(coefi)
+}
+
+# variáveis
+ variaveis = c('Tmax_Maxima','Tmax_fld_m',
+              'Tmax_R','Tmax_ACC_R',
+              'Tmax_Media','Tmin_Maxima',
+              'Tmin_ACC_V','Tmin_R',
+              'Tmin_ACC_R','longitude') # 10 variaveis
+ for(variavel in variaveis){
+        # Selecionando colunas
+        indexVar = which(names(Temporario) %in% c('GENOTIPO','FLO_M','latitude',variavel))
+        
+        # Calculando coeficiente de variação
+        coef_variacao = lapply(Temporario[,-indexVar],coef_var)
+        coef_variacao = do.call('rbind',coef_variacao)
+        coef_variacao = as.data.frame(coef_variacao)
+        
+        # calculando a media
+        
+        media = lapply(Temporario[,-indexVar],mean)
+        media = do.call('rbind',media)
+        media = as.data.frame(media)
+ }
+ 
+ # Estimativas
+ 
+ Estimativas<-summary(modelo23)
+Estimativas<-data.frame(Estimativas$coefficients)
+Estimativas<-data.frame("variaveis" = rownames(Estimativas) ,"Estimativa" = Estimativas$Estimate)
+
+# data frame 
+ coef_med<- data.frame("variaveis" = c(row.names(coef_variacao)))
+ coef_med$`CV` = c(coef_variacao$V1)
+ coef_med$`Medias` = c(media$V1)
+coef_med[11,1]<- c("(Intercept)")
+  coef_med<-coef_med %>% inner_join(Estimativas)
+  coef_med
+
+```
+
+```{r}
+# Intervalo observado das variáveis
+
+
+```
+
+```{r}
 #
 # Predict 
 #
@@ -827,26 +1041,28 @@ predictMediana = NULL
 predictModa = NULL
 for(variavel in variaveis){
         # Selecionando colunas
-        indexVar = which(names(Temporario) %in%c('GENOTIPO','FLO_M','latitude',variavel))
-        tempData = Temporario[,indexVar]
+        indexVar = which(names(Temporario1) %in%c('GENOTIPO','FLO_M','latitude',variavel))
+        tempData = Temporario1[,indexVar]
         
         # Calculando mediana
-        mediana = lapply(Temporario[,-indexVar],median)
+        mediana = lapply(Temporario1[,-indexVar],median)
         mediana = do.call('cbind',mediana)
         mediana = as.data.frame(mediana)
         
+       # Retirar os parametros dos valores ajustados 
+        
         # Calculando moda
-        moda = lapply(Temporario[,-indexVar],calcModa)
+        moda = lapply(Temporario1[,-indexVar],calcModa)
         moda = do.call('cbind',moda)
         moda = as.data.frame(moda)
         
         # Predict mediana
         tempMed = cbind(tempData,mediana)
-        predictMediana = cbind(predictMediana,predict(fit.model,tempMed))
+        predictMediana = cbind(predictMediana,predict(modelo23,tempMed))
         
         # Predict moda
         tempModa = cbind(tempData,moda)
-        predictModa = cbind(predictModa,predict(fit.model,tempModa))
+        predictModa = cbind(predictModa,predict(modelo23,tempModa))
 }
 # Renomeando colunas
 colnames(predictMediana) = paste(variaveis,"predict",sep = "_")
@@ -875,9 +1091,66 @@ predictModa = predictModa[,ordemColunas]
 predictMediana
 predictModa
 ```
+
+```{r}
+# 
+# Graficos
+#
+# Metodo para gerar o grafico
+gerarGrafico = function(dados){
+  g = ggplot(data = dados, aes(x = value, y = FLO_M)) +
+  geom_point() +
+  geom_smooth(formula = y~x) +
+  facet_wrap(variable ~. , scales = "free_x") 
+  return(g)
+}
+# Metodo para preparar os dados para o grafico
+prepararGraficos = function(dados){
+        
+ # Selecionando dados mediana
+ dados = dados[, c(
+        "FLO_M",
+        "longitude_predict",
+        "Tmax_Maxima_predict",
+        "Tmax_fld_m_predict",
+        "Tmax_R_predict",
+        "Tmax_ACC_R_predict",
+        "Tmax_Media_predict",
+        "Tmin_Maxima_predict",
+        "Tmin_ACC_V_predict",
+        "Tmin_R_predict",
+        "Tmin_ACC_R_predict",
+        "longitude_predict"
+ )]
+ 
+ # Transformando dados em formato long
+ dados = melt(dados,id.vars = ('FLO_M'))
+ return(dados)
+}
+# Preparando dados
+medianaPlot = prepararGraficos(dados = predictMediana)
+modaPlot =  prepararGraficos(dados = predictModa)
+# Gerando grafico mediana
+plotMediana = gerarGrafico(dados = medianaPlot)
+# Gerando grafico moda
+plotModa = gerarGrafico(dados = modaPlot)
+# plot
+plotMediana
+plotModa
 ```
 
 
+```{r}
+summary(modelo23)
+```
+```{r}
+Temporario <- Temporario1 %>% select("AA")
 
+
+
+
+# < 0,35
+```
+Intervalo de confiança para RLM
 
 
