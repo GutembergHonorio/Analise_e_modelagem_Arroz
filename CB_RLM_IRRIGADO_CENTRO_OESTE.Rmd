@@ -1009,16 +1009,37 @@ Estimativas<-data.frame("variaveis" = rownames(Estimativas) ,"Estimativa" = Esti
 
 # data frame 
  coef_med<- data.frame("variaveis" = c(row.names(coef_variacao)))
- coef_med$`CV` = c(coef_variacao$V1)
+ coef_med$`CV` = c(coef_variacao$V1)# < 35
  coef_med$`Medias` = c(media$V1)
 coef_med[11,1]<- c("(Intercept)")
+coef_med[11,3]<- c(1)
   coef_med<-coef_med %>% inner_join(Estimativas)
+  coef_med$`Est_X_Med`<- c(coef_med$Estimativa*coef_med$Medias)
   coef_med
 
 ```
 
 ```{r}
 # Intervalo observado das variáveis
+
+ Inter_obs<- Temporario1[,c("Tmax_Maxima",'Tmax_fld_m',
+              'Tmax_R','Tmax_ACC_R',
+              'Tmax_Media','Tmin_Maxima',
+              'Tmin_ACC_V','Tmin_R',
+              'Tmin_ACC_R','longitude')]#10 variaveis selecionadas no modelo23
+
+# formula é y = B1X1+B2X2 ... + BnXn em que todas as variáveis (Xn) estão fixadas na média, com exeção da variável que se deseja ver a relação. Bn é o Estimate no modelo23
+
+FLO_previsto<-data.frame(Tmax_Maxima_OBS = c(unique(Inter_obs$Tmax_Maxima)))
+FLO_previsto$Est_X_med<- c(sum(coef_med[-1,5]))
+FLO_previsto$Tmax_Maxima_FLO_prev<- c(FLO_previsto$Est_X_med + (FLO_previsto$Tmax_Maxima_OBS*coef_med[1,4]))
+
+# grafico
+
+ggplot(FLO_previsto, aes(y=Tmax_Maxima_FLO_prev , x= Tmax_Maxima_OBS))+
+  geom_point() +
+  geom_smooth(formula = y~x)
+
 
 
 ```
@@ -1140,17 +1161,6 @@ plotModa
 ```
 
 
-```{r}
-summary(modelo23)
-```
-```{r}
-Temporario <- Temporario1 %>% select("AA")
-
-
-
-
-# < 0,35
-```
 Intervalo de confiança para RLM
 
 
