@@ -1,0 +1,670 @@
+---
+title: "RLM_Irrigado_Centro-oeste_Desvio da media"
+author: "Gutemberg Resende Honorio Filho"
+date: "04/03/2021"
+output: html_document
+---
+
+# Pacotes
+
+```{r}
+if(!require(tidyverse)) install.packages("tidyverse")
+
+# Teste de normalidade 
+if(!require(tseries)) install.packages("tseries")
+
+# Teste de homocesdasticidade 
+if(!require(lmtest)) install.packages("lmtest")
+
+
+
+
+
+```
+
+# DADOS
+```{r Diretório} 
+
+# DIRETÓRIO DOS DADOS 
+
+Tabelabruta<- read.csv("d:/Users/Cristiane Resende/Desktop/Gutemberg Honorio/Mestrado/Repositorio_4/Analise_e_modelagem_Arroz/Merge_1980_2018.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE) # tabela com os dados originais
+
+# criando coluna com macrorregiões
+
+Tabelabruta<- mutate(Tabelabruta,REGIAO = case_when(UF == 'GO'| UF == 'DF' |UF == 'MS' | UF == 'MT' ~ 'Centro_Oeste',
+                              UF == 'AL'| UF == 'BA' |UF == 'CE' | UF == 'MA' | UF == 'PB' | UF == 'PE' | UF == 'PI' | UF == 'RN' | UF == 'SE' ~ 'Nordeste',
+                              UF == 'AC' | UF == 'AM' | UF == 'AP' | UF == 'PA' | UF == 'RO' | UF == 'RR' | UF == 'TO' ~ 'Norte',
+                              UF == 'ES' | UF == 'MG' | UF == 'SP' | UF == 'RJ' ~ 'Sudeste',
+                              UF == 'RS' | UF == 'SC' | UF == 'PR' ~ 'Sul'))
+
+# Tabelas acessório
+
+TabelabrutaIRR = subset(Tabelabruta, SIST_CULT == "IRRIGATED") # Somente Irrigado
+TabelabrutaTA = subset(Tabelabruta, SIST_CULT == "UPLAND") # Somente Terras altas
+
+# Filtrando os dados
+
+
+IRR<-TabelabrutaIRR %>% mutate(UR_Media=(umidade_Media),UR_V=	(umidade_V), UR_fld_m=	(umidade_fld_m),	UR_R=	(umidade_R), Graus_dia_ciclo=(graus_dia_ciclo), Graus_dia_FLO=(graus_dia_FLO+graus_dia_IP))
+
+IRR <- select(IRR,latitude, longitude, GENOTIPO, ID_ENSAIO, REGIAO, UF, FLO_E, Tmax_Maxima ,Tmax_fld_m ,	Tmax_R,	Tmax_ACC_R, Tmax_Minima,	Tmax_Media,Tmax_V ,Tmax_ACC_V,	Tmin_Maxima,Tmin_Minima ,	Tmin_Media ,	Tmin_V ,	Tmin_ACC_V , Tmin_fld_m ,	Tmin_R,	Tmin_ACC_R , Chuva_ACC ,	Chuva_ACC_V, Chuva_ACC_R, Rad_ACC_R ,	Rad_ACC ,	Rad_ACC_V, UR_Media, UR_V, UR_fld_m,	UR_R, Graus_dia_ciclo, Graus_dia_FLO)
+
+
+rm(TabelabrutaIRR,TabelabrutaTA,Tabelabruta)
+
+# Removendo os genótipos que não serão estudados
+
+IRR = IRR[IRR$GENOTIPO %in% c("ALIANCA",	"AVAXI CL",	"BR IRGA 409",	"BR IRGA 410",	"BR IRGA 412",	"BR IRGA 414",	"BRS 7 TAIM",	"BRS A701 CL",	"BRS A702 CL",	"BRS A704",	"BRS ALVORADA",	"BRS BIGUA",	"BRS CATIANA",	"BRS CIRAD 302",	"BRS FORMOSO",	"BRS FRONTEIRA",	"BRS GUARA",	"BRS JABURU",	"BRS JACANA",	"BRS PAMPA",	"BRS PAMPEIRA",	"BRS PELOTA",	"BRS QUERENCIA",	"BRS SINUELO CL",	"BRS TROPICAL",	"BRSMG RUBELITA",	"CICA 8",	"CT8452",	"DIAMANTE",	"EEA34",	"EMPASC 101",	"EMPASC 102",	"EPAGRI 108",	"EPAGRI 109",	"EPAGRI97-01",	"EPAGRI97-05",	"EPAGRI97-06",	"H6",	"H7 CL",	"IAC1289",	"IAC1298",	"IAC1299",	"IAC1307",	"IAC1311",	"IAPAR 58",	"IRGA 417",	"IRGA 422 CL",	"IRGA 424",	"IRGA 424 RI",	"IRGA 425",	"IRGA 426",	"IRGA 427",	"IRGA 428",	"IRGA 429",	"IRGA 430",	"IRGA97-05",	"IRGA97-10",	"IRGA97-11",	"IRGA97-28",	"JAVAE",	"JEQUITIBA",	"MARAJO",	"METICA 1",	"MOXOTO",	"OUROMINAS",	"PR267",	"PR268",	"PR306",	"PR331",	"PR349",	"PR380",	"PR498",	"PR631",	"PR67",	"PUITA INTA CL",	"RORAIMA",	"SAO FRANCISCO",	"SC138",	"SC173",	"SC237",	"SC240",	"SC250",	"SCS 112",	"SCS 114 ANDOSAN",	"SCS 116 SATORU",	"SCS 121 CL",	"SCSBRS 111",	"SCSBRS 113 TIO TAKA",	"SCSBRS PIRACEMA",	"SG11551",	"URUCUI"),]
+IRR = IRR[IRR$UF!="MT",]
+
+# Filtrando e gerando médias
+
+IRR_Medio<- IRR %>% group_by(ID_ENSAIO, GENOTIPO, REGIAO) %>% summarise(  FLO_M= mean(FLO_E),  latitude= mean(latitude), longitude = mean(longitude), Tmax_Maxima = mean(Tmax_Maxima) ,Tmax_fld_m = mean(Tmax_fld_m ),	Tmax_R= mean( Tmax_R),	Tmax_ACC_R= mean(Tmax_ACC_R ), Tmax_Minima= mean(Tmax_Minima ),	Tmax_Media= mean( Tmax_Media),Tmax_V = mean(Tmax_V ),Tmax_ACC_V= mean(Tmax_ACC_V ),	Tmin_Maxima= mean(Tmin_Maxima ),Tmin_Minima = mean(Tmin_Minima ),	Tmin_Media = mean(Tmin_Media ),	Tmin_V = mean(Tmin_V ),	Tmin_ACC_V = mean(Tmin_ACC_V ), Tmin_fld_m = mean( Tmin_fld_m),	Tmin_R= mean(Tmin_R ),	Tmin_ACC_R = mean(Tmin_ACC_R ), Chuva_ACC = mean(Chuva_ACC ),	Chuva_ACC_V= mean(Chuva_ACC_V ), Chuva_ACC_R= mean(Chuva_ACC_R ), Rad_ACC_R = mean(Rad_ACC_R ),	Rad_ACC = mean(Rad_ACC ),	Rad_ACC_V= mean(Rad_ACC_V ), UR_Media= mean( UR_Media), UR_V= mean( UR_V), UR_fld_m= mean(UR_fld_m ),	UR_R= mean(UR_R ), Graus_dia_ciclo= mean(Graus_dia_ciclo ), Graus_dia_FLO= mean(Graus_dia_FLO ))
+
+# separando por macrorregião
+
+Centro_oeste<- subset(IRR_Medio, (REGIAO == "Centro_Oeste")) # filtrando por região
+```
+
+```{r}
+Temporario <- IRR_Medio[,c(-1,-2,-3)]
+medias<-apply(Temporario,2,mean)
+
+Temporario1<-Temporario
+
+for (name in names(Temporario)) {
+Temporario1[[name]]<- c(Temporario[[name]]- medias[name])
+}
+  
+Temporario1 <- Temporario1 %>% mutate(GENOTIPO = IRR_Medio$GENOTIPO)
+```
+
+## Modelo inical
+```{r}
+Modelo_media <- lm(FLO_M ~ ., Temporario1)
+summary(Modelo_media)
+```
+
+## Ajuste
+
+Remoção das variáveis numéricas não significativas 
+
+UR_fld_m (p = 0.889148);  Tmax_Maxima (p = 0.839476); Tmin_ACC_R (p = 0.779072); Tmin_V (p = 0.697076); Tmax_R (p = 0.660231); UR_R  (p = 0.806578); Tmin_Media (p = 0.656518); latitude (p = 0.749349); Tmin_fld_m (p = 0.404552); Tmin_R (p = 0.441379); Tmin_Maxima (p = 0.188070); Tmax_Minima (p = 0.203205); Chuva_ACC_R (p = 0.219787); Rad_ACC_R (p = 0.062429)
+
+```{r}
+Temporario<-Temporario1 %>% select(-UR_fld_m, -Tmax_Maxima, -Tmin_ACC_R, -Tmin_V, -Tmax_R, -UR_R, -Tmin_Media, -latitude, -Tmin_fld_m, -Tmin_R, -Tmin_Maxima, -Tmax_Minima, -Chuva_ACC_R, -Rad_ACC_R)
+modelo<-lm(FLO_M~., Temporario)
+summary(modelo)
+```
+União dos genótipos não significativos
+
+O genótipo que está no intercepto é o ALIANCA
+
+```{r}
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("ALIANCA", "SC138", "PR268", "MOXOTO", "MARAJO", "EMPASC 101")# este é < 0,1
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo<-lm(FLO_M~., Temporario) 
+#summary(modelo)
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("CICA 8", "EPAGRI 108", "EPAGRI 109")# este é < 0,1
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo<-lm(FLO_M~., Temporario) 
+#summary(modelo)
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("IAC1298", "PR267")# este é < 0,1
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo<-lm(FLO_M~., Temporario) 
+#summary(modelo)
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("IAC1299")# este é < 0,1
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo<-lm(FLO_M~., Temporario) 
+#summary(modelo)
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("SCS 116 SATORU", "SCSBRS 113 TIO TAKA") # este é < 0,1
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo<-lm(FLO_M~., Temporario) 
+#summary(modelo)
+
+
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("URUCUI", "IAPAR 58", "IAC1307", "BRSMG RUBELITA", "BRS GUARA")# GENOTIPOS COM P-valor < 0,05
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo<-lm(FLO_M~., Temporario) 
+#summary(modelo)
+
+
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("SCS 114 ANDOSAN") # este é < 0,1
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo<-lm(FLO_M~., Temporario) 
+#summary(modelo)
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS ALVORADA","METICA 1","OUROMINAS", "PR67", "SCS 121 CL") # este é < 0,05
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo<-lm(FLO_M~., Temporario) 
+#summary(modelo)
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS A704","BRS FORMOSO", "DIAMANTE","IAC1289", "SC173") # este é < 0,1
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo<-lm(FLO_M~., Temporario) 
+#summary(modelo)
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS CATIANA") # este é < 0,1
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo<-lm(FLO_M~., Temporario) 
+#summary(modelo)
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS PAMPEIRA", "SC237") # este é < 0,05
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo<-lm(FLO_M~., Temporario) 
+#summary(modelo)
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS PELOTA") # este é < 0,05
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo<-lm(FLO_M~., Temporario) 
+#summary(modelo)
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("EPAGRI97-01") # este é < 0,05
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo<-lm(FLO_M~., Temporario) 
+summary(modelo)
+
+```
+
+## Residuos
+
+```{r}
+par(mfrow = c(2, 2))
+
+plot(modelo)
+```
+```{r}
+#------------------------------------------------------------#
+# Para  rodar este programa deixe no objeto fit.model a saída 
+# do ajuste da regressão do modelo normal linear.Deixe também
+# os dados disponíveis através do comando attach(...). Depois
+# use o comando source(...) no R ou S-plus para executar o 
+# programa. A sequência de comandos é a seguinte:
+#
+fit.model <- modelo
+attach(Temporario1)
+source("envel_norm_corrigido.txt")
+#
+# A saída será o gráfico de envelope para o resíduo
+# padronizado. Para colocar  um  título no gráfico após a
+# saída use o comando title("...").
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+si <- lm.influence(fit.model)$sigma
+r <- resid(fit.model)
+tsi <- r/(si*sqrt(1-h))
+#
+ident <- diag(n)
+epsilon <- matrix(0,n,100)
+e <- matrix(0,n,100)
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:100){
+     epsilon[,i] <- rnorm(n,0,1)
+     e[,i] <- (ident - H)%*%epsilon[,i]
+     u <- diag(ident - H)
+     e[,i] <- e[,i]/sqrt(u)
+     e[,i] <- sort(e[,i],na.last = TRUE)}
+#
+for(i in 1:n){
+     eo <- sort(e[i,])
+     e1[i] <- (eo[2]+eo[3])/2
+     e2[i] <- (eo[97]+eo[98])/2 }
+#
+med <- apply(e,1,mean)
+faixa <- range(tsi,e1,e2,na.rm = TRUE)
+#
+par(pty="s")
+qqnorm(tsi,xlab="Percentil da N(0,1)",
+ylab="Residuo Studentizado", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
+#------------------------------------------------------------#
+```
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erro normal. Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+ fit.model <- modelo
+attach(Temporario1)
+ source("diag_norm_corrigido.txt")
+#
+# A saída terá quatro gráficos: de pontos de alavanca, 
+# de pontos influentes  e  dois de resíduos. Para identificar
+# os pontos que  mais  se destacam usar o comando 
+# identify(...). Se por exemplo se destacam três pontos no 
+# plot(fitted(fit.model),h,...), após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram traçados os limites ylim=c(a-1,b+1), em que a
+# é o menor valor e b o maior valor para o resíduo.Mude esses 
+# limites  se  necessário.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+lms <- summary(fit.model)
+s <- lms$sigma
+r <- resid(lms)
+ts <- r/(s*sqrt(1-h))
+di <- (1/p)*(h/(1-h))*(ts^2)
+si <- lm.influence(fit.model)$sigma
+tsi <- r/(si*sqrt(1-h))
+fitted.model <- fitted(fit.model)
+ir = which(is.nan(tsi))
+if(length(ir) > 0){
+        tsi = tsi[-ir]
+        fitted.model = fitted.model[-ir]
+}
+
+a <- max(tsi)
+b <- min(tsi)
+par(mfrow=c(2,2))
+plot(h,xlab="Índice", ylab="Medida h", pch=16, ylim=c(0,1))
+cut <- 2*p/n
+abline(cut,0,lty=2)
+identify(h, n=1)
+#title(sub="(a)")
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+identify(di, n=2)
+#
+plot(tsi,xlab="Índice", ylab="Resíduo Padronizado",
+ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(tsi, n=1)
+#
+plot(fitted.model,tsi,xlab="Valor Ajustado", 
+ylab="Resíduo Padronizado", ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),tsi, n=1)
+par(mfrow=c(1,1))
+#------------------------------------------------------------#
+```
+
+
+```{r}
+#Normalidade dos residuos
+n<-jarque.bera.test(modelo$residuals) # p > 0,05 = normal
+
+# Homocedasticidade (Breusch-Pagan)
+h<-bptest(modelo) # p > 0,05 existe homocedasticidade
+
+Resumo_residuos_Centro_oeste<-data.frame("Normalidade (p-value)" = n$p.value, "Homocedasticidade (p-value)" = h$p.value, row.names = "Centro-oeste")
+options(scipen = 999)
+Resumo_residuos_Centro_oeste
+```
+
+#LOG do FLO_M
+
+```{r}
+Temporario <- IRR_Medio[,c(-1,-2,-3)]
+medias<-apply(Temporario,2,mean)
+
+Temporario1<-Temporario
+
+for (name in names(Temporario)) {
+Temporario1[[name]]<- c(Temporario[[name]]- medias[name])
+}
+  
+Temporario1 <- Temporario1 %>% mutate(GENOTIPO = IRR_Medio$GENOTIPO)
+```
+
+## Modelo inical
+```{r}
+modelo <- lm(log(FLO_M) ~ ., Temporario1)
+summary(modelo)
+```
+## Ajuste
+
+Remoção das variáveis numéricas não significativas 
+
+Tmax_R (p = 0.918720);UR_fld_m (p = 0.859720); Tmin_Minima  (p = 0.665046); Tmin_Media (p = 0.682219); Chuva_ACC_R (p = 0.679277); Tmin_ACC_V (p = 0.517187); Tmin_V  (p = 0.695293); latitude (p = 0.568799); Rad_ACC_V (p = 0.642194); Tmax_Minima (p = 0.326860); Tmin_R (p = 0.255464); Tmin_ACC_R (p = 0.351079); UR_R (p = 0.319234); Chuva_ACC_V (p = 0.247782); UR_Media (p = 0.496397); Chuva_ACC (p = 0.430802); Tmin_fld_m (p = 0.124104); Tmax_Maxima (p = 0.255682)
+
+```{r}
+Temporario<-Temporario1 %>% select(-Tmax_R, -UR_fld_m, -Tmin_Minima, -Tmin_Media, -Chuva_ACC_R, -Tmin_ACC_V, -Tmin_V, -latitude, -Rad_ACC_V, -Tmax_Minima, -Tmin_R, -Tmin_ACC_R, -UR_R, -Chuva_ACC_V, -UR_Media, -Chuva_ACC, -Tmin_fld_m, -Tmax_Maxima)
+modelo<-lm(log(FLO_M)~., Temporario)
+summary(modelo)
+```
+
+O genótipo que está no intercept é ALIANCA
+
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("ALIANCA","EMPASC 101",	"MOXOTO",	"BRSMG RUBELITA",	"EPAGRI 109",	"MARAJO",	"BRS A704",	"PR268",	"IRGA97-28",	"SCS 116 SATORU",	"SC138",	"CICA 8",	"BRS GUARA",	"BRS PAMPEIRA",	"BRS CATIANA",	"BRS ALVORADA",	"IRGA 429",	"IAC1298",	"BR IRGA 410",	"SCSBRS 111",	"IAC1299",	"SC173",	"SCSBRS 113 TIO TAKA",	"BRS CIRAD 302",	"BRS JABURU",	"IAC1307",	"SC237",	"BRS FORMOSO",	"METICA 1",	"BRS QUERENCIA",	"PR331",	"IRGA 425",	"IRGA 428",	"SCS 121 CL",	"SCS 114 ANDOSAN",	"BR IRGA 409",	"IRGA 424",	"DIAMANTE",	"EPAGRI 108",	"SCS 112") # este é < 0,1
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo<-lm(log(FLO_M)~., Temporario) 
+#summary(modelo)
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS JACANA",	"SAO FRANCISCO",	"SC250",	"SCSBRS PIRACEMA",	"BRS SINUELO CL",	"IAPAR 58",	"IAC1311",	"BR IRGA 412",	"SC240",	"EMPASC 102",	"BRS A702 CL") # este é < 0,1
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo<-lm(log(FLO_M)~., Temporario) 
+#summary(modelo)
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c( "BRS PAMPA", "OUROMINAS", "PR498", "URUCUI") # este é < 0,1
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo<-lm(log(FLO_M)~., Temporario) 
+#summary(modelo)
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("H7 CL") # este é < 0,1
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo<-lm(log(FLO_M)~., Temporario) 
+#summary(modelo)
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS FRONTEIRA",  "BRS PELOTA", "EPAGRI97-01", "PR267",  "PR67") # este é < 0,05
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo<-lm(log(FLO_M)~., Temporario) 
+#summary(modelo)
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS 7 TAIM",  "BRS A701 CL", "IRGA 417", "PR380") # este é < 0,05
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo<-lm(log(FLO_M)~., Temporario) 
+#summary(modelo)
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("JEQUITIBA", "BRS TROPICAL" ) # este é < 0,05
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo<-lm(log(FLO_M)~., Temporario) 
+summary(modelo)
+
+
+```
+
+Variável que perdeu significancia
+
+Rad_ACC_R (p = 0.082981)
+
+```{r}
+Temporario<-Temporario %>% select(-Rad_ACC_R)
+modelo<-lm(log(FLO_M)~., Temporario)
+summary(modelo)
+```
+
+## Residuos
+
+```{r}
+par(mfrow = c(2, 2))
+
+plot(modelo)
+```
+```{r}
+#------------------------------------------------------------#
+# Para  rodar este programa deixe no objeto fit.model a saída 
+# do ajuste da regressão do modelo normal linear.Deixe também
+# os dados disponíveis através do comando attach(...). Depois
+# use o comando source(...) no R ou S-plus para executar o 
+# programa. A sequência de comandos é a seguinte:
+#
+fit.model <- modelo
+attach(Temporario)
+source("envel_norm_corrigido.txt")
+#
+# A saída será o gráfico de envelope para o resíduo
+# padronizado. Para colocar  um  título no gráfico após a
+# saída use o comando title("...").
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+si <- lm.influence(fit.model)$sigma
+r <- resid(fit.model)
+tsi <- r/(si*sqrt(1-h))
+#
+ident <- diag(n)
+epsilon <- matrix(0,n,100)
+e <- matrix(0,n,100)
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:100){
+     epsilon[,i] <- rnorm(n,0,1)
+     e[,i] <- (ident - H)%*%epsilon[,i]
+     u <- diag(ident - H)
+     e[,i] <- e[,i]/sqrt(u)
+     e[,i] <- sort(e[,i],na.last = TRUE)}
+#
+for(i in 1:n){
+     eo <- sort(e[i,])
+     e1[i] <- (eo[2]+eo[3])/2
+     e2[i] <- (eo[97]+eo[98])/2 }
+#
+med <- apply(e,1,mean)
+faixa <- range(tsi,e1,e2,na.rm = TRUE)
+#
+par(pty="s")
+qqnorm(tsi,xlab="Percentil da N(0,1)",
+ylab="Residuo Studentizado", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
+#------------------------------------------------------------#
+```
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erro normal. Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+ fit.model <- modelo
+attach(Temporario)
+ source("diag_norm_corrigido.txt")
+#
+# A saída terá quatro gráficos: de pontos de alavanca, 
+# de pontos influentes  e  dois de resíduos. Para identificar
+# os pontos que  mais  se destacam usar o comando 
+# identify(...). Se por exemplo se destacam três pontos no 
+# plot(fitted(fit.model),h,...), após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram traçados os limites ylim=c(a-1,b+1), em que a
+# é o menor valor e b o maior valor para o resíduo.Mude esses 
+# limites  se  necessário.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+lms <- summary(fit.model)
+s <- lms$sigma
+r <- resid(lms)
+ts <- r/(s*sqrt(1-h))
+di <- (1/p)*(h/(1-h))*(ts^2)
+si <- lm.influence(fit.model)$sigma
+tsi <- r/(si*sqrt(1-h))
+fitted.model <- fitted(fit.model)
+ir = which(is.nan(tsi))
+if(length(ir) > 0){
+        tsi = tsi[-ir]
+        fitted.model = fitted.model[-ir]
+}
+
+a <- max(tsi)
+b <- min(tsi)
+par(mfrow=c(2,2))
+plot(h,xlab="Índice", ylab="Medida h", pch=16, ylim=c(0,1))
+cut <- 2*p/n
+abline(cut,0,lty=2)
+identify(h, n=1)
+#title(sub="(a)")
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+identify(di, n=2)
+#
+plot(tsi,xlab="Índice", ylab="Resíduo Padronizado",
+ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(tsi, n=1)
+#
+plot(fitted.model,tsi,xlab="Valor Ajustado", 
+ylab="Resíduo Padronizado", ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),tsi, n=1)
+par(mfrow=c(1,1))
+#------------------------------------------------------------#
+```
+```{r}
+modelo<-lm(log(FLO_M)~., Temporario[-406,])
+summary(modelo)
+```
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erro normal. Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+ fit.model <- modelo
+attach(Temporario)
+ source("diag_norm_corrigido.txt")
+#
+# A saída terá quatro gráficos: de pontos de alavanca, 
+# de pontos influentes  e  dois de resíduos. Para identificar
+# os pontos que  mais  se destacam usar o comando 
+# identify(...). Se por exemplo se destacam três pontos no 
+# plot(fitted(fit.model),h,...), após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram traçados os limites ylim=c(a-1,b+1), em que a
+# é o menor valor e b o maior valor para o resíduo.Mude esses 
+# limites  se  necessário.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+lms <- summary(fit.model)
+s <- lms$sigma
+r <- resid(lms)
+ts <- r/(s*sqrt(1-h))
+di <- (1/p)*(h/(1-h))*(ts^2)
+si <- lm.influence(fit.model)$sigma
+tsi <- r/(si*sqrt(1-h))
+fitted.model <- fitted(fit.model)
+ir = which(is.nan(tsi))
+if(length(ir) > 0){
+        tsi = tsi[-ir]
+        fitted.model = fitted.model[-ir]
+}
+
+a <- max(tsi)
+b <- min(tsi)
+par(mfrow=c(2,2))
+plot(h,xlab="Índice", ylab="Medida h", pch=16, ylim=c(0,1))
+cut <- 2*p/n
+abline(cut,0,lty=2)
+identify(h, n=1)
+#title(sub="(a)")
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+identify(di, n=2)
+#
+plot(tsi,xlab="Índice", ylab="Resíduo Padronizado",
+ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(tsi, n=1)
+#
+plot(fitted.model,tsi,xlab="Valor Ajustado", 
+ylab="Resíduo Padronizado", ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),tsi, n=1)
+par(mfrow=c(1,1))
+#---
+```
+
+
+```{r}
+#Normalidade dos residuos
+n<-jarque.bera.test(modelo$residuals) # p > 0,05 = normal
+
+# Homocedasticidade (Breusch-Pagan)
+h<-bptest(modelo) # p > 0,05 existe homocedasticidade
+
+Resumo_residuos_Centro_oeste[2,]<-data.frame("Normalidade (p-value)" = n$p.value, "Homocedasticidade (p-value)" = h$p.value, row.names = "LOG")
+options(scipen = 999)
+Resumo_residuos_Centro_oeste
+```

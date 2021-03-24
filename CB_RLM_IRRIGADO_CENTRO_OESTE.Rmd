@@ -21,8 +21,7 @@ if(!require(scales)) install.packages("scales")
 
 if(!require(reshape2)) install.packages("reshape2")
 
-
-
+if(!require(egg)) install.packages("egg")
 
 ```
 
@@ -51,7 +50,7 @@ TabelabrutaTA = subset(Tabelabruta, SIST_CULT == "UPLAND") # Somente Terras alta
 
 IRR<-TabelabrutaIRR %>% mutate(UR_Media=(umidade_Media),UR_V=	(umidade_V), UR_fld_m=	(umidade_fld_m),	UR_R=	(umidade_R), Graus_dia_ciclo=(graus_dia_ciclo), Graus_dia_FLO=(graus_dia_FLO+graus_dia_IP))
 
-IRR <- select(IRR,latitude, longitude, GENOTIPO, ID_ENSAIO, REGIAO, UF, FLO_E, Tmax_Maxima ,Tmax_fld_m ,	Tmax_R,	Tmax_ACC_R, Tmax_Minima,	Tmax_Media,Tmax_V ,Tmax_ACC_V,	Tmin_Maxima,Tmin_Minima ,	Tmin_Media ,	Tmin_V ,	Tmin_ACC_V , Tmin_fld_m ,	Tmin_R,	Tmin_ACC_R , Chuva_ACC ,	Chuva_ACC_V, Chuva_ACC_R, Rad_ACC_R ,	Rad_ACC ,	Rad_ACC_V, UR_Media, UR_V, UR_fld_m,	UR_R, Graus_dia_ciclo, Graus_dia_FLO)
+IRR <- select(IRR,latitude, longitude, GENOTIPO, ID_ENSAIO,ano, REGIAO, UF, FLO_E, Tmax_Maxima ,Tmax_fld_m ,	Tmax_R,	Tmax_ACC_R, Tmax_Minima,	Tmax_Media,Tmax_V ,Tmax_ACC_V,	Tmin_Maxima,Tmin_Minima ,	Tmin_Media ,	Tmin_V ,	Tmin_ACC_V , Tmin_fld_m ,	Tmin_R,	Tmin_ACC_R , Chuva_ACC ,	Chuva_ACC_V, Chuva_ACC_R, Rad_ACC_R ,	Rad_ACC ,	Rad_ACC_V, UR_Media, UR_V, UR_fld_m,	UR_R, Graus_dia_ciclo, Graus_dia_FLO)
 
 
 rm(TabelabrutaIRR,TabelabrutaTA,Tabelabruta)
@@ -70,7 +69,7 @@ IRR_Medio<- IRR %>% group_by(ID_ENSAIO, GENOTIPO, REGIAO) %>% summarise(  FLO_M=
 Centro_oeste<- subset(IRR_Medio, (REGIAO == "Centro_Oeste")) # filtrando por região
 ```
 
-### Modelo inicial
+# Modelo inicial
 ```{r}
 
 Temporario <- Centro_oeste[,c(-1,-3)] # retirando as vaiáveis REGIAO e ID_ENSAIO
@@ -80,7 +79,7 @@ summary(modelo)
 
 ```
 
-### Remoção de não significantes
+# Remoção de não significantes
 ```{r}
 # Testes de hip?teses de interesse
 
@@ -810,7 +809,7 @@ Temporario1<-Temporario1 %>% select(-Chuva_ACC_V)
 modelo23<-lm(FLO_M~., Temporario1)
 summary(modelo23)
 ```
-
+# Analise de residuos
 ```{r}
 #------------------------------------------------------------#
 # Para  rodar este programa deixe no objeto fit.model a saída 
@@ -950,9 +949,22 @@ jarque.bera.test(tsi) #Residuo Studentizado # p > 0,05 = normal
 # Homocedasticidade (Breusch-Pagan)
 ols_test_breusch_pagan(modelo23)
 ```
+# Modelo final
 
 ```{r}
-Anova<- anova(modelo23)
+modelo_Centro_oeste<-modelo23
+```
+
+
+# Importancia dos preditores
+
+```{r}
+Anova<- anova(modelo_Centro_oeste)
+Anova
+```
+
+```{r}
+
 C_E<-data.frame("Variaveis" = row.names(Anova), "importancia" = (Anova$`Sum Sq`/sum(Anova$`Sum Sq`)))
 C_E<- C_E %>% arrange(desc(importancia))
 options(scipen = 999)
@@ -966,12 +978,10 @@ ggplot(aes(x=reorder(Variaveis,-importancia ), y = importancia ),data = C_E)+
         theme_classic()+
   theme(axis.text.x = element_text(angle=45, hjust=1, vjust = 1))
 ```
+# Contribuição individual dos preditores relacionados aos GENOTIPOs contidos no AA
 
 ```{r}
 # Calculando coeficiente de variação e médias considerando os valores relacionados aos GENOTIPOs contidos no AA
-
-# filtro
-Temporario = subset(Temporario1, GENOTIPO %in% "AA" )
 
 # Coeficiente de variação
 coef_var = function(x) {
@@ -985,6 +995,31 @@ coef_var = function(x) {
               'Tmax_Media','Tmin_Maxima',
               'Tmin_ACC_V','Tmin_R',
               'Tmin_ACC_R','longitude') # 10 variaveis
+ 
+# Estimativas
+ 
+ Estimativas<-summary(modelo_Centro_oeste)
+Estimativas<-data.frame(Estimativas$coefficients)
+Estimativas<-data.frame("variaveis" = rownames(Estimativas) ,"Estimativa" = Estimativas$Estimate)
+
+coef_med<-list()
+
+data = c ("coef_med_AA",
+"coef_med_MARAJO",
+"coef_med_PAMPEIRA",
+"coef_med_CATIANA",
+"coef_med_IRGA430")
+
+genotipos = c("AA","MARAJO", "BRS PAMPEIRA" , "BRS CATIANA" , "IRGA 430")
+
+# filtro
+for (i in 1:length(genotipos)) {
+  
+
+ Temporario = subset(Temporario1, GENOTIPO %in% genotipos[i] )
+
+
+
  for(variavel in variaveis){
         # Selecionando colunas
         indexVar = which(names(Temporario) %in% c('GENOTIPO','FLO_M','latitude',variavel))
@@ -1001,166 +1036,168 @@ coef_var = function(x) {
         media = as.data.frame(media)
  }
  
- # Estimativas
- 
- Estimativas<-summary(modelo23)
-Estimativas<-data.frame(Estimativas$coefficients)
-Estimativas<-data.frame("variaveis" = rownames(Estimativas) ,"Estimativa" = Estimativas$Estimate)
+
 
 # data frame 
- coef_med<- data.frame("variaveis" = c(row.names(coef_variacao)))
- coef_med$`CV` = c(coef_variacao$V1)# < 35
- coef_med$`Medias` = c(media$V1)
-coef_med[11,1]<- c("(Intercept)")
-coef_med[11,3]<- c(1)
-  coef_med<-coef_med %>% inner_join(Estimativas)
-  coef_med$`Est_X_Med`<- c(coef_med$Estimativa*coef_med$Medias)
-  coef_med
+ coef_med[[i]]<- c("variaveis" = c(row.names(coef_variacao)),"CV" = c(coef_variacao$V1), "Medias" = c(media$V1))
 
-```
-
-```{r}
-# Intervalo observado das variáveis
-
- Inter_obs<- Temporario1[,c("Tmax_Maxima",'Tmax_fld_m',
-              'Tmax_R','Tmax_ACC_R',
-              'Tmax_Media','Tmin_Maxima',
-              'Tmin_ACC_V','Tmin_R',
-              'Tmin_ACC_R','longitude')]#10 variaveis selecionadas no modelo23
-
-# formula é y = B1X1+B2X2 ... + BnXn em que todas as variáveis (Xn) estão fixadas na média, com exeção da variável que se deseja ver a relação. Bn é o Estimate no modelo23
-
-FLO_previsto<-data.frame(Tmax_Maxima_OBS = c(unique(Inter_obs$Tmax_Maxima)))
-FLO_previsto$Est_X_med<- c(sum(coef_med[-1,5]))
-FLO_previsto$Tmax_Maxima_FLO_prev<- c(FLO_previsto$Est_X_med + (FLO_previsto$Tmax_Maxima_OBS*coef_med[1,4]))
-
-# grafico
-
-ggplot(FLO_previsto, aes(y=Tmax_Maxima_FLO_prev , x= Tmax_Maxima_OBS))+
-  geom_point() +
-  geom_smooth(formula = y~x)
-
-
-
-```
-
-```{r}
-#
-# Predict 
-#
-# Função para calcular a moda
-calcModa = function(x) {
-     ux <- unique(x)
-     ux[which.max(tabulate(match(x, ux)))]
-}
-variaveis = c('Tmax_Maxima','Tmax_fld_m',
-              'Tmax_R','Tmax_ACC_R',
-              'Tmax_Media','Tmin_Maxima',
-              'Tmin_ACC_V','Tmin_R',
-              'Tmin_ACC_R','longitude')
-predictMediana = NULL
-predictModa = NULL
-for(variavel in variaveis){
-        # Selecionando colunas
-        indexVar = which(names(Temporario1) %in%c('GENOTIPO','FLO_M','latitude',variavel))
-        tempData = Temporario1[,indexVar]
-        
-        # Calculando mediana
-        mediana = lapply(Temporario1[,-indexVar],median)
-        mediana = do.call('cbind',mediana)
-        mediana = as.data.frame(mediana)
-        
-       # Retirar os parametros dos valores ajustados 
-        
-        # Calculando moda
-        moda = lapply(Temporario1[,-indexVar],calcModa)
-        moda = do.call('cbind',moda)
-        moda = as.data.frame(moda)
-        
-        # Predict mediana
-        tempMed = cbind(tempData,mediana)
-        predictMediana = cbind(predictMediana,predict(modelo23,tempMed))
-        
-        # Predict moda
-        tempModa = cbind(tempData,moda)
-        predictModa = cbind(predictModa,predict(modelo23,tempModa))
-}
-# Renomeando colunas
-colnames(predictMediana) = paste(variaveis,"predict",sep = "_")
-colnames(predictModa) = paste(variaveis,"predict",sep = "_")
-# Convertendo para data.frame
-predictMediana = as.data.frame(predictMediana)
-predictModa = as.data.frame(predictModa)
-# Jutando colunas com data.frame
-predictMediana = cbind(Temporario1,predictMediana)
-predictModa = cbind(Temporario1,predictModa)
-# Ordenando colunas
-ordemColunas = c("GENOTIPO","FLO_M",
-                 "longitude","longitude_predict",
-                 "Tmax_Maxima","Tmax_Maxima_predict",
-                 "Tmax_fld_m","Tmax_fld_m_predict",
-                 "Tmax_R","Tmax_R_predict",
-                 "Tmax_ACC_R","Tmax_ACC_R_predict",
-                 "Tmax_Media","Tmax_Media_predict",
-                 "Tmin_Maxima","Tmin_Maxima_predict",
-                 "Tmin_ACC_V","Tmin_ACC_V_predict",
-                 "Tmin_R","Tmin_R_predict",
-                 "Tmin_ACC_R","Tmin_ACC_R_predict")
-# Selecionando colunas
-predictMediana = predictMediana[,ordemColunas]
-predictModa = predictModa[,ordemColunas]
-predictMediana
-predictModa
-```
-
-```{r}
-# 
-# Graficos
-#
-# Metodo para gerar o grafico
-gerarGrafico = function(dados){
-  g = ggplot(data = dados, aes(x = value, y = FLO_M)) +
-  geom_point() +
-  geom_smooth(formula = y~x) +
-  facet_wrap(variable ~. , scales = "free_x") 
-  return(g)
-}
-# Metodo para preparar os dados para o grafico
-prepararGraficos = function(dados){
-        
- # Selecionando dados mediana
- dados = dados[, c(
-        "FLO_M",
-        "longitude_predict",
-        "Tmax_Maxima_predict",
-        "Tmax_fld_m_predict",
-        "Tmax_R_predict",
-        "Tmax_ACC_R_predict",
-        "Tmax_Media_predict",
-        "Tmin_Maxima_predict",
-        "Tmin_ACC_V_predict",
-        "Tmin_R_predict",
-        "Tmin_ACC_R_predict",
-        "longitude_predict"
- )]
+ }
  
- # Transformando dados em formato long
- dados = melt(dados,id.vars = ('FLO_M'))
- return(dados)
-}
-# Preparando dados
-medianaPlot = prepararGraficos(dados = predictMediana)
-modaPlot =  prepararGraficos(dados = predictModa)
-# Gerando grafico mediana
-plotMediana = gerarGrafico(dados = medianaPlot)
-# Gerando grafico moda
-plotModa = gerarGrafico(dados = modaPlot)
-# plot
-plotMediana
-plotModa
+teste<-do.call(cbind.data.frame, coef_med)
+
+coef_med_AA<- data.frame("variaveis"= c(teste[c(1:10),1]), "CV" =as.numeric(c(teste[c(11:20),1])), "Medias"= as.numeric(c(teste[c(21:30),1]) ))
+  coef_med_AA[11,1]<- c("(Intercept)")
+  coef_med_AA[11,3]<- c(1)
+  coef_med_AA<-coef_med_AA %>% inner_join(Estimativas)
+  coef_med_AA$`Est_X_Med`<- c(coef_med_AA$Estimativa*coef_med_AA$Medias)
+coef_med_AA
+
+coef_med_MARAJO<- data.frame("variaveis"= c(teste[c(1:10),2]), "CV" = as.numeric(c(teste[c(11:20),2])), "Medias"= as.numeric(c(teste[c(21:30),2]) ))
+  coef_med_MARAJO[11,1]<- c("(Intercept)")
+  coef_med_MARAJO[11,3]<- c(1)
+  coef_med_MARAJO<-coef_med_MARAJO %>% inner_join(Estimativas)
+  coef_med_MARAJO[11,4]<- c(coef_med_MARAJO[11,4]+Estimativas[22,2])# linha 22 é marajo
+  coef_med_MARAJO$`Est_X_Med`<- c(coef_med_MARAJO$Estimativa*coef_med_MARAJO$Medias)
+coef_med_MARAJO
+
+coef_med_PAMPEIRA<- data.frame("variaveis"= c(teste[c(1:10),3]), "CV" =as.numeric(c(teste[c(11:20),3])), "Medias"= as.numeric(c(teste[c(21:30),3]) ))
+  coef_med_PAMPEIRA[11,1]<- c("(Intercept)")
+  coef_med_PAMPEIRA[11,3]<- c(1)
+  coef_med_PAMPEIRA<-coef_med_PAMPEIRA %>% inner_join(Estimativas)
+  coef_med_PAMPEIRA[11,4]<- c(coef_med_PAMPEIRA[11,4]+Estimativas[9,2])# linha 9 é pampeira
+  coef_med_PAMPEIRA$`Est_X_Med`<- c(coef_med_PAMPEIRA$Estimativa*coef_med_PAMPEIRA$Medias)
+coef_med_PAMPEIRA
+
+coef_med_CATIANA<- data.frame("variaveis"= c(teste[c(1:10),4]), "CV" =as.numeric(c(teste[c(11:20),4])), "Medias"= as.numeric(c(teste[c(21:30),4]) ))
+  coef_med_CATIANA[11,1]<- c("(Intercept)")
+  coef_med_CATIANA[11,3]<- c(1)
+  coef_med_CATIANA<-coef_med_CATIANA %>% inner_join(Estimativas)
+  coef_med_CATIANA[11,4]<- c(coef_med_CATIANA[11,4]+Estimativas[5,2])# linha 5 é catiana
+  coef_med_CATIANA$`Est_X_Med`<- c(coef_med_CATIANA$Estimativa*coef_med_CATIANA$Medias)
+coef_med_CATIANA
+
+coef_med_IRGA430<- data.frame("variaveis"= c(teste[c(1:10),5]), "CV" = as.numeric(c(teste[c(11:20),5])), "Medias"= as.numeric(c(teste[c(21:30),5]) ))
+  coef_med_IRGA430[11,1]<- c("(Intercept)")
+  coef_med_IRGA430[11,3]<- c(1)
+  coef_med_IRGA430<-coef_med_IRGA430 %>% inner_join(Estimativas)
+  coef_med_IRGA430[11,4]<- c(coef_med_IRGA430[11,4]+Estimativas[17,2])# linha 17 é irga 430
+  coef_med_IRGA430$`Est_X_Med`<- c(coef_med_IRGA430$Estimativa*coef_med_IRGA430$Medias)
+coef_med_IRGA430
+
 ```
 
 
-Intervalo de confiança para RLM
+```{r}
+ # Intervalo observado das variáveis
+ # formula é y = B1X1+B2X2 ... + BnXn em que todas as variáveis (Xn) estão fixadas na média,  com exeção da variável que se deseja ver a relação. Bn é o Estimate no modelo_Centro_oeste
+ 
+ # Nomes variaveis
+ interVariaveis = c('Tmin_ACC_V',                                        #Vegetativo
+              'Tmax_fld_m', 'Tmax_R','Tmax_ACC_R','Tmin_R','Tmin_ACC_R', #reprodutivo
+              'Tmax_Media','Tmin_Maxima',"Tmax_Maxima")                 # Ciclo
+ plots = list()
+ plot  = list()
+ 
+ coef_meds[1]<- list(coef_med_AA)
+ coef_meds[2]<- list(coef_med_MARAJO)
+ coef_meds[3]<- list(coef_med_PAMPEIRA)
+ coef_meds[4]<- list(coef_med_CATIANA)
+ coef_meds[5]<- list(coef_med_IRGA430)
+
+ for (j in 1:5) {
+ coef<- as.data.frame(coef_meds[[j]])
+ 
+ for(i in 1:length(interVariaveis)){
+   
+   # Obtendo index
+   indexCOEF = which(coef$variaveis %in% interVariaveis[i])
+ 
+   if(length(indexCOEF) > 0){
+     
+     # Calculo
+     Est_X_med = sum(coef[-indexCOEF, 5])
+     OBS = unique(Temporario1[, interVariaveis[i]])
+     
+     # Criando data.frame temporario
+     previsto_temp = data.frame(OBS,
+                                prev = Est_X_med + (OBS * coef[indexCOEF, 4]))
+     
+     # Renomeando colunas
+     nomesColunas = c(
+       paste(interVariaveis[i], "OBS", sep = "_"),
+       paste(interVariaveis[i], "FLO", "prev", sep = "_")
+     )
+     colnames(previsto_temp) = nomesColunas
+     
+     # Graficos
+     g = ggplot(previsto_temp, aes_string(x = nomesColunas[1], y = nomesColunas[2])) +
+       geom_point() +
+       ylab("")+
+       geom_smooth(formula = y ~ x)
+     
+     plot[[i]] = g
+     
+   }
+
+       plots[[j]] =  plot
+ }  
+ }
+    
+```
+```{r , message=F , warning= F, include=F}
+# Plotando graficos
+
+ figura1<- ggarrange(plots = plots[[1]])  # AA 
+  
+ figura2<- ggarrange(plots = plots[[2]])  # MARAJO
+
+ figura3<- ggarrange(plots = plots[[3]])  # PAMPEIRA
+
+ figura4<- ggarrange(plots = plots[[4]])  # CATIANA
+
+ figura5<- ggarrange(plots = plots[[5]])  # IRGA 430
 
 
+     
+```
+```{r}
+  ggpubr::annotate_figure(figura1, top = "Respostas relativas aos genótipos agrupados na média", left = "Florescimento médio esperado")
+  ggpubr::annotate_figure(figura2, top = "Respostas relativas ao genótipo Marajo", left = "Florescimento médio esperado")
+  ggpubr::annotate_figure(figura3, top = "Respostas relativas ao genótipo Pampeira", left = "Florescimento médio esperado")
+  ggpubr::annotate_figure(figura4, top = "Respostas relativas ao genótipo Catiana", left = "Florescimento médio esperado")
+  ggpubr::annotate_figure(figura5, top = "Respostas relativas ao genótipo IRGA 430", left = "Florescimento médio esperado")
+
+```
+
+```{r}
+# filtrando por região
+Ano_GENOTIPO <- subset(IRR, (REGIAO == "Centro_Oeste")) 
+
+# filtrando por ano e genótipo
+Ano_GENOTIPO<- Ano_GENOTIPO %>% group_by(ano,GENOTIPO) %>% summarise(FLO_M = mean(FLO_E))
+
+# filtrando o primeiro ano de cada genótipo
+Ano_GENOTIPO<- Ano_GENOTIPO %>%group_by(GENOTIPO) %>% filter(ano==min(ano))
+
+# Organizando os estimate do modelo_Centro_oeste
+Estimativas$variaveis<-gsub("GENOTIPO", "", Estimativas$variaveis)
+Estimativas <- rename(Estimativas, "GENOTIPO" = "variaveis")
+Estimativas<- Estimativas[-c(37:47),]
+
+# Juntando ano, genótipo e estimate 
+Ano_GENOTIPO_Estimate<-Estimativas[-1,] %>% full_join(Ano_GENOTIPO)
+
+# somando o estimate do genótipo com o do intercepto
+Ano_GENOTIPO_Estimate$Estimativa<- c(Ano_GENOTIPO_Estimate$Estimativa+Estimativas[1,2])
+
+# Usando o valor do estimate do intercepto para os genótipos não significativos
+Ano_GENOTIPO_Estimate$Estimativa[which((is.na(Ano_GENOTIPO_Estimate$Estimativa)))] <- Estimativas[1,2]
+
+# Plotando
+ggplot(Ano_GENOTIPO_Estimate, aes(x= ano, y = Estimativa))+
+geom_point()+
+  geom_smooth(formula  = y ~ x) +
+    labs(y = "Florescimento estimado", x="Ano de lançamento do genótipo" )+
+theme_bw()
+
+```
