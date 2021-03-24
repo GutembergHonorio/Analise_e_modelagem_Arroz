@@ -1,0 +1,110 @@
+# Testes de hip?teses de interesse
+
+#source("E://windows//Unicamp//Disciplinas//Pos//1_semestre_2013//Intro Modelos Lineares//Programas//Testes Cbeta.r")
+
+# Comparacoes multiplas
+
+# fit.model: sa?da do modelo ajustado
+# m.C: matriz de interesse
+
+testeF.CB <- function(fit.model,m.C)
+
+{
+
+v.beta <-  cbind(fit.model$coef)
+
+n <- nrow(model.matrix(fit.model))
+
+e.p <- nrow(v.beta)
+
+e.q <- nrow(m.C)
+
+m.cov.beta <- (vcov(fit.model))
+
+e.F <- t(m.C%*%v.beta)%*%solve(m.C%*%m.cov.beta%*%t(m.C))%*%(m.C%*%v.beta)/e.q
+
+e.pvalor <- 1-pf(e.F,e.q,n-e.p)
+
+cat("Estatistica F = ",round(e.F,2),"\n")
+
+cat("pvalor = ",round(e.pvalor,4),"\n")
+
+cat("Matriz C :","\n")
+
+print(m.C)
+
+}
+
+testeF.CB.poder <- function(fit.model,m.C,alpha)
+
+{
+
+v.beta <-  cbind(fit.model$coef)
+
+n <- nrow(model.matrix(fit.model))
+
+e.p <- nrow(v.beta)
+
+e.q <- nrow(m.C)
+
+m.cov.beta <- (vcov(fit.model))
+
+m.X <- model.matrix(fit.model)
+
+e.F <- t(m.C%*%v.beta)%*%solve(m.C%*%m.cov.beta%*%t(m.C))%*%(m.C%*%v.beta)/e.q   ##  m.cov.beta=sigma2(x?x)^-1 que tem dist.?qui-quadrado
+
+e.pvalor <- 1-pf(e.F,e.q,n-e.p)                                                  ##
+
+e.sigma2 <- deviance(fit.model)/df.residual(fit.model)                           ## sigma2 estimado
+
+e.delta <- (t(m.C%*%v.beta)%*%solve(m.C%*%solve(t(m.X)%*%m.X)%*%t(m.C))%*%(m.C%*%v.beta))/e.sigma2
+
+F.critico <- qf(1-alpha,e.q,n-e.p)       ## f cr?tico sob h0
+
+e.poder <- 1-pf(F.critico,e.q,n-e.p,ncp=e.delta)
+
+cat("Estatistica F = ",round(e.F,2),"\n")
+
+cat("pvalor = ",round(e.pvalor,4),"\n")
+
+cat("poder observado = ",round(e.poder,4),"\n")
+
+cat("Matriz C :","\n")
+
+print(m.C)
+
+}
+
+
+
+testeF.CBM <- function(fit.model,m.C,m.M)
+
+{
+
+v.beta <-  cbind(fit.model$coef)
+
+n <- nrow(model.matrix(fit.model))
+
+e.p <- nrow(v.beta)
+
+e.q <- nrow(m.C)
+
+m.cov.beta <- (vcov(fit.model))
+
+e.F <- t(m.C%*%v.beta-m.M)%*%solve(m.C%*%m.cov.beta%*%t(m.C))%*%(m.C%*%v.beta-m.M)/e.q
+
+e.pvalor <- 1-pf(e.F,e.q,n-e.p)
+
+cat("Estatistica F = ",round(e.F,2),"\n")
+
+cat("pvalor = ",round(e.pvalor,4),"\n")
+
+cat("Matriz C :","\n")
+
+print(m.C)
+
+cat("Matriz M :","\n")
+
+print(m.M)
+
+}
