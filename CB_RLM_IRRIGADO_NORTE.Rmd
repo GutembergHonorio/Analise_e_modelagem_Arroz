@@ -1013,7 +1013,8 @@ Genótipo PR349
 
 ```{r}
 fit.model<-modelo13
-m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+
 testeF.CB(fit.model,m.C)
 ```
 
@@ -1373,8 +1374,7 @@ coef_var = function(x) {
  
 Estimativas<-summary(modelo_Norte)
 Estimativas<-data.frame(Estimativas$coefficients)
-Estimativas<-data.frame("variaveis" = rownames(Estimativas) ,"Estimativa_log" = Estimativas$Estimate)
-Estimativas$`Estimativa` <- c( if_else( Estimativas$Estimativa_log > 0, exp(Estimativas$Estimativa_log), exp(Estimativas$Estimativa_log)*-1 ))
+Estimativas<-data.frame("variaveis" = rownames(Estimativas) ,"Estimativa" = Estimativas$Estimate)
 
 
 coef_med<-list()
@@ -1448,6 +1448,7 @@ coef_med_IRGA430<- data.frame("variaveis"= c(teste[c(1:19),4]), "CV" = as.numeri
 coef_med_IRGA430
 
 ```
+
 ```{r}
  # Intervalo observado das variáveis
  # formula é y = B1X1+B2X2 ... + BnXn em que todas as variáveis (Xn) estão fixadas na média,  com exeção da variável que se deseja ver a relação. Bn é o Estimate no modelo_Centro_oeste
@@ -1480,7 +1481,7 @@ coef_med_IRGA430
      
      # Criando data.frame temporario
      previsto_temp = data.frame(OBS,
-                                prev = Est_X_med + (OBS * coef[indexCOEF, 4]))
+                                prev = exp(Est_X_med + (OBS * (coef[indexCOEF, 4]))))
      
      # Renomeando colunas
      nomesColunas = c(
@@ -1525,11 +1526,46 @@ coef_med_IRGA430
   ggpubr::annotate_figure(figura4, top = "Respostas relativas ao genótipo IRGA 430", left = "Florescimento médio esperado")
 
 ```
+```{r}
+# filtrando por região
+Ano_GENOTIPO <- subset(IRR, (REGIAO == "Norte")) 
+
+# filtrando por ano e genótipo
+Ano_GENOTIPO<- Ano_GENOTIPO %>% group_by(ano,GENOTIPO) %>% summarise(FLO_M = mean(FLO_E))
+
+# filtrando o primeiro ano de cada genótipo
+Ano_GENOTIPO<- Ano_GENOTIPO %>%group_by(GENOTIPO) %>% filter(ano==min(ano))
+
+# Organizando os estimate do modelo_Centro_oeste
+Estimativas$variaveis<-gsub("GENOTIPO", "", Estimativas$variaveis)
+Estimativas <- rename(Estimativas, "GENOTIPO" = "variaveis")
+Estimativas<- Estimativas[-c(30:49),]
+
+# Juntando ano, genótipo e estimate 
+Ano_GENOTIPO_Estimate<-Estimativas[-1,] %>% full_join(Ano_GENOTIPO)
+
+# somando o estimate do genótipo com o do intercepto
+Ano_GENOTIPO_Estimate$Estimativa<- c(Ano_GENOTIPO_Estimate$Estimativa+Estimativas[1,2])
+
+# Usando o valor do estimate do intercepto para os genótipos não significativos
+Ano_GENOTIPO_Estimate$Estimativa[which((is.na(Ano_GENOTIPO_Estimate$Estimativa)))] <- Estimativas[1,2]
+
+# Plotando
+ggplot(Ano_GENOTIPO_Estimate, aes(x= ano, y = Estimativa))+
+geom_point()+
+  geom_smooth(formula  = y ~ x) +
+    labs(y = "Florescimento estimado (Escala logarítmica)", x="Ano de lançamento do genótipo" )+
+theme_bw()
+
+```
 
 
 
 
 
+```{r}
+exp((1.678758e-03*)
+```
 
 
 
