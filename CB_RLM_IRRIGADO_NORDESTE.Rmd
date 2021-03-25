@@ -656,3 +656,455 @@ ols_test_breusch_pagan(fit.model)
 plot(density(Temporario$FLO_M))
 
 ```
+## Transformação log
+
+```{r}
+Temporario<-Nordeste[,c(-1,-3)]
+
+modelo_LOG_NE_<-lm(log(FLO_M)~.,Temporario)
+summary(modelo_LOG_NE_)
+
+```
+
+Ordem da remoção das variáveis numéricas
+
+Tmax_ACC_R (p = 0.992805)
+
+```{r}
+fit.model<-modelo_LOG_NE_
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_ACC_R)
+modelo_LOG_NE_1<-lm(log(FLO_M)~., Temporario)
+summary(modelo_LOG_NE_1)
+```
+
+UR_fld_m (p = 0.967882)
+
+```{r}
+fit.model<-modelo_LOG_NE_1
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-UR_fld_m)
+modelo_LOG_NE_2<-lm(log(FLO_M)~., Temporario)
+summary(modelo_LOG_NE_2)
+```
+
+Tmin_Media  (p = 0.547374)
+
+```{r}
+fit.model<-modelo_LOG_NE_2
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmin_Media)
+modelo_LOG_NE_3<-lm(log(FLO_M)~., Temporario)
+summary(modelo_LOG_NE_3)
+```
+
+longitude (p = 0.438644)
+
+```{r}
+fit.model<-modelo_LOG_NE_3
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-longitude)
+modelo_LOG_NE_4<-lm(log(FLO_M)~., Temporario)
+summary(modelo_LOG_NE_4)
+```
+
+Tmin_fld_m (p = 0.377775)
+
+```{r}
+fit.model<-modelo_LOG_NE_4
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,		0,	0,	0,	0,	0,	0,		0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmin_fld_m)
+modelo_LOG_NE_5<-lm(log(FLO_M)~., Temporario)
+summary(modelo_LOG_NE_5)
+```
+
+Tmax_fld_m  (p = 0.610765)
+
+```{r}
+fit.model<-modelo_LOG_NE_5
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	1,	0,		0,	0,	0,	0,	0,	0,		0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_fld_m)
+modelo_LOG_NE_6<-lm(log(FLO_M)~., Temporario)
+summary(modelo_LOG_NE_6)
+```
+
+Tmax_Minima (p = 0.392630)
+
+```{r}
+fit.model<-modelo_LOG_NE_6
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,		0,		1,	0,	0,	0,	0,	0,		0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_Minima)
+modelo_LOG_NE_7<-lm(log(FLO_M)~., Temporario)
+summary(modelo_LOG_NE_7)
+```
+
+Chuva_ACC (p = 0.462926)
+
+```{r}
+fit.model<-modelo_LOG_NE_7
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,		0,			0,	0,	0,	0,	0,		0,	0,		0,	0,	1,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Chuva_ACC)
+modelo_LOG_NE_8<-lm(log(FLO_M)~., Temporario)
+summary(modelo_LOG_NE_8)
+```
+
+Tmax_Maxima  (p = 0.332503)
+
+```{r}
+fit.model<-modelo_LOG_NE_8
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	1,		0,			0,	0,	0,	0,	0,		0,	0,		0,	0,		0,	0,	0,	0,	0,	0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_Maxima)
+modelo_LOG_NE_9<-lm(log(FLO_M)~., Temporario)
+summary(modelo_LOG_NE_9)
+```
+
+Rad_ACC_R (p = 0.505476)
+
+```{r}
+fit.model<-modelo_LOG_NE_9
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,			0,			0,	0,	0,	0,	0,		0,	0,		0,	0,		0,	0,	1,	0,	0,	0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Rad_ACC_R)
+modelo_LOG_NE_10<-lm(log(FLO_M)~., Temporario)
+summary(modelo_LOG_NE_10)
+```
+
+Rad_ACC (p = 0.270084)
+
+```{r}
+fit.model<-modelo_LOG_NE_10
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,			0,			0,	0,	0,	0,	0,		0,	0,		0,	0,		0,	0,		1,	0,	0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Rad_ACC)
+modelo_LOG_NE_11<-lm(log(FLO_M)~., Temporario)
+summary(modelo_LOG_NE_11)
+```
+
+Graus_dia_ciclo (p = 0.050942)
+
+```{r}
+fit.model<-modelo_LOG_NE_11
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,			0,			0,	0,	0,	0,	0,		0,	0,		0,	0,		0,	0,			0,	0,	0,		0,	1,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Graus_dia_ciclo)
+modelo_LOG_NE_12<-lm(log(FLO_M)~., Temporario)
+summary(modelo_LOG_NE_12)
+```
+
+latitude  (p = 0.158780)
+
+```{r}
+fit.model<-modelo_LOG_NE_12
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,		0,			0,			0,	0,	0,	0,	0,		0,	0,		0,	0,		0,	0,			0,	0,	0,		0,		0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-latitude)
+modelo_LOG_NE_13<-lm(log(FLO_M)~., Temporario)
+summary(modelo_LOG_NE_13)
+```
+
+Junção dos genotipos que não apresentaram significancia (>0,10)
+
+```{r}
+fit.model<-modelo_LOG_NE_13
+m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+)
+
+testeF.CB(fit.model,m.C)
+```
+
+O genotipo que está no intecept é o ALIANCA
+
+```{r}
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("ALIANCA", "BRS A704",	"BRS JABURU",	"CICA 8",	"EMPASC 101",	"EPAGRI 108",	"EPAGRI 109",	"MOXOTO",	"PR268")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_LOG_NE_14<-lm(log(FLO_M)~., Temporario) 
+summary(modelo_LOG_NE_14)
+
+```
+
+```{r}
+fit.model<-modelo_LOG_NE_14
+m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	))
+
+testeF.CB(fit.model,m.C)
+```
+
+
+```{r}
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS FORMOSO","BRS GUARA", "SCS 114 ANDOSAN", "SCS 116 SATORU", "SCS 121 CL", "SCSBRS 113 TIO TAKA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_LOG_NE_15<-lm(log(FLO_M)~., Temporario) 
+summary(modelo_LOG_NE_15)
+
+```
+```{r}
+fit.model<-modelo_LOG_NE_15
+m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,		0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,				0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,				0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,				0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,				0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,				0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	))
+
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS CATIANA","IAC1298", "IAC1299", "OUROMINAS","PR267")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_LOG_NE_16<-lm(log(FLO_M)~., Temporario) 
+summary(modelo_LOG_NE_16)
+
+```
+
+```{r}
+fit.model<-modelo_LOG_NE_16
+m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,	1,	0,			0,		0,	0,	0,	0,	0,	0,	0,	0,	0,			0,	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,	0,	0,	0,	0,				0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,		0,	0,	1,	0,	0,	0,	0,	0,	0,			0,	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,	0,	0,	0,	0,				0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	))
+
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS ALVORADA","BRS PAMPEIRA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_LOG_NE_17<-lm(log(FLO_M)~., Temporario) 
+summary(modelo_LOG_NE_17)
+
+```
+```{r}
+fit.model<-modelo_LOG_NE_17
+m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,		0,			0,		0,	0,		0,	0,	0,	0,	0,	0,			1,	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,	0,	0,	0,	0,				0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,		0,			0,		0,	0,		0,	1,	0,	0,	0,	0,			0,	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,	0,	0,	0,	0,				0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	))
+
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRSMG RUBELITA","IAC1307")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_LOG_NE_18<-lm(log(FLO_M)~., Temporario) 
+summary(modelo_LOG_NE_18)
+
+```
+### Analise de residuos
+
+
+```{r}
+#------------------------------------------------------------#
+# Para  rodar este programa deixe no objeto fit.model a saída 
+# do ajuste da regressão do modelo normal linear.Deixe também
+# os dados disponíveis através do comando attach(...). Depois
+# use o comando source(...) no R ou S-plus para executar o 
+# programa. A sequência de comandos é a seguinte:
+#
+fit.model <- modelo_LOG_NE_18
+attach(Temporario)
+source("envel_norm_corrigido.txt")
+#
+# A saída será o gráfico de envelope para o resíduo
+# padronizado. Para colocar  um  título no gráfico após a
+# saída use o comando title("...").
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+si <- lm.influence(fit.model)$sigma
+r <- resid(fit.model)
+tsi <- r/(si*sqrt(1-h))
+#
+ident <- diag(n)
+epsilon <- matrix(0,n,100)
+e <- matrix(0,n,100)
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:100){
+     epsilon[,i] <- rnorm(n,0,1)
+     e[,i] <- (ident - H)%*%epsilon[,i]
+     u <- diag(ident - H)
+     e[,i] <- e[,i]/sqrt(u)
+     e[,i] <- sort(e[,i],na.last = TRUE)}
+#
+for(i in 1:n){
+     eo <- sort(e[i,])
+     e1[i] <- (eo[2]+eo[3])/2
+     e2[i] <- (eo[97]+eo[98])/2 }
+#
+med <- apply(e,1,mean)
+faixa <- range(tsi,e1,e2,na.rm = TRUE)
+#
+par(pty="s")
+qqnorm(tsi,xlab="Percentil da N(0,1)",
+ylab="Residuo Studentizado", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
+#------------------------------------------------------------#
+```
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erro normal. Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+ fit.model <- modelo_LOG_NE_18
+ attach(Temporario)
+source("diag_norm_corrigido.txt")
+#
+# A saída terá quatro gráficos: de pontos de alavanca, 
+# de pontos influentes  e  dois de resíduos. Para identificar
+# os pontos que  mais  se destacam usar o comando 
+# identify(...). Se por exemplo se destacam três pontos no 
+# plot(fitted(fit.model),h,...), após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram traçados os limites ylim=c(a-1,b+1), em que a
+# é o menor valor e b o maior valor para o resíduo.Mude esses 
+# limites  se  necessário.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+lms <- summary(fit.model)
+s <- lms$sigma
+r <- resid(lms)
+ts <- r/(s*sqrt(1-h))
+di <- (1/p)*(h/(1-h))*(ts^2)
+si <- lm.influence(fit.model)$sigma
+tsi <- r/(si*sqrt(1-h))
+fitted.model <- fitted(fit.model)
+ir = which(is.nan(tsi))
+if(length(ir) > 0){
+        tsi = tsi[-ir]
+        fitted.model = fitted.model[-ir]
+}
+
+a <- max(tsi)
+b <- min(tsi)
+par(mfrow=c(2,2))
+plot(h,xlab="Índice", ylab="Medida h", pch=16, ylim=c(0,1))
+cut <- 2*p/n
+abline(cut,0,lty=2)
+identify(h, n=1)
+#title(sub="(a)")
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+identify(di, n=2)
+#
+plot(tsi,xlab="Índice", ylab="Resíduo Padronizado",
+ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(tsi, n=1)
+#
+plot(fitted.model,tsi,xlab="Valor Ajustado", 
+ylab="Resíduo Padronizado", ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),tsi, n=1)
+par(mfrow=c(1,1))
+#---------------------------------------------------
+```
+
+
+
+```{r}
+#Normalidade dos residuos
+jarque.bera.test(tsi) #Residuo Studentizado # p > 0,05 = normal
+
+```
+```{r}
+# Homocedasticidade (Breusch-Pagan)
+ols_test_breusch_pagan(modelo_LOG_NE_18)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
