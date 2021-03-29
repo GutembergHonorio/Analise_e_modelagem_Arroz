@@ -74,8 +74,8 @@ Centro_oeste<- subset(IRR_Medio, (REGIAO == "Centro_Oeste")) # filtrando por reg
 
 Temporario <- Centro_oeste[,c(-1,-3)] # retirando as vaiáveis REGIAO e ID_ENSAIO
 
-modelo<-lm(FLO_M~., Temporario) # modelo inicial
-summary(modelo)
+modelo_C_O_<-lm(FLO_M~., Temporario) # modelo inicial
+summary(modelo_C_O_)
 
 ```
 
@@ -203,35 +203,35 @@ Tmin_V (p = 0.919724)
 
 
 ```{r}
-fit.model<-modelo
+fit.model<-modelo_C_O_
 m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
 testeF.CB(fit.model,m.C)
 ```
 ```{r}
 Temporario1<-Temporario %>% select(-Tmin_V)
-modelo1<-lm(FLO_M~., Temporario1)
-summary(modelo1)
+modelo_C_O_1<-lm(FLO_M~., Temporario1)
+summary(modelo_C_O_1)
 ```
 
 Chuva_ACC (p = 0.908085)
 
 
 ```{r}
-fit.model<-modelo1
+fit.model<-modelo_C_O_1
 rm(m.C)
 m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
 testeF.CB(fit.model,m.C)
 ```
 ```{r}
 Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC)
-modelo2<-lm(FLO_M~., Temporario1)
-summary(modelo2)
+modelo_C_O_2<-lm(FLO_M~., Temporario1)
+summary(modelo_C_O_2)
 ```
 
 UR_V (p = 0.843717)
 
 ```{r}
-fit.model<-modelo2
+fit.model<-modelo_C_O_2
 rm(m.C)
 m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0)
 testeF.CB(fit.model,m.C)
@@ -239,13 +239,13 @@ testeF.CB(fit.model,m.C)
 
 ```{r}
 Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V)
-modelo3<-lm(FLO_M~., Temporario1)
-summary(modelo3)
+modelo_C_O_3<-lm(FLO_M~., Temporario1)
+summary(modelo_C_O_3)
 ```
 
 Rad_ACC_V (p = 0.799768)
 ```{r}
-fit.model<-modelo3
+fit.model<-modelo_C_O_3
 rm(m.C)
 m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,		0,	0,	0,	0,	1,	0,		0,	0,	0,	0)
 testeF.CB(fit.model,m.C)
@@ -253,13 +253,13 @@ testeF.CB(fit.model,m.C)
 
 ```{r}
 Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V)
-modelo4<-lm(FLO_M~., Temporario1)
-summary(modelo4)
+modelo_C_O_4<-lm(FLO_M~., Temporario1)
+summary(modelo_C_O_4)
 ```
 
 Tmin_Minima (p = 0.718204)
 ```{r}
-fit.model<-modelo4
+fit.model<-modelo_C_O_4
 rm(m.C)
 m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,		0,	0,	0,	0,		0,	0,	0,	0,		0,		0,	0,	0,	0)
 testeF.CB(fit.model,m.C)
@@ -267,13 +267,13 @@ testeF.CB(fit.model,m.C)
 
 ```{r}
 Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V, -Tmin_Minima)
-modelo5<-lm(FLO_M~., Temporario1)
-summary(modelo5)
+modelo_C_O_5<-lm(FLO_M~., Temporario1)
+summary(modelo_C_O_5)
 ```
 
 Tmax_ACC_V (p = 0.753389)
 ```{r}
-fit.model<-modelo5
+fit.model<-modelo_C_O_5
 rm(m.C)
 m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,		0,		0,	0,	0,	0,		0,	0,	0,	0,		0,		0,	0,	0,	0)
 testeF.CB(fit.model,m.C)
@@ -281,13 +281,13 @@ testeF.CB(fit.model,m.C)
 
 ```{r}
 Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V, -Tmin_Minima, -Tmax_ACC_V)
-modelo6<-lm(FLO_M~., Temporario1)
-summary(modelo6)
+modelo_C_O_6<-lm(FLO_M~., Temporario1)
+summary(modelo_C_O_6)
 ```
 
 Tmax_V (p = 0.578615)
 ```{r}
-fit.model<-modelo6
+fit.model<-modelo_C_O_6
 rm(m.C)
 m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,		0,		0,		0,	0,	0,	0,		0,	0,	0,	0,		0,		0,	0,	0,	0)
 testeF.CB(fit.model,m.C)
@@ -295,13 +295,13 @@ testeF.CB(fit.model,m.C)
 
 ```{r}
 Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V, -Tmin_Minima, -Tmax_ACC_V, -Tmax_V)
-modelo7<-lm(FLO_M~., Temporario1)
-summary(modelo7)
+modelo_C_O_7<-lm(FLO_M~., Temporario1)
+summary(modelo_C_O_7)
 ```
 
 UR_fld_m (p = 0.276400)
 ```{r}
-fit.model<-modelo7
+fit.model<-modelo_C_O_7
 rm(m.C)
 m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,		0,		0,	0,	0,	0,		0,	0,	0,	0,		0,		1,	0,	0,	0)
 testeF.CB(fit.model,m.C)
@@ -309,13 +309,13 @@ testeF.CB(fit.model,m.C)
 
 ```{r}
 Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V, -Tmin_Minima, -Tmax_ACC_V, -Tmax_V, -UR_fld_m)
-modelo8<-lm(FLO_M~., Temporario1)
-summary(modelo8)
+modelo_C_O_8<-lm(FLO_M~., Temporario1)
+summary(modelo_C_O_8)
 ```
 
 UR_R (p = 0.256317)
 ```{r}
-fit.model<-modelo8
+fit.model<-modelo_C_O_8
 rm(m.C)
 m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,		0,		0,	0,	0,	0,		0,	0,	0,	0,		0,			1,	0,	0)
 testeF.CB(fit.model,m.C)
@@ -323,13 +323,13 @@ testeF.CB(fit.model,m.C)
 
 ```{r}
 Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V, -Tmin_Minima, -Tmax_ACC_V, -Tmax_V, -UR_fld_m, -UR_R)
-modelo9<-lm(FLO_M~., Temporario1)
-summary(modelo9)
+modelo_C_O_9<-lm(FLO_M~., Temporario1)
+summary(modelo_C_O_9)
 ```
 
 Rad_ACC_R (p = 0.336529)
 ```{r}
-fit.model<-modelo9
+fit.model<-modelo_C_O_9
 rm(m.C)
 m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,		0,		0,	0,	0,	0,		0,	0,	1,	0,		0,				0,	0)
 testeF.CB(fit.model,m.C)
@@ -337,13 +337,13 @@ testeF.CB(fit.model,m.C)
 
 ```{r}
 Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V, -Tmin_Minima, -Tmax_ACC_V, -Tmax_V, -UR_fld_m, -UR_R, -Rad_ACC_R)
-modelo10<-lm(FLO_M~., Temporario1)
-summary(modelo10)
+modelo_C_O_10<-lm(FLO_M~., Temporario1)
+summary(modelo_C_O_10)
 ```
 
 Rad_ACC (p = 0.352826)
 ```{r}
-fit.model<-modelo10
+fit.model<-modelo_C_O_10
 rm(m.C)
 m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,		0,		0,	0,	0,	0,		0,	0,		1,		0,				0,	0)
 testeF.CB(fit.model,m.C)
@@ -351,13 +351,13 @@ testeF.CB(fit.model,m.C)
 
 ```{r}
 Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V, -Tmin_Minima, -Tmax_ACC_V, -Tmax_V, -UR_fld_m, -UR_R, -Rad_ACC_R, -Rad_ACC)
-modelo11<-lm(FLO_M~., Temporario1)
-summary(modelo11)
+modelo_C_O_11<-lm(FLO_M~., Temporario1)
+summary(modelo_C_O_11)
 ```
 
 Graus_dia_FLO (p = 0.540216)
 ```{r}
-fit.model<-modelo11
+fit.model<-modelo_C_O_11
 rm(m.C)
 m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,		0,		0,	0,	0,	0,		0,	0,				0,				0,	1)
 testeF.CB(fit.model,m.C)
@@ -365,13 +365,13 @@ testeF.CB(fit.model,m.C)
 
 ```{r}
 Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V, -Tmin_Minima, -Tmax_ACC_V, -Tmax_V, -UR_fld_m, -UR_R, -Rad_ACC_R, -Rad_ACC, -Graus_dia_FLO)
-modelo12<-lm(FLO_M~., Temporario1)
-summary(modelo12)
+modelo_C_O_12<-lm(FLO_M~., Temporario1)
+summary(modelo_C_O_12)
 ```
 
 Graus_dia_ciclo (p = 0.638808)
 ```{r}
-fit.model<-modelo12
+fit.model<-modelo_C_O_12
 rm(m.C)
 m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,		0,		0,	0,	0,	0,		0,	0,				0,				1)
 testeF.CB(fit.model,m.C)
@@ -379,13 +379,13 @@ testeF.CB(fit.model,m.C)
 
 ```{r}
 Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V, -Tmin_Minima, -Tmax_ACC_V, -Tmax_V, -UR_fld_m, -UR_R, -Rad_ACC_R, -Rad_ACC, -Graus_dia_FLO, -Graus_dia_ciclo)
-modelo13<-lm(FLO_M~., Temporario1)
-summary(modelo13)
+modelo_C_O_13<-lm(FLO_M~., Temporario1)
+summary(modelo_C_O_13)
 ```
 
 Chuva_ACC_R (p = 0.109028)
 ```{r}
-fit.model<-modelo13
+fit.model<-modelo_C_O_13
 rm(m.C)
 m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,		0,		0,	0,	0,	0,		0,	1,				0)
 testeF.CB(fit.model,m.C)
@@ -393,13 +393,13 @@ testeF.CB(fit.model,m.C)
 
 ```{r}
 Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V, -Tmin_Minima, -Tmax_ACC_V, -Tmax_V, -UR_fld_m, -UR_R, -Rad_ACC_R, -Rad_ACC, -Graus_dia_FLO, -Graus_dia_ciclo,-Chuva_ACC_R)
-modelo14<-lm(FLO_M~., Temporario1)
-summary(modelo14)
+modelo_C_O_14<-lm(FLO_M~., Temporario1)
+summary(modelo_C_O_14)
 ```
 
 UR_Media (p = 0.100633)
 ```{r}
-fit.model<-modelo14
+fit.model<-modelo_C_O_14
 rm(m.C)
 m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,		0,		0,	0,	0,	0,		0,					1)
 testeF.CB(fit.model,m.C)
@@ -407,13 +407,13 @@ testeF.CB(fit.model,m.C)
 
 ```{r}
 Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V, -Tmin_Minima, -Tmax_ACC_V, -Tmax_V, -UR_fld_m, -UR_R, -Rad_ACC_R, -Rad_ACC, -Graus_dia_FLO, -Graus_dia_ciclo,-Chuva_ACC_R, -UR_Media)
-modelo15<-lm(FLO_M~., Temporario1)
-summary(modelo15)
+modelo_C_O_15<-lm(FLO_M~., Temporario1)
+summary(modelo_C_O_15)
 ```
 
 latitude (p = 0.164901)
 ```{r}
-fit.model<-modelo15
+fit.model<-modelo_C_O_15
 rm(m.C)
 m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,			0,		0,		0,	0,	0,	0,		0)
 testeF.CB(fit.model,m.C)
@@ -421,13 +421,13 @@ testeF.CB(fit.model,m.C)
 
 ```{r}
 Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V, -Tmin_Minima, -Tmax_ACC_V, -Tmax_V, -UR_fld_m, -UR_R, -Rad_ACC_R, -Rad_ACC, -Graus_dia_FLO, -Graus_dia_ciclo,-Chuva_ACC_R, -UR_Media, -latitude)
-modelo16<-lm(FLO_M~., Temporario1)
-summary(modelo16)
+modelo_C_O_16<-lm(FLO_M~., Temporario1)
+summary(modelo_C_O_16)
 ```
 
 Tmin_Media  (p = 0.290819)
 ```{r}
-fit.model<-modelo16
+fit.model<-modelo_C_O_16
 rm(m.C)
 m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,			0,		1,		0,	0,	0,	0,		0)
 testeF.CB(fit.model,m.C)
@@ -435,13 +435,13 @@ testeF.CB(fit.model,m.C)
 
 ```{r}
 Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V, -Tmin_Minima, -Tmax_ACC_V, -Tmax_V, -UR_fld_m, -UR_R, -Rad_ACC_R, -Rad_ACC, -Graus_dia_FLO, -Graus_dia_ciclo,-Chuva_ACC_R, -UR_Media, -latitude, -Tmin_Media)
-modelo17<-lm(FLO_M~., Temporario1)
-summary(modelo17)
+modelo_C_O_17<-lm(FLO_M~., Temporario1)
+summary(modelo_C_O_17)
 ```
 
 Tmin_fld_m (p = 0.245857) 
 ```{r}
-fit.model<-modelo17
+fit.model<-modelo_C_O_17
 rm(m.C)
 m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,			0,				0,	1,	0,	0,		0)
 testeF.CB(fit.model,m.C)
@@ -449,8 +449,8 @@ testeF.CB(fit.model,m.C)
 
 ```{r}
 Temporario1<-Temporario %>% select(-Tmin_V, -Chuva_ACC, -UR_V, -Rad_ACC_V, -Tmin_Minima, -Tmax_ACC_V, -Tmax_V, -UR_fld_m, -UR_R, -Rad_ACC_R, -Rad_ACC, -Graus_dia_FLO, -Graus_dia_ciclo,-Chuva_ACC_R, -UR_Media, -latitude, -Tmin_Media, -Tmin_fld_m)
-modelo18<-lm(FLO_M~., Temporario1)
-summary(modelo18)
+modelo_C_O_18<-lm(FLO_M~., Temporario1)
+summary(modelo_C_O_18)
 ```
 
 Junção dos genótipos não significativos
@@ -459,7 +459,7 @@ Obs: O genótipo do intercepto é o BR IRGA 409
 
 
 ```{r}
-fit.model<-modelo18
+fit.model<-modelo_C_O_18
 
 m.C <- rbind(cbind(	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
 ,cbind(	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
@@ -501,15 +501,15 @@ Genotipos  <- Temporario1$GENOTIPO
 SELECAO_GEN <- c("BR IRGA 409", "BR IRGA 410",	"EMPASC 102",	"IRGA 425",	"IRGA 426",	"PR631",	"BRS A701 CL",	"BRS CIRAD 302",	"BRS SINUELO CL",	"SC240",	"IRGA97-28",	"IRGA 424 RI",	"JEQUITIBA",	"EPAGRI97-06",	"EPAGRI97-05",	"PR498",	"SC250",	"IRGA 424",	"PR349",	"BRS JACANA",	"IRGA 427",	"BRS A702 CL",	"BRS FRONTEIRA",	"PR306",	"BRS PAMPA",	"EPAGRI97-01",	"IRGA 417",	"BRS PELOTA",	"BRS 7 TAIM",	"SG11551",	"IRGA 422 CL")
 
 Temporario1$GENOTIPO <- c(ifelse(Temporario1$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
-modelo19<-lm(FLO_M~., Temporario1) 
-summary(modelo19)
+modelo_C_O_19<-lm(FLO_M~., Temporario1) 
+summary(modelo_C_O_19)
 
 ```
 
 Genótipos que continuaram não significativos
 
 ```{r}
-fit.model<-modelo19
+fit.model<-modelo_C_O_19
 
 m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
 ,cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
@@ -525,7 +525,7 @@ Os três não devem ser removidos conjuntamente
 !! Somente "SC237"
 
 ```{r}
-fit.model<-modelo19
+fit.model<-modelo_C_O_19
 
 m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1	,0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
 
@@ -537,14 +537,14 @@ Genotipos  <- Temporario1$GENOTIPO
 SELECAO_GEN <- c("SC237")
 
 Temporario1$GENOTIPO <- c(ifelse(Temporario1$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
-modelo20<-lm(FLO_M~., Temporario1) 
-summary(modelo20)
+modelo_C_O_20<-lm(FLO_M~., Temporario1) 
+summary(modelo_C_O_20)
 ```
 
 !! Somente "SCSBRS 111" e "IAC1289"
 
 ```{r}
-fit.model<-modelo20
+fit.model<-modelo_C_O_20
 
 m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0),
 cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0))
@@ -559,14 +559,14 @@ Genotipos  <- Temporario1$GENOTIPO
 SELECAO_GEN <- c("SCSBRS 111","IAC1289")
 
 Temporario1$GENOTIPO <- c(ifelse(Temporario1$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
-modelo21<-lm(FLO_M~., Temporario1) 
-summary(modelo21)
+modelo_C_O_21<-lm(FLO_M~., Temporario1) 
+summary(modelo_C_O_21)
 ```
 
 !! Somente "PR67"
 
 ```{r}
-fit.model<-modelo21
+fit.model<-modelo_C_O_21
 
 m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
 
@@ -580,8 +580,8 @@ Genotipos  <- Temporario1$GENOTIPO
 SELECAO_GEN <- c("PR67")
 
 Temporario1$GENOTIPO <- c(ifelse(Temporario1$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
-modelo22<-lm(FLO_M~., Temporario1) 
-summary(modelo22)
+modelo_C_O_22<-lm(FLO_M~., Temporario1) 
+summary(modelo_C_O_22)
 ```
 
 
@@ -594,7 +594,7 @@ summary(modelo22)
 # use o comando source(...) no R ou S-plus para executar o 
 # programa. A sequência de comandos é a seguinte:
 #
-fit.model <- modelo22
+fit.model <- modelo_C_O_22
 attach(Temporario1)
 #source("envel_norm_corrigido.txt")
 #
@@ -653,7 +653,7 @@ qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
 # comando source(...) no S-Plus ou R para executar o programa. 
 # A sequência de comandos é a seguinte:
 #
- fit.model <- modelo22
+ fit.model <- modelo_C_O_22
  attach(Temporario1)
 #source("diag_norm_corrigido.txt")
 #
@@ -717,8 +717,8 @@ par(mfrow=c(1,1))
 ```
 
 ```{r}
-modelo22<-lm(FLO_M~., Temporario1[c(-116,-70,-57),])
-summary(modelo22)
+modelo_C_O_22<-lm(FLO_M~., Temporario1[c(-116,-70,-57),])
+summary(modelo_C_O_22)
 ```
 
 
@@ -730,7 +730,7 @@ summary(modelo22)
 # comando source(...) no S-Plus ou R para executar o programa. 
 # A sequência de comandos é a seguinte:
 #
- fit.model <- modelo22
+ fit.model <- modelo_C_O_22
  attach(Temporario1)
  #source("diag_norm_corrigido.txt")
 #
@@ -795,7 +795,7 @@ par(mfrow=c(1,1))
 
 Chuva_ACC_V (p = 0.063419)
 ```{r}
-fit.model<-modelo22
+fit.model<-modelo_C_O_22
 
 m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1)
 
@@ -806,8 +806,8 @@ testeF.CB(fit.model,m.C)
 Temporario1<-Temporario1[c(-116,-70,-57),]
 
 Temporario1<-Temporario1 %>% select(-Chuva_ACC_V)
-modelo23<-lm(FLO_M~., Temporario1)
-summary(modelo23)
+modelo_C_O_23<-lm(FLO_M~., Temporario1)
+summary(modelo_C_O_23)
 ```
 # Analise de residuos
 ```{r}
@@ -817,7 +817,7 @@ summary(modelo23)
 # os dados disponíveis através do comando attach(...). Depois
 # use o comando source(...) no R ou S-plus para executar o 
 # programa. A sequência de comandos é a seguinte:
-fit.model <- modelo23
+fit.model <- modelo_C_O_23
 attach(Temporario1)
 #source("envel_norm_corrigido.txt")
 #
@@ -876,7 +876,7 @@ qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
 # comando source(...) no S-Plus ou R para executar o programa. 
 # A sequência de comandos é a seguinte:
 #
- fit.model <- modelo23
+ fit.model <- modelo_C_O_23
  attach(Temporario1)
  #source("diag_norm_corrigido.txt")
 #
@@ -947,12 +947,12 @@ jarque.bera.test(tsi) #Residuo Studentizado # p > 0,05 = normal
 ```
 ```{r}
 # Homocedasticidade (Breusch-Pagan)
-ols_test_breusch_pagan(modelo23)
+ols_test_breusch_pagan(modelo_C_O_23)
 ```
 # Modelo final
 
 ```{r}
-modelo_Centro_oeste<-modelo23
+modelo_Centro_oeste<-modelo_C_O_23
 ```
 
 
@@ -1097,7 +1097,7 @@ coef_med_IRGA430
               'Tmax_Media','Tmin_Maxima',"Tmax_Maxima")                 # Ciclo
  plots = list()
  plot  = list()
- 
+ coef_meds = list()
  coef_meds[1]<- list(coef_med_AA)
  coef_meds[2]<- list(coef_med_MARAJO)
  coef_meds[3]<- list(coef_med_PAMPEIRA)
