@@ -1,0 +1,4243 @@
+---
+title: "GLM IRRIGADO NORDESTE"
+author: "Gutemberg Resende Honorio Filho"
+date: "25/03/2021"
+output: html_document
+---
+
+
+
+# Pacotes
+
+```{r}
+if(!require(tidyverse)) install.packages("tidyverse")
+
+# Teste de normalidade 
+#if(!require(tseries)) install.packages("tseries")
+
+# Teste de homocesdasticidade 
+#if(!require(olsrr)) install.packages("olsrr")
+
+
+
+#if(!require(scales)) install.packages("scales")
+
+#if(!require(reshape2)) install.packages("reshape2")
+
+#if(!require(egg)) install.packages("egg")
+
+
+
+```
+
+
+# DADOS
+```{r Diretório} 
+
+# DIRETÓRIO DOS DADOS 
+
+Tabelabruta<- read.csv("d:/Users/Cristiane Resende/Desktop/Gutemberg Honorio/Mestrado/Repositorio_4/Analise_e_modelagem_Arroz/Merge_1980_2018.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE) # tabela com os dados originais
+
+# criando coluna com macrorregiões
+
+Tabelabruta<- mutate(Tabelabruta,REGIAO = case_when(UF == 'GO'| UF == 'DF' |UF == 'MS' | UF == 'MT' ~ 'Centro_Oeste',
+                              UF == 'AL'| UF == 'BA' |UF == 'CE' | UF == 'MA' | UF == 'PB' | UF == 'PE' | UF == 'PI' | UF == 'RN' | UF == 'SE' ~ 'Nordeste',
+                              UF == 'AC' | UF == 'AM' | UF == 'AP' | UF == 'PA' | UF == 'RO' | UF == 'RR' | UF == 'TO' ~ 'Norte',
+                              UF == 'ES' | UF == 'MG' | UF == 'SP' | UF == 'RJ' ~ 'Sudeste',
+                              UF == 'RS' | UF == 'SC' | UF == 'PR' ~ 'Sul'))
+
+# Tabelas acessório
+
+TabelabrutaIRR = subset(Tabelabruta, SIST_CULT == "IRRIGATED") # Somente Irrigado
+TabelabrutaTA = subset(Tabelabruta, SIST_CULT == "UPLAND") # Somente Terras altas
+
+# Filtrando os dados
+
+
+IRR<-TabelabrutaIRR %>% mutate(UR_Media=(umidade_Media),UR_V=	(umidade_V), UR_fld_m=	(umidade_fld_m),	UR_R=	(umidade_R), Graus_dia_ciclo=(graus_dia_ciclo), Graus_dia_FLO=(graus_dia_FLO+graus_dia_IP))
+
+IRR <- select(IRR,latitude, longitude, GENOTIPO, ID_ENSAIO,ano, Altitude, REGIAO, UF, FLO_E, Tmax_Maxima ,Tmax_fld_m ,	Tmax_R,	Tmax_ACC_R, Tmax_Minima,	Tmax_Media,Tmax_V ,Tmax_ACC_V,	Tmin_Maxima,Tmin_Minima ,	Tmin_Media ,	Tmin_V ,	Tmin_ACC_V , Tmin_fld_m ,	Tmin_R,	Tmin_ACC_R , Chuva_ACC ,	Chuva_ACC_V, Chuva_ACC_R, Rad_ACC_R ,	Rad_ACC ,	Rad_ACC_V, UR_Media, UR_V, UR_fld_m,	UR_R, Graus_dia_ciclo, Graus_dia_FLO)
+
+
+rm(TabelabrutaIRR,TabelabrutaTA,Tabelabruta)
+
+# Removendo os genótipos que não serão estudados
+
+IRR = IRR[IRR$GENOTIPO %in% c("ALIANCA",	"AVAXI CL",	"BR IRGA 409",	"BR IRGA 410",	"BR IRGA 412",	"BR IRGA 414",	"BRS 7 TAIM",	"BRS A701 CL",	"BRS A702 CL",	"BRS A704",	"BRS ALVORADA",	"BRS BIGUA",	"BRS CATIANA",	"BRS CIRAD 302",	"BRS FORMOSO",	"BRS FRONTEIRA",	"BRS GUARA",	"BRS JABURU",	"BRS JACANA",	"BRS PAMPA",	"BRS PAMPEIRA",	"BRS PELOTA",	"BRS QUERENCIA",	"BRS SINUELO CL",	"BRS TROPICAL",	"BRSMG RUBELITA",	"CICA 8",	"CT8452",	"DIAMANTE",	"EEA34",	"EMPASC 101",	"EMPASC 102",	"EPAGRI 108",	"EPAGRI 109",	"EPAGRI97-01",	"EPAGRI97-05",	"EPAGRI97-06",	"H6",	"H7 CL",	"IAC1289",	"IAC1298",	"IAC1299",	"IAC1307",	"IAC1311",	"IAPAR 58",	"IRGA 417",	"IRGA 422 CL",	"IRGA 424",	"IRGA 424 RI",	"IRGA 425",	"IRGA 426",	"IRGA 427",	"IRGA 428",	"IRGA 429",	"IRGA 430",	"IRGA97-05",	"IRGA97-10",	"IRGA97-11",	"IRGA97-28",	"JAVAE",	"JEQUITIBA",	"MARAJO",	"METICA 1",	"MOXOTO",	"OUROMINAS",	"PR267",	"PR268",	"PR306",	"PR331",	"PR349",	"PR380",	"PR498",	"PR631",	"PR67",	"PUITA INTA CL",	"RORAIMA",	"SAO FRANCISCO",	"SC138",	"SC173",	"SC237",	"SC240",	"SC250",	"SCS 112",	"SCS 114 ANDOSAN",	"SCS 116 SATORU",	"SCS 121 CL",	"SCSBRS 111",	"SCSBRS 113 TIO TAKA",	"SCSBRS PIRACEMA",	"SG11551",	"URUCUI"),]
+IRR = IRR[IRR$UF!="MT",]
+
+# Filtrando e gerando médias
+
+IRR_Medio<- IRR %>% group_by(ID_ENSAIO, GENOTIPO, REGIAO) %>% summarise(  FLO_M= mean(FLO_E),  latitude= mean(latitude), longitude = mean(longitude), Altitude = mean(Altitude), Tmax_Maxima = mean(Tmax_Maxima) ,Tmax_fld_m = mean(Tmax_fld_m ),	Tmax_R= mean( Tmax_R),	Tmax_ACC_R= mean(Tmax_ACC_R ), Tmax_Minima= mean(Tmax_Minima ),	Tmax_Media= mean( Tmax_Media),Tmax_V = mean(Tmax_V ),Tmax_ACC_V= mean(Tmax_ACC_V ),	Tmin_Maxima= mean(Tmin_Maxima ),Tmin_Minima = mean(Tmin_Minima ),	Tmin_Media = mean(Tmin_Media ),	Tmin_V = mean(Tmin_V ),	Tmin_ACC_V = mean(Tmin_ACC_V ), Tmin_fld_m = mean( Tmin_fld_m),	Tmin_R= mean(Tmin_R ),	Tmin_ACC_R = mean(Tmin_ACC_R ), Chuva_ACC = mean(Chuva_ACC ),	Chuva_ACC_V= mean(Chuva_ACC_V ), Chuva_ACC_R= mean(Chuva_ACC_R ), Rad_ACC_R = mean(Rad_ACC_R ),	Rad_ACC = mean(Rad_ACC ),	Rad_ACC_V= mean(Rad_ACC_V ), UR_Media= mean( UR_Media), UR_V= mean( UR_V), UR_fld_m= mean(UR_fld_m ),	UR_R= mean(UR_R ), Graus_dia_ciclo= mean(Graus_dia_ciclo ), Graus_dia_FLO= mean(Graus_dia_FLO ))
+
+# separando por macrorregião
+
+Nordeste<- subset(IRR_Medio, (REGIAO == "Nordeste")) # filtrando por região
+```
+# link log
+```{r}
+Temporario <- Nordeste[,c(-1,-3)] # retirando as vaiáveis REGIAO e ID_ENSAIO
+modelo_glm_NE_<- glm(FLO_M~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_NE_)
+```
+ 
+```{r}
+# Testes de hip?teses de interesse
+
+source("teste-CB.txt")
+
+# Comparacoes multiplas
+
+# fit.model: sa?da do modelo ajustado
+# m.C: matriz de interesse
+
+testeF.CB <- function(fit.model,m.C)
+
+{
+
+v.beta <-  cbind(fit.model$coef)
+
+n <- nrow(model.matrix(fit.model))
+
+e.p <- nrow(v.beta)
+
+e.q <- nrow(m.C)
+
+m.cov.beta <- (vcov(fit.model))
+
+e.F <- t(m.C%*%v.beta)%*%solve(m.C%*%m.cov.beta%*%t(m.C))%*%(m.C%*%v.beta)/e.q
+
+e.pvalor <- 1-pf(e.F,e.q,n-e.p)
+
+cat("Estatistica F = ",round(e.F,2),"\n")
+
+cat("pvalor = ",round(e.pvalor,4),"\n")
+
+cat("Matriz C :","\n")
+
+print(m.C)
+
+}
+
+testeF.CB.poder <- function(fit.model,m.C,alpha)
+
+{
+
+v.beta <-  cbind(fit.model$coef)
+
+n <- nrow(model.matrix(fit.model))
+
+e.p <- nrow(v.beta)
+
+e.q <- nrow(m.C)
+
+m.cov.beta <- (vcov(fit.model))
+
+m.X <- model.matrix(fit.model)
+
+e.F <- t(m.C%*%v.beta)%*%solve(m.C%*%m.cov.beta%*%t(m.C))%*%(m.C%*%v.beta)/e.q   ##  m.cov.beta=sigma2(x?x)^-1 que tem dist.?qui-quadrado
+
+e.pvalor <- 1-pf(e.F,e.q,n-e.p)                                                  ##
+
+e.sigma2 <- deviance(fit.model)/df.residual(fit.model)                           ## sigma2 estimado
+
+e.delta <- (t(m.C%*%v.beta)%*%solve(m.C%*%solve(t(m.X)%*%m.X)%*%t(m.C))%*%(m.C%*%v.beta))/e.sigma2
+
+F.critico <- qf(1-alpha,e.q,n-e.p)       ## f cr?tico sob h0
+
+e.poder <- 1-pf(F.critico,e.q,n-e.p,ncp=e.delta)
+
+cat("Estatistica F = ",round(e.F,2),"\n")
+
+cat("pvalor = ",round(e.pvalor,4),"\n")
+
+cat("poder observado = ",round(e.poder,4),"\n")
+
+cat("Matriz C :","\n")
+
+print(m.C)
+
+}
+
+
+
+testeF.CBM <- function(fit.model,m.C,m.M)
+
+{
+
+v.beta <-  cbind(fit.model$coef)
+
+n <- nrow(model.matrix(fit.model))
+
+e.p <- nrow(v.beta)
+
+e.q <- nrow(m.C)
+
+m.cov.beta <- (vcov(fit.model))
+
+e.F <- t(m.C%*%v.beta-m.M)%*%solve(m.C%*%m.cov.beta%*%t(m.C))%*%(m.C%*%v.beta-m.M)/e.q
+
+e.pvalor <- 1-pf(e.F,e.q,n-e.p)
+
+cat("Estatistica F = ",round(e.F,2),"\n")
+
+cat("pvalor = ",round(e.pvalor,4),"\n")
+
+cat("Matriz C :","\n")
+
+print(m.C)
+
+cat("Matriz M :","\n")
+
+print(m.M)
+
+}
+```
+
+
+
+Ordem da remoção das variáveis numéricas
+
+Tmax_ACC_R (p = 0.970645)
+
+```{r}
+fit.model<-modelo_glm_NE_
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_ACC_R)
+modelo_glm_NE_1<- glm(FLO_M~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_NE_1)
+```
+
+UR_fld_m (p = 0.960489)
+
+```{r}
+fit.model<-modelo_glm_NE_1
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-UR_fld_m)
+modelo_glm_NE_2<- glm(FLO_M~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_NE_2)
+```
+
+Tmin_Media (p = 0.526558)
+
+```{r}
+fit.model<-modelo_glm_NE_2
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmin_Media)
+modelo_glm_NE_3<- glm(FLO_M~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_NE_3)
+```
+
+longitude (p = 0.416927)
+
+```{r}
+fit.model<-modelo_glm_NE_3
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-longitude)
+modelo_glm_NE_4<- glm(FLO_M~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_NE_4)
+```
+
+Tmin_fld_m (p = 0.381665)
+
+```{r}
+fit.model<-modelo_glm_NE_4
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,		0,	0,	0,	0,	0,	0,		0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmin_fld_m)
+modelo_glm_NE_5<- glm(FLO_M~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_NE_5)
+```
+
+Tmax_fld_m  (p = 0.594186)
+
+```{r}
+fit.model<-modelo_glm_NE_5
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	1,	0,		0,	0,	0,	0,	0,	0,		0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_fld_m)
+modelo_glm_NE_6<- glm(FLO_M~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_NE_6)
+```
+
+Tmax_Maxima  (p = 0.393161)
+
+```{r}
+fit.model<-modelo_glm_NE_6
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	1,		0,		0,	0,	0,	0,	0,	0,		0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_Maxima)
+modelo_glm_NE_7<- glm(FLO_M~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_NE_7)
+```
+
+Rad_ACC_R (p = 0.389531)
+
+```{r}
+fit.model<-modelo_glm_NE_7
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,			0,		0,	0,	0,	0,	0,	0,		0,	0,		0,	0,	0,	0,	0,	1,	0,	0,	0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Rad_ACC_R)
+modelo_glm_NE_8<- glm(FLO_M~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_NE_8)
+```
+
+Tmax_Minima  (p = 0.496966)
+
+```{r}
+fit.model<-modelo_glm_NE_8
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,			0,		1,	0,	0,	0,	0,	0,		0,	0,		0,	0,	0,	0,	0,		0,	0,	0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_Minima)
+modelo_glm_NE_9<- glm(FLO_M~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_NE_9)
+```
+
+UR_V  (p = 0.369496)
+
+```{r}
+fit.model<-modelo_glm_NE_9
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,			0,			0,	0,	0,	0,	0,		0,	0,		0,	0,	0,	0,	0,		0,	0,	0,	1,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-UR_V)
+modelo_glm_NE_10<- glm(FLO_M~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_NE_10)
+```
+
+Chuva_ACC_R (p = 0.347308)
+
+```{r}
+fit.model<-modelo_glm_NE_10
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,			0,			0,	0,	0,	0,	0,		0,	0,		0,	0,	0,	0,	1,		0,	0,	0,			0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Chuva_ACC_R)
+modelo_glm_NE_11<- glm(FLO_M~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_NE_11)
+```
+
+UR_Media  (p = 0.409131)
+
+```{r}
+fit.model<-modelo_glm_NE_11
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,			0,			0,	0,	0,	0,	0,		0,	0,		0,	0,	0,	0,			0,	0,	1,			0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-UR_Media)
+modelo_glm_NE_12<- glm(FLO_M~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_NE_12)
+```
+
+latitude  (p = 0.203604)
+
+```{r}
+fit.model<-modelo_glm_NE_12
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,		0,			0,			0,	0,	0,	0,	0,		0,	0,		0,	0,	0,	0,			0,	0,				0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-latitude)
+modelo_glm_NE_13<- glm(FLO_M~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_NE_13)
+```
+
+Graus_dia_ciclo (p = 0.381067)
+
+```{r}
+fit.model<-modelo_glm_NE_13
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,			0,			0,	0,	0,	0,	0,		0,	0,		0,	0,	0,	0,			0,	0,				0,	1,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Graus_dia_ciclo)
+modelo_glm_NE_14<- glm(FLO_M~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_NE_14)
+```
+
+Rad_ACC_V (p = 0.326418)
+
+```{r}
+fit.model<-modelo_glm_NE_14
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,			0,			0,	0,	0,	0,	0,		0,	0,		0,	0,	0,	0,			0,	1,				0,		0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Rad_ACC_V)
+modelo_glm_NE_15<- glm(FLO_M~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_NE_15)
+```
+
+Tmin_ACC_V (p = 0.063679)
+
+```{r}
+fit.model<-modelo_glm_NE_15
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,			0,			0,	0,	0,	0,	0,		0,	1,		0,	0,	0,	0,			0,					0,		0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmin_ACC_V)
+modelo_glm_NE_16<- glm(FLO_M~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_NE_16)
+```
+```{r}
+fit.model<-modelo_glm_NE_16
+m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+)
+testeF.CB(fit.model,m.C)
+```
+O genotipo que está no intecept é o ALIANCA
+
+```{r}
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("ALIANCA", "BRS A704",	"CICA 8",	"EMPASC 101",	"EPAGRI 108",	"EPAGRI 109",	"MOXOTO",	"PR268")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_NE_17<- glm(FLO_M~.,Temporario, family = Gamma(link = "log" )) 
+summary(modelo_glm_NE_17)
+
+```
+
+```{r}
+fit.model<-modelo_glm_NE_17
+m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	))
+testeF.CB(fit.model,m.C)
+```
+
+
+```{r}
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS JABURU","SCS 114 ANDOSAN")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_NE_18<-glm(FLO_M~.,Temporario, family = Gamma(link = "log" )) 
+summary(modelo_glm_NE_18)
+
+```
+
+```{r}
+fit.model<-modelo_glm_NE_18
+m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	))
+testeF.CB(fit.model,m.C)
+```
+
+
+```{r}
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS FORMOSO","IAC1298", "SCS 116 SATORU", "SCS 121 CL")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_NE_19<-glm(FLO_M~.,Temporario, family = Gamma(link = "log" )) 
+summary(modelo_glm_NE_19)
+
+```
+
+```{r}
+fit.model<-modelo_glm_NE_19
+m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	))
+testeF.CB(fit.model,m.C)
+```
+
+
+```{r}
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS GUARA","IAC1299","PR267","SCSBRS 113 TIO TAKA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_NE_20<-glm(FLO_M~.,Temporario, family = Gamma(link = "log" )) 
+summary(modelo_glm_NE_20)
+
+```
+```{r}
+fit.model<-modelo_glm_NE_20
+m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	))
+testeF.CB(fit.model,m.C)
+```
+
+
+```{r}
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS CATIANA","BRSMG RUBELITA" )
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_NE_21<-glm(FLO_M~.,Temporario, family = Gamma(link = "log" )) 
+summary(modelo_glm_NE_21)
+
+```
+
+
+```{r}
+fit.model<-modelo_glm_NE_21
+m.C <- cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+testeF.CB(fit.model,m.C)
+```
+
+
+```{r}
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("IAC1307")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_NE_22<-glm(FLO_M~.,Temporario, family = Gamma(link = "log" )) 
+summary(modelo_glm_NE_22)
+
+```
+
+```{r}
+fit.model<-modelo_glm_NE_22
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+
+
+```{r}
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS ALVORADA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_NE_23<-glm(FLO_M~.,Temporario, family = Gamma(link = "log" )) 
+summary(modelo_glm_NE_23)
+
+```
+
+```{r}
+fit.model<-modelo_glm_NE_23
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+
+
+```{r}
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("OUROMINAS")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_NE_24<-glm(FLO_M~.,Temporario, family = Gamma(link = "log" )) 
+summary(modelo_glm_NE_24)
+
+```
+
+
+```{r}
+fit.model<-modelo_glm_NE_24
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+
+
+```{r}
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS PAMPEIRA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_NE_25<-glm(FLO_M~.,Temporario, family = Gamma(link = "log" )) 
+summary(modelo_glm_NE_25)
+
+```
+
+Tmin_Maxima (p = 0.062980)
+
+```{r}
+fit.model<-modelo_glm_NE_25
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmin_Maxima)
+modelo_glm_NE_26<- glm(FLO_M~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_NE_26)
+```
+
+```{r}
+Temporario_glm_NE_26 <- Temporario
+```
+
+
+## Analise de residos.
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa deixe no objeto fit.model a saída      
+# do ajuste da regressão com erros gama e ligação log.  Deixe     
+# também os dados disponíveis através do comando attach(...).    
+# Depois use o comando source(...) no R ou S-Plus para        
+# executar o programa. A sequência de comandos é a seguinte:               
+#
+       fit.model <- modelo_glm_NE_26
+       attach(Temporario_glm_NE_26)
+       source("envel_gama.txt")                                      
+#
+# A saída será o gráfico de envelope para o resíduo componente 
+# do desvio padronizado. Para colocar um título no gráfico use
+# o comando title("..."). Para  usar  outras  ligações mudar 
+# no programa abaixo o termo family=Gamma(link=log) para 
+# family=Gamma no caso de ligação  recíproca ou por 
+# family= Gamma(link=identity) no caso de ligação identidade.
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit.model,type="response")
+fi <- (n-p)/sum((ro/(fitted(fit.model)))^ 2)
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+#
+e <- matrix(0,n,100)
+#
+for(i in 1:100){
+resp <- rgamma(n,fi)
+resp <- (fitted(fit.model)/fi)*resp
+fit <- glm(resp ~ X, family=Gamma(link=log))
+w <- fit$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit,type="response")
+phi <- (n-p)/sum((ro/(fitted(fit)))^ 2)
+e[,i] <- sort(resid(fit,type="deviance")*sqrt(phi/(1-h)))}
+#
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:n){
+  eo <- sort(e[i,])
+e1[i] <- (eo[2]+eo[3])/2
+e2[i] <- (eo[97]+eo[98])/2}
+#
+med <- apply(e,1,mean)
+faixa <- range(td,e1,e2)
+par(pty="s")
+qqnorm(td, xlab="Percentil da N(0,1)",
+ylab="Componente do Desvio", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+#
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="", ylab="", type="l",ylim=faixa,lty=2, main="")
+#------------------------------------------------------------#          
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erros gama.   Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+         fit.model <- modelo_glm_NE_26
+         attach(Temporario_glm_NE_26)
+         source("diag_gama.txt")
+#
+# A saída terá quatro gráficos: de pontos de alacanca, 
+# de pontos influentes  e  dois de resíduos. Para 
+# identificar os pontos que  mais  se destacam usar o 
+# comando identify(...). Se por exemplo se destacam
+# três pontos no plot(fitted(fit.model),h,...), 
+# após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram colocados os limites ylim=c(a-1,b+1), 
+# em que a é o menor valor e b o maior valor para o resíduo. 
+# Este programa usa a library MASS para estimar o parâmetro
+# fi da gama que  estará guardado no objeto fi.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+library(MASS)
+fi <- gamma.shape(fit.model)$alpha
+ts <- resid(fit.model,type="pearson")*sqrt(fi/(1-h))
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+di <- (h/(1-h))*(ts^2)
+par(mfrow=c(2,2))
+a <- max(td)
+b <- min(td)
+plot(fitted(fit.model),h,xlab="Valor Ajustado", ylab="Medida h", pch=16)
+#identify(fitted(fit.model), h, n=1)
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+#identify(di, n=2)
+#
+plot(fitted(fit.model),td,xlab="Valor Ajustado", ylab="Resíduo Componente do Desvio",
+ylim=c(b-1,a+1),pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),td, n=1)
+#
+w <- fit.model$weights
+eta <- predict(fit.model)
+z <- eta + resid(fit.model, type="pearson")/sqrt(w)
+plot(predict(fit.model),z,xlab="Preditor Linear", 
+ylab="Variável z", pch=16)
+par(mfrow=c(1,1))
+#------------------------------------------------------------#
+
+```
+
+
+## transf. log
+```{r}
+ detach("package:MASS", unload = TRUE)
+```
+
+```{r}
+Temporario <- Nordeste[,c(-1,-3)] # retirando as vaiáveis REGIAO e ID_ENSAIO
+modelo_glm_Log_Log_NE_<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_Log_NE_)
+```
+```{r}
+fit.model<-modelo_glm_Log_Log_NE_
+m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0
+)
+)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("ALIANCA","BRS A704", "BRS JABURU","CICA 8","EMPASC 101", "EPAGRI 108" ,   "EPAGRI 109",  "MOXOTO",   "PR268",   "SCS 114 ANDOSAN")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_Log_Log_NE_1<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_Log_NE_1)
+```
+```{r}
+fit.model<-modelo_glm_Log_Log_NE_1
+m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	))
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS FORMOSO",    "BRS GUARA",    "IAC1298",   "IAC1299",  "PR267",    "SCS 116 SATORU",     "SCS 121 CL",    "SCSBRS 113 TIO TAKA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_Log_Log_NE_2<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_Log_NE_2)
+```
+```{r}
+fit.model<-modelo_glm_Log_Log_NE_2
+m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,		0,		0,	0,	0,	0,	0,	0,	0,	0,	0,			0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,			0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,		0,		0,	0,	0,	0,	0,	0,	0,	0,	0,			0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,			0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,		0,	0,	0,	0,	0,	0,	0,	0,	0,			1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,			0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,		0,	0,	0,	0,	0,	0,	0,	0,	0,			0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,		0,	0,	0,	0,	0,			0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	))
+testeF.CB(fit.model,m.C)
+```
+
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS ALVORADA",  "BRS CATIANA",    "IAC1307",     "OUROMINAS")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_Log_Log_NE_3<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_Log_NE_3)
+```
+
+
+```{r}
+fit.model<-modelo_glm_Log_Log_NE_3
+m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,		0,			0,		0,	0,	1,	0,	0,	0,	0,	0,	0,				0,	0,	0,	0,	0,	0,	0,	0,	0,			0,	0,	0,	0,	0,			0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0),
+cbind(	0,	0,	0,	0,	0,	0,	0,		0,			0,		0,	0,	0,	0,	1,	0,	0,	0,	0,				0,	0,	0,	0,	0,	0,	0,	0,	0,			0,	0,	0,	0,	0,			0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0))
+testeF.CB(fit.model,m.C)
+```
+
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS PAMPEIRA",      "BRSMG RUBELITA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_Log_Log_NE_4<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_Log_NE_4)
+```
+Tmin_Media (p = 0.763180)
+
+```{r}
+fit.model<-modelo_glm_Log_Log_NE_4
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(-Tmin_Media)
+
+modelo_glm_Log_Log_NE_5<-glm(log(FLO_M)~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_Log_NE_5)
+```
+
+UR_fld_m (p = 0.627459)
+
+```{r}
+fit.model<-modelo_glm_Log_Log_NE_5
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(- UR_fld_m)
+
+modelo_glm_Log_Log_NE_6<-glm(log(FLO_M)~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_Log_NE_6)
+```
+
+Tmax_fld_m (p = 0.519578)
+
+```{r}
+fit.model<-modelo_glm_Log_Log_NE_6
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(- Tmax_fld_m)
+
+modelo_glm_Log_Log_NE_7<-glm(log(FLO_M)~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_Log_NE_7)
+```
+
+Tmax_ACC_R  (p = 0.461984)
+
+```{r}
+fit.model<-modelo_glm_Log_Log_NE_7
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	1,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(- Tmax_ACC_R)
+
+modelo_glm_Log_Log_NE_8<-glm(log(FLO_M)~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_Log_NE_8)
+```
+
+Chuva_ACC  (p = 0.473014)
+
+```{r}
+fit.model<-modelo_glm_Log_Log_NE_8
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,		0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(- Chuva_ACC)
+
+modelo_glm_Log_Log_NE_9<-glm(log(FLO_M)~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_Log_NE_9)
+```
+
+Tmax_Minima (p = 0.482680)
+
+```{r}
+fit.model<-modelo_glm_Log_Log_NE_9
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,		1,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,		0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(- Tmax_Minima)
+
+modelo_glm_Log_Log_NE_10<-glm(log(FLO_M)~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_Log_NE_10)
+```
+
+Rad_ACC_R (p = 0.211125)
+
+```{r}
+fit.model<-modelo_glm_Log_Log_NE_10
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,			0,	0,	0,	0,	0,		0,	0,	0,	0,	0,		0,	0,	1,	0,	0,	0,	0,		0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(- Rad_ACC_R)
+
+modelo_glm_Log_Log_NE_11<-glm(log(FLO_M)~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_Log_NE_11)
+```
+
+longitude  (p = 0.247176)
+
+```{r}
+fit.model<-modelo_glm_Log_Log_NE_11
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,		0,			0,	0,	0,	0,	0,		0,	0,	0,	0,	0,		0,	0,		0,	0,	0,	0,		0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(- longitude)
+
+modelo_glm_Log_Log_NE_12<-glm(log(FLO_M)~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_Log_NE_12)
+```
+
+Rad_ACC (p = 0.254549)
+
+```{r}
+fit.model<-modelo_glm_Log_Log_NE_12
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,		0,			0,	0,	0,	0,	0,		0,	0,	0,	0,	0,		0,	0,		1,	0,	0,	0,		0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(- Rad_ACC)
+
+modelo_glm_Log_Log_NE_13<-glm(log(FLO_M)~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_Log_NE_13)
+```
+
+Tmax_Maxima (p = 0.260389)
+
+```{r}
+fit.model<-modelo_glm_Log_Log_NE_13
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	1,		0,			0,	0,	0,	0,	0,		0,	0,	0,	0,	0,		0,	0,			0,	0,	0,		0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(- Tmax_Maxima)
+
+modelo_glm_Log_Log_NE_14<-glm(log(FLO_M)~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_Log_NE_14)
+```
+
+Tmin_fld_m  (p = 0.138394)
+
+```{r}
+fit.model<-modelo_glm_Log_Log_NE_14
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,			0,			0,	0,	0,	0,	0,		0,	0,	1,	0,	0,		0,	0,			0,	0,	0,		0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(- Tmin_fld_m)
+
+modelo_glm_Log_Log_NE_15<-glm(log(FLO_M)~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_Log_NE_15)
+```
+
+latitude (p = 0.095739)
+
+```{r}
+fit.model<-modelo_glm_Log_Log_NE_15
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,		0,			0,			0,	0,	0,	0,	0,		0,	0,		0,	0,		0,	0,			0,	0,	0,		0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(- latitude)
+
+modelo_glm_Log_Log_NE_16<-glm(log(FLO_M)~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_Log_NE_16)
+```
+Graus_dia_ciclo (p = 0.131688)
+
+```{r}
+fit.model<-modelo_glm_Log_Log_NE_16
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,			0,			0,	0,	0,	0,	0,		0,	0,		0,	0,		0,	0,			0,	0,	0,		0,	1,	0
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(- Graus_dia_ciclo)
+
+modelo_glm_Log_Log_NE_17<-glm(log(FLO_M)~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_Log_NE_17)
+```
+```{r}
+Temporario_glm_Log_Log_NE_18 <- Temporario
+
+```
+
+## Analise de residos.
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa deixe no objeto fit.model a saída      
+# do ajuste da regressão com erros gama e ligação log.  Deixe     
+# também os dados disponíveis através do comando attach(...).    
+# Depois use o comando source(...) no R ou S-Plus para        
+# executar o programa. A sequência de comandos é a seguinte:               
+#
+       fit.model <- modelo_glm_Log_Log_NE_17
+       attach(Temporario_glm_Log_Log_NE_18)
+       source("envel_gama.txt")                                      
+#
+# A saída será o gráfico de envelope para o resíduo componente 
+# do desvio padronizado. Para colocar um título no gráfico use
+# o comando title("..."). Para  usar  outras  ligações mudar 
+# no programa abaixo o termo family=Gamma(link=log) para 
+# family=Gamma no caso de ligação  recíproca ou por 
+# family= Gamma(link=identity) no caso de ligação identidade.
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit.model,type="response")
+fi <- (n-p)/sum((ro/(fitted(fit.model)))^ 2)
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+#
+e <- matrix(0,n,100)
+#
+for(i in 1:100){
+resp <- rgamma(n,fi)
+resp <- (fitted(fit.model)/fi)*resp
+fit <- glm(resp ~ X, family=Gamma(link=log))
+w <- fit$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit,type="response")
+phi <- (n-p)/sum((ro/(fitted(fit)))^ 2)
+e[,i] <- sort(resid(fit,type="deviance")*sqrt(phi/(1-h)))}
+#
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:n){
+  eo <- sort(e[i,])
+e1[i] <- (eo[2]+eo[3])/2
+e2[i] <- (eo[97]+eo[98])/2}
+#
+med <- apply(e,1,mean)
+faixa <- range(td,e1,e2)
+par(pty="s")
+qqnorm(td, xlab="Percentil da N(0,1)",
+ylab="Componente do Desvio", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+#
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="", ylab="", type="l",ylim=faixa,lty=2, main="")
+
+#------------------------------------------------------------#          
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erros gama.   Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+         fit.model <- modelo_glm_Log_Log_NE_17
+         attach(Temporario_glm_Log_Log_NE_18)
+         source("diag_gama.txt")
+#
+# A saída terá quatro gráficos: de pontos de alacanca, 
+# de pontos influentes  e  dois de resíduos. Para 
+# identificar os pontos que  mais  se destacam usar o 
+# comando identify(...). Se por exemplo se destacam
+# três pontos no plot(fitted(fit.model),h,...), 
+# após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram colocados os limites ylim=c(a-1,b+1), 
+# em que a é o menor valor e b o maior valor para o resíduo. 
+# Este programa usa a library MASS para estimar o parâmetro
+# fi da gama que  estará guardado no objeto fi.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+library(MASS)
+fi <- gamma.shape(fit.model)$alpha
+ts <- resid(fit.model,type="pearson")*sqrt(fi/(1-h))
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+di <- (h/(1-h))*(ts^2)
+par(mfrow=c(2,2))
+a <- max(td)
+b <- min(td)
+plot(fitted(fit.model),h,xlab="Valor Ajustado", ylab="Medida h", pch=16)
+#identify(fitted(fit.model), h, n=1)
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+#identify(di, n=2)
+#
+plot(fitted(fit.model),td,xlab="Valor Ajustado", ylab="Resíduo Componente do Desvio",
+ylim=c(b-1,a+1),pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),td, n=1)
+#
+w <- fit.model$weights
+eta <- predict(fit.model)
+z <- eta + resid(fit.model, type="pearson")/sqrt(w)
+plot(predict(fit.model),z,xlab="Preditor Linear", 
+ylab="Variável z", pch=16)
+par(mfrow=c(1,1))
+#------------------------------------------------------------#
+
+```
+```{r}
+modelo_glm_Log_Log_NE_18<-glm(log(FLO_M)~.,Temporario_glm_Log_Log_NE_18[c(-1,-2, -3),], family = Gamma(link = "log" ))
+summary(modelo_glm_Log_Log_NE_18)
+
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa deixe no objeto fit.model a saída      
+# do ajuste da regressão com erros gama e ligação log.  Deixe     
+# também os dados disponíveis através do comando attach(...).    
+# Depois use o comando source(...) no R ou S-Plus para        
+# executar o programa. A sequência de comandos é a seguinte:               
+#
+       fit.model <- modelo_glm_Log_Log_NE_18
+       attach(Temporario_glm_Log_Log_NE_18[c(-1,-2,-3),])
+       source("envel_gama.txt")                                      
+#
+# A saída será o gráfico de envelope para o resíduo componente 
+# do desvio padronizado. Para colocar um título no gráfico use
+# o comando title("..."). Para  usar  outras  ligações mudar 
+# no programa abaixo o termo family=Gamma(link=log) para 
+# family=Gamma no caso de ligação  recíproca ou por 
+# family= Gamma(link=identity) no caso de ligação identidade.
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit.model,type="response")
+fi <- (n-p)/sum((ro/(fitted(fit.model)))^ 2)
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+#
+e <- matrix(0,n,100)
+#
+for(i in 1:100){
+resp <- rgamma(n,fi)
+resp <- (fitted(fit.model)/fi)*resp
+fit <- glm(resp ~ X, family=Gamma(link=log))
+w <- fit$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit,type="response")
+phi <- (n-p)/sum((ro/(fitted(fit)))^ 2)
+e[,i] <- sort(resid(fit,type="deviance")*sqrt(phi/(1-h)))}
+#
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:n){
+  eo <- sort(e[i,])
+e1[i] <- (eo[2]+eo[3])/2
+e2[i] <- (eo[97]+eo[98])/2}
+#
+med <- apply(e,1,mean)
+faixa <- range(td,e1,e2)
+par(pty="s")
+qqnorm(td, xlab="Percentil da N(0,1)",
+ylab="Componente do Desvio", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+#
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="", ylab="", type="l",ylim=faixa,lty=2, main="")
+#identify(di, n=2)
+#------------------------------------------------------------#          
+```
+
+
+
+## trandf. Log Log
+
+```{r}
+ detach("package:MASS", unload = TRUE)
+```
+
+```{r}
+Temporario <- Nordeste[,c(-1,-3)] # retirando as vaiáveis REGIAO e ID_ENSAIO
+modelo_glm_Log_2Log_NE_<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_2Log_NE_)
+```
+```{r}
+fit.model<-modelo_glm_Log_2Log_NE_
+m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("ALIANCA","BRS A704",    "BRS JABURU",   "CICA 8",   "EMPASC 101",    "EPAGRI 108",   "EPAGRI 109",  "MOXOTO", "PR268",   "SCS 114 ANDOSAN")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_Log_2Log_NE_1<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_2Log_NE_1)
+```
+
+
+```{r}
+fit.model<-modelo_glm_Log_2Log_NE_1
+m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS FORMOSO",   "BRS GUARA",   "IAC1298",  "IAC1299",    "PR267",   "SCS 116 SATORU",   "SCS 121 CL",    "SCSBRS 113 TIO TAKA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_Log_2Log_NE_2<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_2Log_NE_2)
+```
+```{r}
+fit.model<-modelo_glm_Log_2Log_NE_2
+m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS ALVORADA",   "BRS CATIANA",  "IAC1307",   "OUROMINAS")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_Log_2Log_NE_3<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_2Log_NE_3)
+```
+```{r}
+fit.model<-modelo_glm_Log_2Log_NE_3
+m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+
+)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS PAMPEIRA",  "BRSMG RUBELITA" )
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_Log_2Log_NE_4<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_2Log_NE_4)
+```
+Tmin_Media (p = 0.764462) 
+
+```{r}
+fit.model<-modelo_glm_Log_2Log_NE_4
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(-Tmin_Media)
+
+modelo_glm_Log_2Log_NE_5<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_2Log_NE_5)
+```
+
+UR_fld_m (p = 0.665683) 
+
+```{r}
+fit.model<-modelo_glm_Log_2Log_NE_5
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(- UR_fld_m)
+
+modelo_glm_Log_2Log_NE_6<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_2Log_NE_6)
+```
+
+Tmax_fld_m             5.217e-04  7.412e-04   0.704  (p = 0.481923) 
+
+```{r}
+fit.model<-modelo_glm_Log_2Log_NE_6
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(-Tmax_fld_m)
+
+modelo_glm_Log_2Log_NE_7<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_2Log_NE_7)
+```
+
+Tmax_ACC_R (p = 0.445371) 
+
+```{r}
+fit.model<-modelo_glm_Log_2Log_NE_7
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	1,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(- Tmax_ACC_R)
+
+modelo_glm_Log_2Log_NE_8<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_2Log_NE_8)
+```
+
+Chuva_ACC  (p = 0.489730) 
+
+```{r}
+fit.model<-modelo_glm_Log_2Log_NE_8
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,		0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(- Chuva_ACC)
+
+modelo_glm_Log_2Log_NE_9<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_2Log_NE_9)
+```
+
+Tmax_Minima (p = 0.470961) 
+
+```{r}
+fit.model<-modelo_glm_Log_2Log_NE_9
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,		1,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,		0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(-Tmax_Minima)
+
+modelo_glm_Log_2Log_NE_10<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_2Log_NE_10)
+```
+
+longitude (p = 0.233063) 
+
+```{r}
+fit.model<-modelo_glm_Log_2Log_NE_10
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,		0,			0,	0,	0,	0,	0,		0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,		0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(-longitude)
+
+modelo_glm_Log_2Log_NE_11<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_2Log_NE_11)
+```
+
+Rad_ACC_R (p = 0.244608) 
+
+```{r}
+fit.model<-modelo_glm_Log_2Log_NE_11
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,		0,			0,	0,	0,	0,	0,		0,	0,	0,	0,	0,		0,	0,	1,	0,	0,	0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(-Rad_ACC_R)
+
+modelo_glm_Log_2Log_NE_12<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_2Log_NE_12)
+```
+
+Rad_ACC  (p = 0.204519) 
+
+```{r}
+fit.model<-modelo_glm_Log_2Log_NE_12
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,		0,			0,	0,	0,	0,	0,		0,	0,	0,	0,	0,		0,	0,		1,	0,	0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(- Rad_ACC)
+
+modelo_glm_Log_2Log_NE_13<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_2Log_NE_13)
+```
+
+Tmax_Maxima (p = 0.242470) 
+
+```{r}
+fit.model<-modelo_glm_Log_2Log_NE_13
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	1,		0,			0,	0,	0,	0,	0,		0,	0,	0,	0,	0,		0,	0,			0,	0,	0,		0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(- Tmax_Maxima)
+
+modelo_glm_Log_2Log_NE_14<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_2Log_NE_14)
+```
+
+Tmin_fld_m (p = 0.128733) 
+
+```{r}
+fit.model<-modelo_glm_Log_2Log_NE_14
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,			0,			0,	0,	0,	0,	0,		0,	0,	1,	0,	0,		0,	0,			0,	0,	0,		0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(-Tmin_fld_m)
+
+modelo_glm_Log_2Log_NE_15<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_2Log_NE_15)
+```
+latitude  (p = 0.094561) 
+
+```{r}
+fit.model<-modelo_glm_Log_2Log_NE_15
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,		0,			0,			0,	0,	0,	0,	0,		0,	0,		0,	0,		0,	0,			0,	0,	0,		0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(-latitude)
+
+modelo_glm_Log_2Log_NE_16<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_2Log_NE_16)
+```
+Graus_dia_ciclo (p = 0.094191)
+
+
+```{r}
+fit.model<-modelo_glm_Log_2Log_NE_16
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,			0,			0,	0,	0,	0,	0,		0,	0,		0,	0,		0,	0,			0,	0,	0,		0,	1,	0
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(-Graus_dia_ciclo)
+
+modelo_glm_Log_2Log_NE_17<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_2Log_NE_17)
+```
+```{r}
+Temporario_glm_Log_2Log_NE_17 <- Temporario
+```
+
+
+## Analise de residos.
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa deixe no objeto fit.model a saída      
+# do ajuste da regressão com erros gama e ligação log.  Deixe     
+# também os dados disponíveis através do comando attach(...).    
+# Depois use o comando source(...) no R ou S-Plus para        
+# executar o programa. A sequência de comandos é a seguinte:               
+#
+       fit.model <- modelo_glm_Log_2Log_NE_17
+       attach(Temporario_glm_Log_2Log_NE_17)
+       source("envel_gama.txt")                                      
+#
+# A saída será o gráfico de envelope para o resíduo componente 
+# do desvio padronizado. Para colocar um título no gráfico use
+# o comando title("..."). Para  usar  outras  ligações mudar 
+# no programa abaixo o termo family=Gamma(link=log) para 
+# family=Gamma no caso de ligação  recíproca ou por 
+# family= Gamma(link=identity) no caso de ligação identidade.
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit.model,type="response")
+fi <- (n-p)/sum((ro/(fitted(fit.model)))^ 2)
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+#
+e <- matrix(0,n,100)
+#
+for(i in 1:100){
+resp <- rgamma(n,fi)
+resp <- (fitted(fit.model)/fi)*resp
+fit <- glm(resp ~ X, family=Gamma(link=log))
+w <- fit$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit,type="response")
+phi <- (n-p)/sum((ro/(fitted(fit)))^ 2)
+e[,i] <- sort(resid(fit,type="deviance")*sqrt(phi/(1-h)))}
+#
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:n){
+  eo <- sort(e[i,])
+e1[i] <- (eo[2]+eo[3])/2
+e2[i] <- (eo[97]+eo[98])/2}
+#
+med <- apply(e,1,mean)
+faixa <- range(td,e1,e2)
+par(pty="s")
+qqnorm(td, xlab="Percentil da N(0,1)",
+ylab="Componente do Desvio", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+#
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="", ylab="", type="l",ylim=faixa,lty=2, main="")
+
+#------------------------------------------------------------#          
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erros gama.   Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+         fit.model <- modelo_glm_Log_2Log_NE_17
+         attach(Temporario_glm_Log_2Log_NE_17)
+         source("diag_gama.txt")
+#
+# A saída terá quatro gráficos: de pontos de alacanca, 
+# de pontos influentes  e  dois de resíduos. Para 
+# identificar os pontos que  mais  se destacam usar o 
+# comando identify(...). Se por exemplo se destacam
+# três pontos no plot(fitted(fit.model),h,...), 
+# após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram colocados os limites ylim=c(a-1,b+1), 
+# em que a é o menor valor e b o maior valor para o resíduo. 
+# Este programa usa a library MASS para estimar o parâmetro
+# fi da gama que  estará guardado no objeto fi.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+library(MASS)
+fi <- gamma.shape(fit.model)$alpha
+ts <- resid(fit.model,type="pearson")*sqrt(fi/(1-h))
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+di <- (h/(1-h))*(ts^2)
+par(mfrow=c(2,2))
+a <- max(td)
+b <- min(td)
+plot(fitted(fit.model),h,xlab="Valor Ajustado", ylab="Medida h", pch=16)
+#identify(fitted(fit.model), h, n=1)
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+#identify(di, n=2)
+#
+plot(fitted(fit.model),td,xlab="Valor Ajustado", ylab="Resíduo Componente do Desvio",
+ylim=c(b-1,a+1),pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),td, n=1)
+#
+w <- fit.model$weights
+eta <- predict(fit.model)
+z <- eta + resid(fit.model, type="pearson")/sqrt(w)
+plot(predict(fit.model),z,xlab="Preditor Linear", 
+ylab="Variável z", pch=16)
+par(mfrow=c(1,1))
+#------------------------------------------------------------#
+
+```
+
+
+# link inverse
+
+```{r}
+ detach("package:MASS", unload = TRUE)
+```
+
+```{r}
+Temporario<-Nordeste[,c(-1,-3)]
+modelo_glm_inv_NE_<- glm(FLO_M~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_inv_NE_)
+```
+
+Tmax_ACC_R (p = 0.786921)
+
+```{r}
+fit.model<-modelo_glm_inv_NE_
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_ACC_R)
+modelo_glm_inv_NE_1<- glm(FLO_M~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_inv_NE_1)
+```
+
+Tmin_Media (p = 0.663388)
+
+```{r}
+fit.model<-modelo_glm_inv_NE_1
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmin_Media)
+modelo_glm_inv_NE_2<- glm(FLO_M~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_inv_NE_2)
+```
+
+Chuva_ACC (p = 0.613085)
+
+```{r}
+fit.model<-modelo_glm_inv_NE_2
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Chuva_ACC)
+modelo_glm_inv_NE_3<- glm(FLO_M~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_inv_NE_3)
+```
+
+Tmax_fld_m (p = 0.608732)
+
+```{r}
+fit.model<-modelo_glm_inv_NE_3
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,		0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_fld_m)
+modelo_glm_inv_NE_4<- glm(FLO_M~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_inv_NE_4)
+```
+
+Tmin_fld_m (p = 0.604901)
+
+```{r}
+fit.model<-modelo_glm_inv_NE_4
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,		0,	0,	0,	0,	0,	0,		0,	0,	1,	0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmin_fld_m)
+modelo_glm_inv_NE_5<- glm(FLO_M~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_inv_NE_5)
+```
+
+longitude (p = 0.404342)
+
+```{r}
+fit.model<-modelo_glm_inv_NE_5
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,		0,		0,	0,	0,	0,	0,	0,		0,	0,		0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-longitude)
+modelo_glm_inv_NE_6<- glm(FLO_M~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_inv_NE_6)
+```
+
+Tmax_Minima  (p = 0.274949)
+
+```{r}
+fit.model<-modelo_glm_inv_NE_6
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,		0,		1,	0,	0,	0,	0,	0,		0,	0,		0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_Minima)
+modelo_glm_inv_NE_7<- glm(FLO_M~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_inv_NE_7)
+```
+
+UR_fld_m (p = 0.219546)
+
+```{r}
+fit.model<-modelo_glm_inv_NE_7
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,		0,			0,	0,	0,	0,	0,		0,	0,		0,	0,		0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-UR_fld_m)
+modelo_glm_inv_NE_8<- glm(FLO_M~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_inv_NE_8)
+```
+
+Rad_ACC_R (p = 0.194535)
+
+```{r}
+fit.model<-modelo_glm_inv_NE_8
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,		0,			0,	0,	0,	0,	0,		0,	0,		0,	0,		0,	0,	1,	0,	0,	0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Rad_ACC_R)
+modelo_glm_inv_NE_9<- glm(FLO_M~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_inv_NE_9)
+```
+
+Tmax_Maxima (p = 0.239202)
+
+```{r}
+fit.model<-modelo_glm_inv_NE_9
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	1,		0,			0,	0,	0,	0,	0,		0,	0,		0,	0,		0,	0,		0,	0,	0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_Maxima)
+modelo_glm_inv_NE_10<- glm(FLO_M~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_inv_NE_10)
+```
+
+UR_V (p = 0.096285)
+
+```{r}
+fit.model<-modelo_glm_inv_NE_10
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,			0,			0,	0,	0,	0,	0,		0,	0,		0,	0,		0,	0,		0,	0,	0,	1,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-UR_V)
+modelo_glm_inv_NE_11<- glm(FLO_M~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_inv_NE_11)
+```
+
+Tmin_Maxima  (p = 0.073321)
+
+```{r}
+fit.model<-modelo_glm_inv_NE_11
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,			0,			0,	0,	0,	1,	0,		0,	0,		0,	0,		0,	0,		0,	0,	0,			0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmin_Maxima)
+modelo_glm_inv_NE_12<- glm(FLO_M~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_inv_NE_12)
+```
+
+Genótipos não significativos 
+
+```{r}
+fit.model<-modelo_glm_inv_NE_12
+m.C <-rbind(cbind(	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	))
+testeF.CB(fit.model,m.C)
+```
+
+Genótipo "ALIANCA" está no intercepto
+```{r}
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("ALIANCA", "BRS A704",    "BRS JABURU",   "CICA 8",   "EPAGRI 108",  "EPAGRI 109",  "MOXOTO",  "PR268","EMPASC 101" )
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_inv_NE_13<- glm(FLO_M~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_inv_NE_13)
+```
+
+
+
+```{r}
+fit.model<-modelo_glm_inv_NE_13
+m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	1,	0,	0,		0,	0,	0,	0,	0,		0,	0,	0,		0,			0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	1,		0,	0,	0,	0,	0,		0,	0,	0,		0,			0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,		0,	0,	0,		0,			0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,		0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,		0,	0,	0,		0,			0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,		0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,		0,	0,	0,		0,			0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,		0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	))
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS FORMOSO",   "BRS GUARA",  "SCS 121 CL",   "SCS 116 SATORU",    "SCS 114 ANDOSAN" )
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_inv_NE_14<- glm(FLO_M~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_inv_NE_14)
+```
+
+```{r}
+fit.model<-modelo_glm_inv_NE_14
+m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,		0,			0,	0,	0,	0,	0,		0,	0,	0,		0,			1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,		0,	0,	0,	0,	0,				0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,		0,			0,	0,	0,	0,	0,		0,	0,	0,		0,			0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,		0,	0,	0,	0,	0,				0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,		0,			0,	0,	0,	0,	0,		0,	0,	0,		0,			0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	1,		0,	0,	0,	0,	0,				0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,		0,			0,	0,	0,	0,	0,		0,	0,	0,		0,			0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,		0,	0,	0,	0,	0,				0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	))
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("IAC1298",  "IAC1299",   "PR267",  "SCSBRS 113 TIO TAKA" )
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_inv_NE_15<- glm(FLO_M~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_inv_NE_15)
+```
+
+
+```{r}
+fit.model<-modelo_glm_inv_NE_15
+m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,		1,	0,	0,		0,			0,	0,	0,	0,	0,		0,	0,	0,		0,					0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,			0,	0,	0,	0,	0,				0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,		0,	0,	1,		0,			0,	0,	0,	0,	0,		0,	0,	0,		0,					0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,			0,	0,	0,	0,	0,				0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,		0,			0,	0,	0,	0,	0,		0,	0,	0,		0,					0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		1,			0,	0,	0,	0,	0,				0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	))
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS ALVORADA","BRS CATIANA","OUROMINAS")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_inv_NE_16<- glm(FLO_M~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_inv_NE_16)
+```
+```{r}
+fit.model<-modelo_glm_inv_NE_16
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,			0,			0,			0,	0,	0,	0,	1,		0,	0,	0,		0,					0,	0,	0,	0,	0,	0,	0,	0,	0,	0,					0,	0,	0,	0,	0,				0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRSMG RUBELITA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_inv_NE_17<- glm(FLO_M~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_inv_NE_17)
+```
+
+latitude (p = 0.173634) 
+```{r}
+fit.model<-modelo_glm_inv_NE_17
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,			0,			0,			0,	0,	0,	0,			0,	0,	0,		0,					0,	0,	0,	0,	0,	0,	0,	0,	0,	0,					0,	0,	0,	0,	0,				0,		1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-latitude)
+modelo_glm_inv_NE_18<- glm(FLO_M~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_inv_NE_18)
+```
+
+```{r}
+fit.model<-modelo_glm_inv_NE_18
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,			0,			0,			0,	0,	0,	0,			0,	0,	0,		0,					1,	0,	0,	0,	0,	0,	0,	0,	0,	0,					0,	0,	0,	0,	0,				0,			0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("IAC1307")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_inv_NE_19<- glm(FLO_M~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_inv_NE_19)
+```
+
+
+```{r}
+fit.model<-modelo_glm_inv_NE_19
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,			0,			0,			0,	0,	1,	0,			0,	0,	0,		0,						0,	0,	0,	0,	0,	0,	0,	0,	0,					0,	0,	0,	0,	0,				0,			0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS PAMPEIRA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_inv_NE_20<- glm(FLO_M~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_inv_NE_20)
+```
+Rad_ACC_V  (p = 0.050638) .
+
+```{r}
+fit.model<-modelo_glm_inv_NE_20
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,			0,			0,			0,	0,		0,			0,	0,	0,		0,						0,	0,	0,	0,	0,	0,	0,	0,	0,					0,	0,	0,	0,	0,				0,			0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Rad_ACC_V)
+modelo_glm_inv_NE_21<- glm(FLO_M~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_inv_NE_21)
+```
+```{r}
+Temporario_glm_inv_NE_21<- Temporario
+```
+
+
+## Analise de residos.
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa deixe no objeto fit.model a saída      
+# do ajuste da regressão com erros gama e ligação log.  Deixe     
+# também os dados disponíveis através do comando attach(...).    
+# Depois use o comando source(...) no R ou S-Plus para        
+# executar o programa. A sequência de comandos é a seguinte:               
+#
+       fit.model <- modelo_glm_inv_NE_21
+       attach(Temporario_glm_inv_NE_21)
+       source("envel_gama.txt")                                      
+#
+# A saída será o gráfico de envelope para o resíduo componente 
+# do desvio padronizado. Para colocar um título no gráfico use
+# o comando title("..."). Para  usar  outras  ligações mudar 
+# no programa abaixo o termo family=Gamma(link=log) para 
+# family=Gamma no caso de ligação  recíproca ou por 
+# family= Gamma(link=identity) no caso de ligação identidade.
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit.model,type="response")
+fi <- (n-p)/sum((ro/(fitted(fit.model)))^ 2)
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+#
+e <- matrix(0,n,100)
+#
+for(i in 1:100){
+resp <- rgamma(n,fi)
+resp <- (fitted(fit.model)/fi)*resp
+fit <- glm(resp ~ X, family=Gamma(link=log))
+w <- fit$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit,type="response")
+phi <- (n-p)/sum((ro/(fitted(fit)))^ 2)
+e[,i] <- sort(resid(fit,type="deviance")*sqrt(phi/(1-h)))}
+#
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:n){
+  eo <- sort(e[i,])
+e1[i] <- (eo[2]+eo[3])/2
+e2[i] <- (eo[97]+eo[98])/2}
+#
+med <- apply(e,1,mean)
+faixa <- range(td,e1,e2)
+par(pty="s")
+qqnorm(td, xlab="Percentil da N(0,1)",
+ylab="Componente do Desvio", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+#
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="", ylab="", type="l",ylim=faixa,lty=2, main="")
+
+#------------------------------------------------------------#          
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erros gama.   Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+         fit.model <- modelo_glm_inv_NE_21
+         attach(Temporario_glm_inv_NE_21)
+         source("diag_gama.txt")
+#
+# A saída terá quatro gráficos: de pontos de alacanca, 
+# de pontos influentes  e  dois de resíduos. Para 
+# identificar os pontos que  mais  se destacam usar o 
+# comando identify(...). Se por exemplo se destacam
+# três pontos no plot(fitted(fit.model),h,...), 
+# após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram colocados os limites ylim=c(a-1,b+1), 
+# em que a é o menor valor e b o maior valor para o resíduo. 
+# Este programa usa a library MASS para estimar o parâmetro
+# fi da gama que  estará guardado no objeto fi.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+library(MASS)
+fi <- gamma.shape(fit.model)$alpha
+ts <- resid(fit.model,type="pearson")*sqrt(fi/(1-h))
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+di <- (h/(1-h))*(ts^2)
+par(mfrow=c(2,2))
+a <- max(td)
+b <- min(td)
+plot(fitted(fit.model),h,xlab="Valor Ajustado", ylab="Medida h", pch=16)
+#identify(fitted(fit.model), h, n=1)
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+#identify(di, n=2)
+#
+plot(fitted(fit.model),td,xlab="Valor Ajustado", ylab="Resíduo Componente do Desvio",
+ylim=c(b-1,a+1),pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),td, n=1)
+#
+w <- fit.model$weights
+eta <- predict(fit.model)
+z <- eta + resid(fit.model, type="pearson")/sqrt(w)
+plot(predict(fit.model),z,xlab="Preditor Linear", 
+ylab="Variável z", pch=16)
+par(mfrow=c(1,1))
+#------------------------------------------------------------#
+
+```
+
+
+
+## log
+
+```{r}
+Temporario<-Nordeste[,c(-1,-3)]
+modelo_glm_Log_inv_NE_<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_inv_NE_)
+```
+
+
+```{r}
+fit.model<-modelo_glm_Log_inv_NE_
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("ALIANCA", "BRS A704","BRS JABURU","CICA 8","EMPASC 101","EPAGRI 108","EPAGRI 109","MOXOTO","PR268","SCS 114 ANDOSAN")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_Log_inv_NE_2<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_inv_NE_2)
+```
+
+
+
+```{r}
+fit.model<-modelo_glm_Log_inv_NE_2
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS FORMOSO","BRS GUARA", "IAC1298", "IAC1299"  ,"PR267","SCS 116 SATORU","SCS 121 CL","SCSBRS 113 TIO TAKA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_Log_inv_NE_3<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_inv_NE_3)
+```
+
+
+
+
+```{r}
+fit.model<-modelo_glm_Log_inv_NE_3
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c( "BRS ALVORADA","BRS CATIANA" , "IAC1307"   , "OUROMINAS")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_Log_inv_NE_4<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_inv_NE_4)
+```
+```{r}
+fit.model<-modelo_glm_Log_inv_NE_4
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS PAMPEIRA" ,"BRSMG RUBELITA" )
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_Log_inv_NE_5<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_inv_NE_5)
+```
+Tmin_Media (p = 0.811783)
+
+```{r}
+fit.model<-modelo_glm_Log_inv_NE_5
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmin_Media)
+modelo_glm_Log_inv_NE_6<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_inv_NE_6)
+```
+
+UR_fld_m  (p = 0.811783)
+
+```{r}
+fit.model<-modelo_glm_Log_inv_NE_6
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-UR_fld_m)
+modelo_glm_Log_inv_NE_7<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_inv_NE_7)
+```
+
+
+Chuva_ACC (p = 0.451156)
+
+```{r}
+fit.model<-modelo_glm_Log_inv_NE_7
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Chuva_ACC)
+modelo_glm_Log_inv_NE_8<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_inv_NE_8)
+```
+
+
+Tmax_ACC_R  (p = 0.445012)
+
+```{r}
+fit.model<-modelo_glm_Log_inv_NE_8
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_ACC_R)
+modelo_glm_Log_inv_NE_9<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_inv_NE_9)
+```
+
+
+Tmax_fld_m (p = 0.475657)
+
+```{r}
+fit.model<-modelo_glm_Log_inv_NE_9
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_fld_m)
+modelo_glm_Log_inv_NE_10<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_inv_NE_10)
+```
+
+
+Tmax_Minima (p = 0.451635)
+
+```{r}
+fit.model<-modelo_glm_Log_inv_NE_10
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_Minima)
+modelo_glm_Log_inv_NE_11<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_inv_NE_11)
+```
+
+
+longitude (p = 0.246003)
+
+```{r}
+fit.model<-modelo_glm_Log_inv_NE_11
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-longitude)
+modelo_glm_Log_inv_NE_12<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_inv_NE_12)
+```
+
+
+Rad_ACC_R (p = 0.246329)
+
+```{r}
+fit.model<-modelo_glm_Log_inv_NE_12
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Rad_ACC_R)
+modelo_glm_Log_inv_NE_13<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_inv_NE_13)
+```
+
+
+Rad_ACC (p = 0.190956)
+
+```{r}
+fit.model<-modelo_glm_Log_inv_NE_13
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Rad_ACC)
+modelo_glm_Log_inv_NE_14<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_inv_NE_14)
+```
+
+
+Tmax_Maxima (p = 0.224213)
+
+```{r}
+fit.model<-modelo_glm_Log_inv_NE_14
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_Maxima)
+modelo_glm_Log_inv_NE_15<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_inv_NE_15)
+```
+
+
+Tmin_fld_m  (p = 0.121036)
+
+```{r}
+fit.model<-modelo_glm_Log_inv_NE_15
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmin_fld_m)
+modelo_glm_Log_inv_NE_16<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_inv_NE_16)
+```
+
+
+latitude (p = 0.093196)
+
+```{r}
+fit.model<-modelo_glm_Log_inv_NE_16
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-latitude)
+modelo_glm_Log_inv_NE_17<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_inv_NE_17)
+```
+
+
+Graus_dia_ciclo (p = 0.084563)
+
+```{r}
+fit.model<-modelo_glm_Log_inv_NE_17
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Graus_dia_ciclo)
+modelo_glm_Log_inv_NE_18<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_inv_NE_18)
+```
+
+```{r}
+Temporario_glm_Log_inv_NE_18 <- Temporario
+```
+
+
+#### Analise de residos.
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa deixe no objeto fit.model a saída      
+# do ajuste da regressão com erros gama e ligação log.  Deixe     
+# também os dados disponíveis através do comando attach(...).    
+# Depois use o comando source(...) no R ou S-Plus para        
+# executar o programa. A sequência de comandos é a seguinte:               
+#
+       fit.model <- modelo_glm_Log_inv_NE_18
+       attach(Temporario_glm_Log_inv_NE_18)
+       source("envel_gama.txt")                                      
+#
+# A saída será o gráfico de envelope para o resíduo componente 
+# do desvio padronizado. Para colocar um título no gráfico use
+# o comando title("..."). Para  usar  outras  ligações mudar 
+# no programa abaixo o termo family=Gamma(link=log) para 
+# family=Gamma no caso de ligação  recíproca ou por 
+# family= Gamma(link=identity) no caso de ligação identidade.
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit.model,type="response")
+fi <- (n-p)/sum((ro/(fitted(fit.model)))^ 2)
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+#
+e <- matrix(0,n,100)
+#
+for(i in 1:100){
+resp <- rgamma(n,fi)
+resp <- (fitted(fit.model)/fi)*resp
+fit <- glm(resp ~ X, family=Gamma(link=log))
+w <- fit$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit,type="response")
+phi <- (n-p)/sum((ro/(fitted(fit)))^ 2)
+e[,i] <- sort(resid(fit,type="deviance")*sqrt(phi/(1-h)))}
+#
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:n){
+  eo <- sort(e[i,])
+e1[i] <- (eo[2]+eo[3])/2
+e2[i] <- (eo[97]+eo[98])/2}
+#
+med <- apply(e,1,mean)
+faixa <- range(td,e1,e2)
+par(pty="s")
+qqnorm(td, xlab="Percentil da N(0,1)",
+ylab="Componente do Desvio", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+#
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="", ylab="", type="l",ylim=faixa,lty=2, main="")
+
+#------------------------------------------------------------#          
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erros gama.   Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+         fit.model <- modelo_glm_Log_inv_NE_18
+         attach(Temporario_glm_Log_inv_NE_18)
+         source("diag_gama.txt")
+#
+# A saída terá quatro gráficos: de pontos de alacanca, 
+# de pontos influentes  e  dois de resíduos. Para 
+# identificar os pontos que  mais  se destacam usar o 
+# comando identify(...). Se por exemplo se destacam
+# três pontos no plot(fitted(fit.model),h,...), 
+# após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram colocados os limites ylim=c(a-1,b+1), 
+# em que a é o menor valor e b o maior valor para o resíduo. 
+# Este programa usa a library MASS para estimar o parâmetro
+# fi da gama que  estará guardado no objeto fi.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+library(MASS)
+fi <- gamma.shape(fit.model)$alpha
+ts <- resid(fit.model,type="pearson")*sqrt(fi/(1-h))
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+di <- (h/(1-h))*(ts^2)
+par(mfrow=c(2,2))
+a <- max(td)
+b <- min(td)
+plot(fitted(fit.model),h,xlab="Valor Ajustado", ylab="Medida h", pch=16)
+#identify(fitted(fit.model), h, n=1)
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+#identify(di, n=2)
+#
+plot(fitted(fit.model),td,xlab="Valor Ajustado", ylab="Resíduo Componente do Desvio",
+ylim=c(b-1,a+1),pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),td, n=1)
+#
+w <- fit.model$weights
+eta <- predict(fit.model)
+z <- eta + resid(fit.model, type="pearson")/sqrt(w)
+plot(predict(fit.model),z,xlab="Preditor Linear", 
+ylab="Variável z", pch=16)
+par(mfrow=c(1,1))
+#------------------------------------------------------------#
+
+```
+
+## log log
+
+```{r}
+ detach("package:MASS", unload = TRUE)
+```
+
+```{r}
+Temporario<-Nordeste[,c(-1,-3)]
+modelo_glm_Log_log_inv_NE_<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_log_inv_NE_)
+```
+```{r}
+fit.model<-modelo_glm_Log_log_inv_NE_
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("ALIANCA", "BRS A704", "BRS JABURU","CICA 8","EMPASC 101","EPAGRI 108", "EPAGRI 109", "MOXOTO", "PR268", "SCS 114 ANDOSAN")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_Log_log_inv_NE_1<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_log_inv_NE_1)
+```
+
+```{r}
+fit.model<-modelo_glm_Log_log_inv_NE_1
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS FORMOSO", "BRS GUARA", "IAC1298","IAC1299", "PR267", "SCS 116 SATORU", "SCS 121 CL", "SCSBRS 113 TIO TAKA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_Log_log_inv_NE_2<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_log_inv_NE_2)
+```
+```{r}
+fit.model<-modelo_glm_Log_log_inv_NE_2
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS ALVORADA"  , "BRS CATIANA", "IAC1307" ,"OUROMINAS")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_Log_log_inv_NE_3<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_log_inv_NE_3)
+```
+```{r}
+fit.model<-modelo_glm_Log_log_inv_NE_3
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS PAMPEIRA", "BRSMG RUBELITA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_Log_log_inv_NE_4<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_log_inv_NE_4)
+```
+
+Tmin_Media (p = 0.797853)
+
+```{r}
+fit.model<-modelo_glm_Log_log_inv_NE_4
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmin_Media)
+modelo_glm_Log_log_inv_NE_5<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_log_inv_NE_5)
+```
+
+UR_fld_m (p = 0.728125)
+
+```{r}
+fit.model<-modelo_glm_Log_log_inv_NE_5
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-UR_fld_m)
+modelo_glm_Log_log_inv_NE_6<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_log_inv_NE_6)
+```
+Chuva_ACC (p = 0.455568)
+
+```{r}
+fit.model<-modelo_glm_Log_log_inv_NE_6
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Chuva_ACC)
+modelo_glm_Log_log_inv_NE_7<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_log_inv_NE_7)
+```
+
+Tmax_ACC_R (p = 0.434360)
+
+```{r}
+fit.model<-modelo_glm_Log_log_inv_NE_7
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_ACC_R)
+modelo_glm_Log_log_inv_NE_8<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_log_inv_NE_8)
+```
+
+Tmax_fld_m (p = 0.471232)
+
+```{r}
+fit.model<-modelo_glm_Log_log_inv_NE_8
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_fld_m)
+modelo_glm_Log_log_inv_NE_9<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_log_inv_NE_9)
+```
+
+Tmax_Minima (p = 0.450949)
+
+```{r}
+fit.model<-modelo_glm_Log_log_inv_NE_9
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_Minima)
+modelo_glm_Log_log_inv_NE_10<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_log_inv_NE_10)
+```
+
+longitude (p = 0.268670)
+
+```{r}
+fit.model<-modelo_glm_Log_log_inv_NE_10
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-longitude)
+modelo_glm_Log_log_inv_NE_11<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_log_inv_NE_11)
+```
+
+Rad_ACC_R (p = 0.232878)
+
+```{r}
+fit.model<-modelo_glm_Log_log_inv_NE_11
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Rad_ACC_R)
+modelo_glm_Log_log_inv_NE_12<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_log_inv_NE_12)
+```
+
+Tmax_Maxima (p = 0.180129)
+
+```{r}
+fit.model<-modelo_glm_Log_log_inv_NE_12
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_Maxima)
+modelo_glm_Log_log_inv_NE_13<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_log_inv_NE_13)
+```
+
+Rad_ACC (p = 0.203748)
+
+```{r}
+fit.model<-modelo_glm_Log_log_inv_NE_13
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Rad_ACC)
+modelo_glm_Log_log_inv_NE_14<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_log_inv_NE_14)
+```
+
+Tmin_fld_m (p = 0.117615)
+
+```{r}
+fit.model<-modelo_glm_Log_log_inv_NE_14
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmin_fld_m)
+modelo_glm_Log_log_inv_NE_15<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_log_inv_NE_15)
+```
+
+latitude  (p = 0.092939)
+
+```{r}
+fit.model<-modelo_glm_Log_log_inv_NE_15
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-latitude)
+modelo_glm_Log_log_inv_NE_16<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_log_inv_NE_16)
+```
+
+Graus_dia_ciclo (p = 0.069399)
+
+```{r}
+fit.model<-modelo_glm_Log_log_inv_NE_16
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Graus_dia_ciclo)
+modelo_glm_Log_log_inv_NE_17<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_log_inv_NE_17)
+```
+
+```{r}
+Temporario_glm_Log_log_inv_NE_17 <- Temporario
+```
+
+
+#### Analise de residos.
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa deixe no objeto fit.model a saída      
+# do ajuste da regressão com erros gama e ligação log.  Deixe     
+# também os dados disponíveis através do comando attach(...).    
+# Depois use o comando source(...) no R ou S-Plus para        
+# executar o programa. A sequência de comandos é a seguinte:               
+#
+       fit.model <- modelo_glm_Log_log_inv_NE_17
+       attach(Temporario_glm_Log_log_inv_NE_17)
+       source("envel_gama.txt")                                      
+#
+# A saída será o gráfico de envelope para o resíduo componente 
+# do desvio padronizado. Para colocar um título no gráfico use
+# o comando title("..."). Para  usar  outras  ligações mudar 
+# no programa abaixo o termo family=Gamma(link=log) para 
+# family=Gamma no caso de ligação  recíproca ou por 
+# family= Gamma(link=identity) no caso de ligação identidade.
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit.model,type="response")
+fi <- (n-p)/sum((ro/(fitted(fit.model)))^ 2)
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+#
+e <- matrix(0,n,100)
+#
+for(i in 1:100){
+resp <- rgamma(n,fi)
+resp <- (fitted(fit.model)/fi)*resp
+fit <- glm(resp ~ X, family=Gamma(link=log))
+w <- fit$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit,type="response")
+phi <- (n-p)/sum((ro/(fitted(fit)))^ 2)
+e[,i] <- sort(resid(fit,type="deviance")*sqrt(phi/(1-h)))}
+#
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:n){
+  eo <- sort(e[i,])
+e1[i] <- (eo[2]+eo[3])/2
+e2[i] <- (eo[97]+eo[98])/2}
+#
+med <- apply(e,1,mean)
+faixa <- range(td,e1,e2)
+par(pty="s")
+qqnorm(td, xlab="Percentil da N(0,1)",
+ylab="Componente do Desvio", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+#
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="", ylab="", type="l",ylim=faixa,lty=2, main="")
+
+#------------------------------------------------------------#          
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erros gama.   Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+         fit.model <- modelo_glm_Log_log_inv_NE_17
+         attach(Temporario_glm_Log_log_inv_NE_17)
+         source("diag_gama.txt")
+#
+# A saída terá quatro gráficos: de pontos de alacanca, 
+# de pontos influentes  e  dois de resíduos. Para 
+# identificar os pontos que  mais  se destacam usar o 
+# comando identify(...). Se por exemplo se destacam
+# três pontos no plot(fitted(fit.model),h,...), 
+# após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram colocados os limites ylim=c(a-1,b+1), 
+# em que a é o menor valor e b o maior valor para o resíduo. 
+# Este programa usa a library MASS para estimar o parâmetro
+# fi da gama que  estará guardado no objeto fi.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+library(MASS)
+fi <- gamma.shape(fit.model)$alpha
+ts <- resid(fit.model,type="pearson")*sqrt(fi/(1-h))
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+di <- (h/(1-h))*(ts^2)
+par(mfrow=c(2,2))
+a <- max(td)
+b <- min(td)
+plot(fitted(fit.model),h,xlab="Valor Ajustado", ylab="Medida h", pch=16)
+#identify(fitted(fit.model), h, n=1)
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+#identify(di, n=2)
+#
+plot(fitted(fit.model),td,xlab="Valor Ajustado", ylab="Resíduo Componente do Desvio",
+ylim=c(b-1,a+1),pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),td, n=1)
+#
+w <- fit.model$weights
+eta <- predict(fit.model)
+z <- eta + resid(fit.model, type="pearson")/sqrt(w)
+plot(predict(fit.model),z,xlab="Preditor Linear", 
+ylab="Variável z", pch=16)
+par(mfrow=c(1,1))
+#------------------------------------------------------------#
+
+```
+
+
+
+
+
+
+
+# Link 1/mu^2 
+
+```{r}
+ detach("package:MASS", unload = TRUE)
+```
+
+```{r}
+Temporario<-Nordeste[,c(-1,-3)]
+modelo_glm_mu_NE_<- glm(FLO_M~.,Temporario,   family = Gamma(link = "1/mu^2"))
+summary(modelo_glm_mu_NE_)
+```
+
+```{r}
+fit.model<-modelo_glm_mu_NE_
+m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("ALIANCA","BRS A704",	"BRS FORMOSO",	"BRS GUARA",	"BRS JABURU",	"CICA 8",	"EMPASC 101",	"EPAGRI 108",	"EPAGRI 109",	"MOXOTO",	"PR268",	"SCS 114 ANDOSAN",	"SCS 116 SATORU",	"SCS 121 CL")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_mu_NE_1<- glm(FLO_M~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_mu_NE_1)
+```
+
+```{r}
+fit.model<-modelo_glm_mu_NE_1
+m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS CATIANA",    "IAC1298" ,   "IAC1299" ,   "OUROMINAS" ,    "PR267",      "SCSBRS 113 TIO TAKA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_mu_NE_2<- glm(FLO_M~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_mu_NE_2)
+```
+
+
+```{r}
+fit.model<-modelo_glm_mu_NE_2
+m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,	1,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	1,	0,	0,	0,	0,			0,	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS ALVORADA",    "BRSMG RUBELITA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_mu_NE_3<- glm(FLO_M~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_mu_NE_3)
+```
+
+
+
+
+```{r}
+fit.model<-modelo_glm_mu_NE_3
+m.C <- rbind(cbind(	0,	0,	0,	0,	0,	0,	0,		0,		0,	0,	0,	1,	0,		0,	0,	0,	0,			0,	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,		0,		0,	0,	0,	0,	0,		0,	0,	0,	0,			1,	0,	0,	0,	0,	0,	0,	0,	0,	0,			0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	)
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS PAMPEIRA",  "IAC1307" )
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_mu_NE_4<- glm(FLO_M~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_mu_NE_4)
+```
+
+```{r}
+fit.model<-modelo_glm_mu_NE_4
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,		0,		0,	0,	0,		0,		0,	0,	0,	0,				0,	0,	0,	0,	0,	0,	0,	0,	0,			0,	0,	0,	0,	1,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("SCS 112" )
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_mu_NE_5<- glm(FLO_M~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_mu_NE_5)
+```
+
+Chuva_ACC (p = 0.806411)
+
+```{r}
+fit.model<-modelo_glm_mu_NE_5
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Chuva_ACC)
+modelo_glm_mu_NE_6<- glm(FLO_M~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_mu_NE_6)
+```
+Tmin_Media (p = 0.772500) 
+
+```{r}
+fit.model<-modelo_glm_mu_NE_6
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmin_Media)
+modelo_glm_mu_NE_7<- glm(FLO_M~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_mu_NE_7)
+```
+Tmax_fld_m  (p = 0.536596) 
+
+```{r}
+fit.model<-modelo_glm_mu_NE_7
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_fld_m)
+modelo_glm_mu_NE_8<- glm(FLO_M~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_mu_NE_8)
+```
+
+Tmax_ACC_R (p = 0.325995) 
+
+```{r}
+fit.model<-modelo_glm_mu_NE_8
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	1,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_ACC_R)
+modelo_glm_mu_NE_9<- glm(FLO_M~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_mu_NE_9)
+```
+
+longitude (p = 0.265240) 
+
+```{r}
+fit.model<-modelo_glm_mu_NE_9
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,		0,		0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-longitude)
+modelo_glm_mu_NE_10<- glm(FLO_M~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_mu_NE_10)
+```
+
+Tmax_Minima (p = 0.167374) 
+
+```{r}
+fit.model<-modelo_glm_mu_NE_10
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,		0,		1,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_Minima)
+modelo_glm_mu_NE_11<- glm(FLO_M~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_mu_NE_11)
+```
+
+Rad_ACC_R (p = 0.155983) 
+
+```{r}
+fit.model<-modelo_glm_mu_NE_11
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,		0,			0,	0,	0,	0,	0,		0,	0,	0,	0,	0,		0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Rad_ACC_R)
+modelo_glm_mu_NE_12<- glm(FLO_M~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_mu_NE_12)
+```
+
+UR_fld_m (p = 0.186205) 
+
+```{r}
+fit.model<-modelo_glm_mu_NE_12
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,		0,			0,	0,	0,	0,	0,		0,	0,	0,	0,	0,		0,	0,		0,	0,	0,	0,	1,	0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-UR_fld_m)
+modelo_glm_mu_NE_13<- glm(FLO_M~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_mu_NE_13)
+```
+
+Tmin_R (p = 0.061013) 
+
+```{r}
+fit.model<-modelo_glm_mu_NE_13
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,		0,			0,	0,	0,	0,	0,		0,	0,	0,	1,	0,		0,	0,		0,	0,	0,	0,		0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmin_R)
+modelo_glm_mu_NE_14<- glm(FLO_M~.,Temporario-1, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_mu_NE_14)
+```
+
+```{r}
+Temporario_glm_mu_NE_14 <- Temporario
+```
+
+
+## Analise de residos.
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa deixe no objeto fit.model a saída      
+# do ajuste da regressão com erros gama e ligação log.  Deixe     
+# também os dados disponíveis através do comando attach(...).    
+# Depois use o comando source(...) no R ou S-Plus para        
+# executar o programa. A sequência de comandos é a seguinte:               
+#
+       fit.model <- modelo_glm_mu_NE_14
+       attach(Temporario_glm_mu_NE_14)
+       source("envel_gama.txt")                                      
+#
+# A saída será o gráfico de envelope para o resíduo componente 
+# do desvio padronizado. Para colocar um título no gráfico use
+# o comando title("..."). Para  usar  outras  ligações mudar 
+# no programa abaixo o termo family=Gamma(link=log) para 
+# family=Gamma no caso de ligação  recíproca ou por 
+# family= Gamma(link=identity) no caso de ligação identidade.
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit.model,type="response")
+fi <- (n-p)/sum((ro/(fitted(fit.model)))^ 2)
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+#
+e <- matrix(0,n,100)
+#
+for(i in 1:100){
+resp <- rgamma(n,fi)
+resp <- (fitted(fit.model)/fi)*resp
+fit <- glm(resp ~ X, family=Gamma(link=log))
+w <- fit$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit,type="response")
+phi <- (n-p)/sum((ro/(fitted(fit)))^ 2)
+e[,i] <- sort(resid(fit,type="deviance")*sqrt(phi/(1-h)))}
+#
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:n){
+  eo <- sort(e[i,])
+e1[i] <- (eo[2]+eo[3])/2
+e2[i] <- (eo[97]+eo[98])/2}
+#
+med <- apply(e,1,mean)
+faixa <- range(td,e1,e2)
+par(pty="s")
+qqnorm(td, xlab="Percentil da N(0,1)",
+ylab="Componente do Desvio", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+#
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="", ylab="", type="l",ylim=faixa,lty=2, main="")
+
+#------------------------------------------------------------#          
+```
+```{r}
+teste<-td
+teste1 <- sort(teste)
+match(teste1[1:3], teste)
+```
+```{r}
+td[175]
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erros gama.   Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+         fit.model <- modelo_glm_mu_NE_14
+         attach(Temporario_glm_mu_NE_14)
+         source("diag_gama.txt")
+#
+# A saída terá quatro gráficos: de pontos de alacanca, 
+# de pontos influentes  e  dois de resíduos. Para 
+# identificar os pontos que  mais  se destacam usar o 
+# comando identify(...). Se por exemplo se destacam
+# três pontos no plot(fitted(fit.model),h,...), 
+# após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram colocados os limites ylim=c(a-1,b+1), 
+# em que a é o menor valor e b o maior valor para o resíduo. 
+# Este programa usa a library MASS para estimar o parâmetro
+# fi da gama que  estará guardado no objeto fi.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+library(MASS)
+fi <- gamma.shape(fit.model)$alpha
+ts <- resid(fit.model,type="pearson")*sqrt(fi/(1-h))
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+di <- (h/(1-h))*(ts^2)
+par(mfrow=c(2,2))
+a <- max(td)
+b <- min(td)
+plot(fitted(fit.model),h,xlab="Valor Ajustado", ylab="Medida h", pch=16)
+#identify(fitted(fit.model), h, n=1)
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+#identify(di, n=2)
+#
+plot(fitted(fit.model),td,xlab="Valor Ajustado", ylab="Resíduo Componente do Desvio",
+ylim=c(b-1,a+1),pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),td, n=1)
+#
+w <- fit.model$weights
+eta <- predict(fit.model)
+z <- eta + resid(fit.model, type="pearson")/sqrt(w)
+plot(predict(fit.model),z,xlab="Preditor Linear", 
+ylab="Variável z", pch=16)
+par(mfrow=c(1,1))
+#------------------------------------------------------------#
+
+```
+```{r}
+modelo_glm_mu_NE_15<- glm.fit(FLO_M~.,Temporario_glm_mu_NE_14 , intercept = FALSE , family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_mu_NE_15)
+```
+```{r}
+med
+```
+```{r}
+aux<-Temporario_glm_mu_NE_14[c(-177, -175, -392),]
+attach(aux)
+modelo_glm_mu_NE_15<- glm(FLO_M~.,aux, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_mu_NE_15)
+```
+
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa deixe no objeto fit.model a saída      
+# do ajuste da regressão com erros gama e ligação log.  Deixe     
+# também os dados disponíveis através do comando attach(...).    
+# Depois use o comando source(...) no R ou S-Plus para        
+# executar o programa. A sequência de comandos é a seguinte:               
+#
+       fit.model <- modelo_glm_mu_NE_15
+       attach(aux)
+       source("envel_gama.txt")                                      
+#
+# A saída será o gráfico de envelope para o resíduo componente 
+# do desvio padronizado. Para colocar um título no gráfico use
+# o comando title("..."). Para  usar  outras  ligações mudar 
+# no programa abaixo o termo family=Gamma(link=log) para 
+# family=Gamma no caso de ligação  recíproca ou por 
+# family= Gamma(link=identity) no caso de ligação identidade.
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit.model,type="response")
+fi <- (n-p)/sum((ro/(fitted(fit.model)))^ 2)
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+#
+e <- matrix(0,n,100)
+#
+for(i in 1:100){
+resp <- rgamma(n,fi)
+resp <- (fitted(fit.model)/fi)*resp
+fit <- glm(resp ~ X, family=Gamma(link=log))
+w <- fit$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit,type="response")
+phi <- (n-p)/sum((ro/(fitted(fit)))^ 2)
+e[,i] <- sort(resid(fit,type="deviance")*sqrt(phi/(1-h)))}
+#
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:n){
+  eo <- sort(e[i,])
+e1[i] <- (eo[2]+eo[3])/2
+e2[i] <- (eo[97]+eo[98])/2}
+#
+med <- apply(e,1,mean)
+faixa <- range(td,e1,e2)
+par(pty="s")
+qqnorm(td, xlab="Percentil da N(0,1)",
+ylab="Componente do Desvio", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+#
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="", ylab="", type="l",ylim=faixa,lty=2, main="")
+
+#------------------------------------------------------------#          
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erros gama.   Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+         fit.model <- modelo_glm_mu_NE_15
+         attach(aux)
+         source("diag_gama.txt")
+#
+# A saída terá quatro gráficos: de pontos de alacanca, 
+# de pontos influentes  e  dois de resíduos. Para 
+# identificar os pontos que  mais  se destacam usar o 
+# comando identify(...). Se por exemplo se destacam
+# três pontos no plot(fitted(fit.model),h,...), 
+# após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram colocados os limites ylim=c(a-1,b+1), 
+# em que a é o menor valor e b o maior valor para o resíduo. 
+# Este programa usa a library MASS para estimar o parâmetro
+# fi da gama que  estará guardado no objeto fi.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+library(MASS)
+fi <- gamma.shape(fit.model)$alpha
+ts <- resid(fit.model,type="pearson")*sqrt(fi/(1-h))
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+di <- (h/(1-h))*(ts^2)
+par(mfrow=c(2,2))
+a <- max(td)
+b <- min(td)
+plot(fitted(fit.model),h,xlab="Valor Ajustado", ylab="Medida h", pch=16)
+#identify(fitted(fit.model), h, n=1)
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+#identify(di, n=2)
+#
+plot(fitted(fit.model),td,xlab="Valor Ajustado", ylab="Resíduo Componente do Desvio",
+ylim=c(b-1,a+1),pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),td, n=1)
+#
+w <- fit.model$weights
+eta <- predict(fit.model)
+z <- eta + resid(fit.model, type="pearson")/sqrt(w)
+plot(predict(fit.model),z,xlab="Preditor Linear", 
+ylab="Variável z", pch=16)
+par(mfrow=c(1,1))
+#------------------------------------------------------------#
+
+```
+
+## log
+
+
+```{r}
+ detach("package:MASS", unload = TRUE)
+```
+
+```{r}
+Temporario<-Nordeste[,c(-1,-3)]
+modelo_glm_log_mu_NE_<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "1/mu^2"))
+summary(modelo_glm_log_mu_NE_)
+```
+
+```{r}
+fit.model<-modelo_glm_log_mu_NE_
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("ALIANCA","BRS A704","BRS JABURU","CICA 8","EMPASC 101","EPAGRI 108","EPAGRI 109", "MOXOTO","PR268", "SCS 114 ANDOSAN")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_log_mu_NE_1<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_mu_NE_1)
+```
+```{r}
+fit.model<-modelo_glm_log_mu_NE_1
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS FORMOSO","BRS GUARA","IAC1298", "PR267","SCS 116 SATORU","SCS 121 CL", "SCSBRS 113 TIO TAKA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_log_mu_NE_2<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_mu_NE_2)
+```
+```{r}
+fit.model<-modelo_glm_log_mu_NE_2
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS ALVORADA","BRS CATIANA","IAC1299","OUROMINAS")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_log_mu_NE_3<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_mu_NE_3)
+```
+```{r}
+fit.model<-modelo_glm_log_mu_NE_3
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS PAMPEIRA", "BRSMG RUBELITA", "IAC1307")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_log_mu_NE_4<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_mu_NE_4)
+```
+Tmin_Media (p = 0.861604) 
+
+```{r}
+fit.model<-modelo_glm_log_mu_NE_4
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmin_Media)
+modelo_glm_log_mu_NE_5<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_mu_NE_5)
+```
+
+UR_fld_m (p = 0.817269) 
+
+```{r}
+fit.model<-modelo_glm_log_mu_NE_5
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-UR_fld_m)
+modelo_glm_log_mu_NE_6<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_mu_NE_6)
+```
+
+Chuva_ACC (p = 0.482512) 
+
+```{r}
+fit.model<-modelo_glm_log_mu_NE_6
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Chuva_ACC)
+modelo_glm_log_mu_NE_7<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_mu_NE_7)
+```
+
+Tmax_ACC_R (p = 0.406571) 
+
+```{r}
+fit.model<-modelo_glm_log_mu_NE_7
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_ACC_R)
+modelo_glm_log_mu_NE_8<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_mu_NE_8)
+```
+
+Tmax_fld_m (p = 0.398380) 
+
+```{r}
+fit.model<-modelo_glm_log_mu_NE_8
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_fld_m)
+modelo_glm_log_mu_NE_9<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_mu_NE_9)
+```
+
+Tmax_Minima (p = 0.421646) 
+
+```{r}
+fit.model<-modelo_glm_log_mu_NE_9
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_Minima)
+modelo_glm_log_mu_NE_10<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_mu_NE_10)
+```
+
+longitude (p = 0.301052) 
+
+```{r}
+fit.model<-modelo_glm_log_mu_NE_10
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-longitude)
+modelo_glm_log_mu_NE_11<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_mu_NE_11)
+```
+
+Rad_ACC_R (p = 0.229686) 
+
+```{r}
+fit.model<-modelo_glm_log_mu_NE_11
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Rad_ACC_R)
+modelo_glm_log_mu_NE_12<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_mu_NE_12)
+```
+
+Tmax_Maxima (p = 0.154403) 
+
+```{r}
+fit.model<-modelo_glm_log_mu_NE_12
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_Maxima)
+modelo_glm_log_mu_NE_13<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_mu_NE_13)
+```
+
+Rad_ACC (p = 0.172801) 
+
+```{r}
+fit.model<-modelo_glm_log_mu_NE_13
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Rad_ACC)
+modelo_glm_log_mu_NE_14<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_mu_NE_14)
+```
+
+Tmin_fld_m  (p = 0.107328) 
+
+```{r}
+fit.model<-modelo_glm_log_mu_NE_14
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmin_fld_m)
+modelo_glm_log_mu_NE_15<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_mu_NE_15)
+```
+
+latitude  (p = 0.091745) 
+
+```{r}
+fit.model<-modelo_glm_log_mu_NE_15
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-latitude)
+modelo_glm_log_mu_NE_16<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_mu_NE_16)
+```
+
+Graus_dia_ciclo (p = 0.052005) 
+
+```{r}
+fit.model<-modelo_glm_log_mu_NE_16
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Graus_dia_ciclo)
+modelo_glm_log_mu_NE_17<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_mu_NE_17)
+```
+
+```{r}
+Temporario_glm_log_mu_NE_17<- Temporario
+```
+
+
+### Analise de residos.
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa deixe no objeto fit.model a saída      
+# do ajuste da regressão com erros gama e ligação log.  Deixe     
+# também os dados disponíveis através do comando attach(...).    
+# Depois use o comando source(...) no R ou S-Plus para        
+# executar o programa. A sequência de comandos é a seguinte:               
+#
+       fit.model <- modelo_glm_log_mu_NE_17
+       attach(Temporario_glm_log_mu_NE_17)
+       source("envel_gama.txt")                                      
+#
+# A saída será o gráfico de envelope para o resíduo componente 
+# do desvio padronizado. Para colocar um título no gráfico use
+# o comando title("..."). Para  usar  outras  ligações mudar 
+# no programa abaixo o termo family=Gamma(link=log) para 
+# family=Gamma no caso de ligação  recíproca ou por 
+# family= Gamma(link=identity) no caso de ligação identidade.
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit.model,type="response")
+fi <- (n-p)/sum((ro/(fitted(fit.model)))^ 2)
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+#
+e <- matrix(0,n,100)
+#
+for(i in 1:100){
+resp <- rgamma(n,fi)
+resp <- (fitted(fit.model)/fi)*resp
+fit <- glm(resp ~ X, family=Gamma(link=log))
+w <- fit$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit,type="response")
+phi <- (n-p)/sum((ro/(fitted(fit)))^ 2)
+e[,i] <- sort(resid(fit,type="deviance")*sqrt(phi/(1-h)))}
+#
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:n){
+  eo <- sort(e[i,])
+e1[i] <- (eo[2]+eo[3])/2
+e2[i] <- (eo[97]+eo[98])/2}
+#
+med <- apply(e,1,mean)
+faixa <- range(td,e1,e2)
+par(pty="s")
+qqnorm(td, xlab="Percentil da N(0,1)",
+ylab="Componente do Desvio", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+#
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="", ylab="", type="l",ylim=faixa,lty=2, main="")
+
+#------------------------------------------------------------#          
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erros gama.   Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+         fit.model <- modelo_glm_log_mu_NE_17
+         attach(Temporario_glm_log_mu_NE_17)
+         source("diag_gama.txt")
+#
+# A saída terá quatro gráficos: de pontos de alacanca, 
+# de pontos influentes  e  dois de resíduos. Para 
+# identificar os pontos que  mais  se destacam usar o 
+# comando identify(...). Se por exemplo se destacam
+# três pontos no plot(fitted(fit.model),h,...), 
+# após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram colocados os limites ylim=c(a-1,b+1), 
+# em que a é o menor valor e b o maior valor para o resíduo. 
+# Este programa usa a library MASS para estimar o parâmetro
+# fi da gama que  estará guardado no objeto fi.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+library(MASS)
+fi <- gamma.shape(fit.model)$alpha
+ts <- resid(fit.model,type="pearson")*sqrt(fi/(1-h))
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+di <- (h/(1-h))*(ts^2)
+par(mfrow=c(2,2))
+a <- max(td)
+b <- min(td)
+plot(fitted(fit.model),h,xlab="Valor Ajustado", ylab="Medida h", pch=16)
+#identify(fitted(fit.model), h, n=1)
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+#identify(di, n=2)
+#
+plot(fitted(fit.model),td,xlab="Valor Ajustado", ylab="Resíduo Componente do Desvio",
+ylim=c(b-1,a+1),pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),td, n=1)
+#
+w <- fit.model$weights
+eta <- predict(fit.model)
+z <- eta + resid(fit.model, type="pearson")/sqrt(w)
+plot(predict(fit.model),z,xlab="Preditor Linear", 
+ylab="Variável z", pch=16)
+par(mfrow=c(1,1))
+#------------------------------------------------------------#
+
+```
+## log log
+
+
+```{r}
+ detach("package:MASS", unload = TRUE)
+```
+
+```{r}
+Temporario<-Nordeste[,c(-1,-3)]
+modelo_glm_log_log_mu_NE_<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "1/mu^2"))
+summary(modelo_glm_log_log_mu_NE_)
+```
+
+```{r}
+fit.model<-modelo_glm_log_log_mu_NE_
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("ALIANCA","BRS A704","BRS JABURU", "CICA 8","EMPASC 101","EPAGRI 108","EPAGRI 109","MOXOTO","PR268","SCS 114 ANDOSAN")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_log_log_mu_NE_1<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_log_mu_NE_1)
+```
+```{r}
+fit.model<-modelo_glm_log_log_mu_NE_1
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS FORMOSO", "BRS GUARA", "IAC1298", "PR267", "SCS 116 SATORU", "SCS 121 CL", "SCSBRS 113 TIO TAKA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_log_log_mu_NE_2<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_log_mu_NE_2)
+```
+
+```{r}
+fit.model<-modelo_glm_log_log_mu_NE_2
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS ALVORADA","BRS CATIANA", "IAC1299","OUROMINAS")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_log_log_mu_NE_3<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_log_mu_NE_3)
+```
+
+
+```{r}
+fit.model<-modelo_glm_log_log_mu_NE_3
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS PAMPEIRA", "BRSMG RUBELITA", "IAC1307")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_log_log_mu_NE_4<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_log_mu_NE_4)
+```
+Tmin_Media (p = 0.831874)
+
+```{r}
+fit.model<-modelo_glm_log_log_mu_NE_4
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmin_Media)
+modelo_glm_log_log_mu_NE_5<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_log_mu_NE_5)
+```
+
+
+UR_fld_m (p = 0.792475)
+
+```{r}
+fit.model<-modelo_glm_log_log_mu_NE_5
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-UR_fld_m)
+modelo_glm_log_log_mu_NE_6<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_log_mu_NE_6)
+```
+
+Chuva_ACC (p = 0.476174)
+
+```{r}
+fit.model<-modelo_glm_log_log_mu_NE_6
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Chuva_ACC)
+modelo_glm_log_log_mu_NE_7<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_log_mu_NE_7)
+```
+
+Tmax_ACC_R (p = 0.409712)
+
+```{r}
+fit.model<-modelo_glm_log_log_mu_NE_7
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_ACC_R)
+modelo_glm_log_log_mu_NE_8<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_log_mu_NE_8)
+```
+
+Tmax_fld_m  (p = 0.419055)
+
+```{r}
+fit.model<-modelo_glm_log_log_mu_NE_8
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_fld_m)
+modelo_glm_log_log_mu_NE_9<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_log_mu_NE_9)
+```
+
+Tmax_Minima (p = 0.431315)
+
+```{r}
+fit.model<-modelo_glm_log_log_mu_NE_9
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_Minima)
+modelo_glm_log_log_mu_NE_10<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_log_mu_NE_10)
+```
+
+longitude (p = 0.306798)
+
+```{r}
+fit.model<-modelo_glm_log_log_mu_NE_10
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-longitude)
+modelo_glm_log_log_mu_NE_11<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_log_mu_NE_11)
+```
+
+Rad_ACC_R (p = 0.222482)
+
+```{r}
+fit.model<-modelo_glm_log_log_mu_NE_11
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Rad_ACC_R)
+modelo_glm_log_log_mu_NE_12<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_log_mu_NE_12)
+```
+
+Tmax_Maxima (p = 0.158716)
+
+```{r}
+fit.model<-modelo_glm_log_log_mu_NE_12
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmax_Maxima)
+modelo_glm_log_log_mu_NE_13<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_log_mu_NE_13)
+```
+
+Rad_ACC (p = 0.168814)
+
+```{r}
+fit.model<-modelo_glm_log_log_mu_NE_13
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Rad_ACC)
+modelo_glm_log_log_mu_NE_14<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_log_mu_NE_14)
+```
+
+Tmin_fld_m (p = 0.108119)
+
+```{r}
+fit.model<-modelo_glm_log_log_mu_NE_14
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Tmin_fld_m)
+modelo_glm_log_log_mu_NE_15<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_log_mu_NE_15)
+```
+
+latitude (p = 0.091811)
+
+```{r}
+fit.model<-modelo_glm_log_log_mu_NE_15
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-latitude)
+modelo_glm_log_log_mu_NE_16<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_log_mu_NE_16)
+```
+
+Graus_dia_ciclo (p = 0.050202)
+
+```{r}
+fit.model<-modelo_glm_log_log_mu_NE_16
+m.C <- cbind()
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario<-Temporario %>% select(-Graus_dia_ciclo)
+modelo_glm_log_log_mu_NE_17<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_log_mu_NE_17)
+```
+
+```{r}
+Temporario_glm_log_log_mu_NE_17<-Temporario
+```
+
+
+### Analise de residos.
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa deixe no objeto fit.model a saída      
+# do ajuste da regressão com erros gama e ligação log.  Deixe     
+# também os dados disponíveis através do comando attach(...).    
+# Depois use o comando source(...) no R ou S-Plus para        
+# executar o programa. A sequência de comandos é a seguinte:               
+#
+       fit.model <- modelo_glm_log_log_mu_NE_17
+       attach(Temporario_glm_log_log_mu_NE_17)
+       source("envel_gama.txt")                                      
+#
+# A saída será o gráfico de envelope para o resíduo componente 
+# do desvio padronizado. Para colocar um título no gráfico use
+# o comando title("..."). Para  usar  outras  ligações mudar 
+# no programa abaixo o termo family=Gamma(link=log) para 
+# family=Gamma no caso de ligação  recíproca ou por 
+# family= Gamma(link=identity) no caso de ligação identidade.
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit.model,type="response")
+fi <- (n-p)/sum((ro/(fitted(fit.model)))^ 2)
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+#
+e <- matrix(0,n,100)
+#
+for(i in 1:100){
+resp <- rgamma(n,fi)
+resp <- (fitted(fit.model)/fi)*resp
+fit <- glm(resp ~ X, family=Gamma(link=log))
+w <- fit$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit,type="response")
+phi <- (n-p)/sum((ro/(fitted(fit)))^ 2)
+e[,i] <- sort(resid(fit,type="deviance")*sqrt(phi/(1-h)))}
+#
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:n){
+  eo <- sort(e[i,])
+e1[i] <- (eo[2]+eo[3])/2
+e2[i] <- (eo[97]+eo[98])/2}
+#
+med <- apply(e,1,mean)
+faixa <- range(td,e1,e2)
+par(pty="s")
+qqnorm(td, xlab="Percentil da N(0,1)",
+ylab="Componente do Desvio", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+#
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="", ylab="", type="l",ylim=faixa,lty=2, main="")
+
+#------------------------------------------------------------#          
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erros gama.   Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+         fit.model <- modelo_glm_log_log_mu_NE_17
+         attach(Temporario_glm_log_log_mu_NE_17)
+         source("diag_gama.txt")
+#
+# A saída terá quatro gráficos: de pontos de alacanca, 
+# de pontos influentes  e  dois de resíduos. Para 
+# identificar os pontos que  mais  se destacam usar o 
+# comando identify(...). Se por exemplo se destacam
+# três pontos no plot(fitted(fit.model),h,...), 
+# após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram colocados os limites ylim=c(a-1,b+1), 
+# em que a é o menor valor e b o maior valor para o resíduo. 
+# Este programa usa a library MASS para estimar o parâmetro
+# fi da gama que  estará guardado no objeto fi.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+library(MASS)
+fi <- gamma.shape(fit.model)$alpha
+ts <- resid(fit.model,type="pearson")*sqrt(fi/(1-h))
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+di <- (h/(1-h))*(ts^2)
+par(mfrow=c(2,2))
+a <- max(td)
+b <- min(td)
+plot(fitted(fit.model),h,xlab="Valor Ajustado", ylab="Medida h", pch=16)
+#identify(fitted(fit.model), h, n=1)
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+#identify(di, n=2)
+#
+plot(fitted(fit.model),td,xlab="Valor Ajustado", ylab="Resíduo Componente do Desvio",
+ylim=c(b-1,a+1),pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),td, n=1)
+#
+w <- fit.model$weights
+eta <- predict(fit.model)
+z <- eta + resid(fit.model, type="pearson")/sqrt(w)
+plot(predict(fit.model),z,xlab="Preditor Linear", 
+ylab="Variável z", pch=16)
+par(mfrow=c(1,1))
+#------------------------------------------------------------#
+
+```
+

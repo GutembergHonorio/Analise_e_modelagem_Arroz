@@ -952,7 +952,9 @@ ols_test_breusch_pagan(modelo_C_O_23)
 # Modelo final
 
 ```{r}
+df_Centro_oeste<- Temporario1
 modelo_Centro_oeste<-modelo_C_O_23
+summary(modelo_Centro_oeste)
 ```
 
 
@@ -990,11 +992,7 @@ coef_var = function(x) {
 }
 
 # variáveis
- variaveis = c('Tmax_Maxima','Tmax_fld_m',
-              'Tmax_R','Tmax_ACC_R',
-              'Tmax_Media','Tmin_Maxima',
-              'Tmin_ACC_V','Tmin_R',
-              'Tmin_ACC_R','longitude') # 10 variaveis
+ variaveis = c("longitude","Tmax_Maxima", "Tmax_fld_m","Tmax_R","Tmax_ACC_R","Tmax_Minima","Tmax_Media",            "Tmin_Maxima","Tmin_ACC_V","Tmin_R","Tmin_ACC_R", "FLO_M") # 11 variaveis
  
 # Estimativas
  
@@ -1016,7 +1014,7 @@ genotipos = c("AA","MARAJO", "BRS PAMPEIRA" , "BRS CATIANA" , "IRGA 430")
 for (i in 1:length(genotipos)) {
   
 
- Temporario = subset(Temporario1, GENOTIPO %in% genotipos[i] )
+ Temporario = subset(df_Centro_oeste, GENOTIPO %in% genotipos[i] )
 
 
 
@@ -1045,57 +1043,55 @@ for (i in 1:length(genotipos)) {
  
 teste<-do.call(cbind.data.frame, coef_med)
 
-coef_med_AA<- data.frame("variaveis"= c(teste[c(1:10),1]), "CV" =as.numeric(c(teste[c(11:20),1])), "Medias"= as.numeric(c(teste[c(21:30),1]) ))
-  coef_med_AA[11,1]<- c("(Intercept)")
-  coef_med_AA[11,3]<- c(1)
+coef_med_AA<- data.frame("variaveis"= c(teste[c(1:11),1]), "CV" =as.numeric(c(teste[c(12:22),1])), "Medias"= as.numeric(c(teste[c(23:33),1]) ))
+  coef_med_AA[12,1]<- c("(Intercept)")
+  coef_med_AA[12,3]<- c(1)
   coef_med_AA<-coef_med_AA %>% inner_join(Estimativas)
   coef_med_AA$`Est_X_Med`<- c(coef_med_AA$Estimativa*coef_med_AA$Medias)
 coef_med_AA
 
-coef_med_MARAJO<- data.frame("variaveis"= c(teste[c(1:10),2]), "CV" = as.numeric(c(teste[c(11:20),2])), "Medias"= as.numeric(c(teste[c(21:30),2]) ))
-  coef_med_MARAJO[11,1]<- c("(Intercept)")
-  coef_med_MARAJO[11,3]<- c(1)
+coef_med_MARAJO<- data.frame("variaveis"= c(teste[c(1:11),2]), "CV" =as.numeric(c(teste[c(12:22),2])), "Medias"= as.numeric(c(teste[c(23:33),2]) ))
+  coef_med_MARAJO[12,1]<- c("(Intercept)")
+  coef_med_MARAJO[12,3]<- c(1)
   coef_med_MARAJO<-coef_med_MARAJO %>% inner_join(Estimativas)
-  coef_med_MARAJO[11,4]<- c(coef_med_MARAJO[11,4]+Estimativas[22,2])# linha 22 é marajo
+  coef_med_MARAJO[12,4]<- c(coef_med_MARAJO[12,4]+Estimativas[22,2])# linha 22 é marajo
   coef_med_MARAJO$`Est_X_Med`<- c(coef_med_MARAJO$Estimativa*coef_med_MARAJO$Medias)
 coef_med_MARAJO
 
-coef_med_PAMPEIRA<- data.frame("variaveis"= c(teste[c(1:10),3]), "CV" =as.numeric(c(teste[c(11:20),3])), "Medias"= as.numeric(c(teste[c(21:30),3]) ))
-  coef_med_PAMPEIRA[11,1]<- c("(Intercept)")
-  coef_med_PAMPEIRA[11,3]<- c(1)
+coef_med_PAMPEIRA<- data.frame("variaveis"= c(teste[c(1:11),3]), "CV" =as.numeric(c(teste[c(12:22),3])), "Medias"= as.numeric(c(teste[c(23:33),3]) ))
+  coef_med_PAMPEIRA[12,1]<- c("(Intercept)")
+  coef_med_PAMPEIRA[12,3]<- c(1)
   coef_med_PAMPEIRA<-coef_med_PAMPEIRA %>% inner_join(Estimativas)
-  coef_med_PAMPEIRA[11,4]<- c(coef_med_PAMPEIRA[11,4]+Estimativas[9,2])# linha 9 é pampeira
+  coef_med_PAMPEIRA[12,4]<- c(coef_med_PAMPEIRA[12,4]+Estimativas[9,2])# linha 9 é pampeira
   coef_med_PAMPEIRA$`Est_X_Med`<- c(coef_med_PAMPEIRA$Estimativa*coef_med_PAMPEIRA$Medias)
 coef_med_PAMPEIRA
 
-coef_med_CATIANA<- data.frame("variaveis"= c(teste[c(1:10),4]), "CV" =as.numeric(c(teste[c(11:20),4])), "Medias"= as.numeric(c(teste[c(21:30),4]) ))
-  coef_med_CATIANA[11,1]<- c("(Intercept)")
-  coef_med_CATIANA[11,3]<- c(1)
+coef_med_CATIANA<- data.frame("variaveis"= c(teste[c(1:11),4]), "CV" =as.numeric(c(teste[c(12:22),4])), "Medias"= as.numeric(c(teste[c(23:33),4]) ))
+  coef_med_CATIANA[12,1]<- c("(Intercept)")
+  coef_med_CATIANA[12,3]<- c(1)
   coef_med_CATIANA<-coef_med_CATIANA %>% inner_join(Estimativas)
-  coef_med_CATIANA[11,4]<- c(coef_med_CATIANA[11,4]+Estimativas[5,2])# linha 5 é catiana
+  coef_med_CATIANA[12,4]<- c(coef_med_CATIANA[12,4]+Estimativas[5,2])# linha 5 é catiana
   coef_med_CATIANA$`Est_X_Med`<- c(coef_med_CATIANA$Estimativa*coef_med_CATIANA$Medias)
 coef_med_CATIANA
 
-coef_med_IRGA430<- data.frame("variaveis"= c(teste[c(1:10),5]), "CV" = as.numeric(c(teste[c(11:20),5])), "Medias"= as.numeric(c(teste[c(21:30),5]) ))
-  coef_med_IRGA430[11,1]<- c("(Intercept)")
-  coef_med_IRGA430[11,3]<- c(1)
+coef_med_IRGA430<- data.frame("variaveis"= c(teste[c(1:11),5]), "CV" =as.numeric(c(teste[c(12:22),5])), "Medias"= as.numeric(c(teste[c(23:33),5]) ))
+  coef_med_IRGA430[12,1]<- c("(Intercept)")
+  coef_med_IRGA430[12,3]<- c(1)
   coef_med_IRGA430<-coef_med_IRGA430 %>% inner_join(Estimativas)
-  coef_med_IRGA430[11,4]<- c(coef_med_IRGA430[11,4]+Estimativas[17,2])# linha 17 é irga 430
+  coef_med_IRGA430[12,4]<- c(coef_med_IRGA430[12,4]+Estimativas[17,2])# linha 17 é irga 430
   coef_med_IRGA430$`Est_X_Med`<- c(coef_med_IRGA430$Estimativa*coef_med_IRGA430$Medias)
 coef_med_IRGA430
 
 ```
 
 
-```{r}
+
+```{r , message=F , warning= F, include=F}
  # Intervalo observado das variáveis
  # formula é y = B1X1+B2X2 ... + BnXn em que todas as variáveis (Xn) estão fixadas na média,  com exeção da variável que se deseja ver a relação. Bn é o Estimate no modelo_Centro_oeste
  
  # Nomes variaveis
- interVariaveis = c('Tmin_ACC_V',                                        #Vegetativo
-              'Tmax_fld_m', 'Tmax_R','Tmax_ACC_R','Tmin_R','Tmin_ACC_R', #reprodutivo
-              'Tmax_Media','Tmin_Maxima',"Tmax_Maxima")                 # Ciclo
- plots = list()
+ interVariaveis = c("longitude","Tmax_Maxima", "Tmax_fld_m","Tmax_R","Tmax_ACC_R","Tmax_Minima","Tmax_Media",            "Tmin_Maxima","Tmin_ACC_V","Tmin_R","Tmin_ACC_R")              
  plot  = list()
  coef_meds = list()
  coef_meds[1]<- list(coef_med_AA)
@@ -1116,7 +1112,7 @@ coef_med_IRGA430
      
      # Calculo
      Est_X_med = sum(coef[-indexCOEF, 5])
-     OBS = unique(Temporario1[, interVariaveis[i]])
+     OBS = unique(df_Centro_oeste[, interVariaveis[i]])
      
      # Criando data.frame temporario
      previsto_temp = data.frame(OBS,
@@ -1143,8 +1139,7 @@ coef_med_IRGA430
  }  
  }
     
-```
-```{r , message=F , warning= F, include=F}
+
 # Plotando graficos
 
  figura1<- ggarrange(plots = plots[[1]])  # AA 
@@ -1166,6 +1161,143 @@ coef_med_IRGA430
   ggpubr::annotate_figure(figura3, top = "Respostas relativas ao genótipo Pampeira", left = "Florescimento médio esperado")
   ggpubr::annotate_figure(figura4, top = "Respostas relativas ao genótipo Catiana", left = "Florescimento médio esperado")
   ggpubr::annotate_figure(figura5, top = "Respostas relativas ao genótipo IRGA 430", left = "Florescimento médio esperado")
+
+```
+
+```{r , message=F , warning= F, include=F}
+ # Intervalo observado das variáveis
+ # formula é y = B1X1+B2X2 ... + BnXn em que todas as variáveis (Xn) estão fixadas na média,  com exeção da variável que se deseja ver a relação. Bn é o Estimate no modelo_Centro_oeste
+ 
+ # Nomes variaveis
+ interVariaveis = c("longitude","Tmax_Maxima", "Tmax_fld_m","Tmax_R","Tmax_ACC_R","Tmax_Minima","Tmax_Media",            "Tmin_Maxima","Tmin_ACC_V","Tmin_R","Tmin_ACC_R")
+ plots = list()
+ plot  = list()
+ coef_meds = list()
+ coef_meds[1]<- list(coef_med_AA)
+ coef_meds[2]<- list(coef_med_MARAJO)
+ coef_meds[3]<- list(coef_med_PAMPEIRA)
+ coef_meds[4]<- list(coef_med_CATIANA)
+ coef_meds[5]<- list(coef_med_IRGA430)
+
+ for (j in 1:5) {
+ coef<- as.data.frame(coef_meds[[j]])
+  filtro = subset(df_Centro_oeste, GENOTIPO %in% genotipos[j] )
+
+ for(i in 1:length(interVariaveis)){
+   
+   # Obtendo index
+   indexCOEF = which(coef$variaveis %in% interVariaveis[i])
+ 
+   if(length(indexCOEF) > 0){
+     
+     # Calculo
+     Est_X_med = sum(coef[-indexCOEF, 5])
+     OBS = unique(df_Centro_oeste[, interVariaveis[i]])
+     FLO_OBS = filtro %>% group_by_at(interVariaveis[i]) %>% summarise(FLO_M)
+      colnames(FLO_OBS) <- c("X", "FLO_M")
+      
+     # Criando data.frame temporario
+     previsto_temp = data.frame(OBS,
+                                prev = (Est_X_med + (OBS * coef[indexCOEF, 4])))
+     
+     # Renomeando colunas
+     nomesColunas = c(
+       paste(interVariaveis[i]),
+       paste(interVariaveis[i], "FLO", "prev", sep = "_")
+       )
+     colnames(previsto_temp) = nomesColunas
+     
+     FLOR_previsto_temp[[i]]<-previsto_temp
+     
+
+     # Graficos
+     g = ggplot() +
+       geom_point(data = FLO_OBS, aes_string(x = "X" , y = "FLO_M"  ), color = "black") +
+       geom_smooth(data = FLO_OBS, aes_string(x = "X" , y = "FLO_M"), formula = y ~ x, color = "blue"  )+
+        geom_point(data = previsto_temp, aes_string(x = nomesColunas[1], y = nomesColunas[2] ), color = "red") +
+       geom_smooth(data = previsto_temp, aes_string(x = nomesColunas[1], y = nomesColunas[2] ),formula = y ~ x, color = "red")+
+        labs(x = nomesColunas[1], y = "")
+      
+
+     
+     plot[[i]] = g
+     
+   }
+   FLOR_previsto[[j]]<-FLOR_previsto_temp
+
+       plots[[j]] =  plot
+ }  
+ }
+    
+ # Plotando graficos
+
+ figura1<- ggarrange(plots = plots[[1]])  # AA 
+  
+ figura2<- ggarrange(plots = plots[[2]])  # MARAJO
+
+ figura3<- ggarrange(plots = plots[[3]])  # PAMPEIRA
+
+ figura4<- ggarrange(plots = plots[[4]])  # CATIANA
+
+ figura5<- ggarrange(plots = plots[[5]])  # IRGA 430
+
+
+ 
+```
+
+```{r}
+  ggpubr::annotate_figure(figura1, top = "Respostas relativas aos genótipos agrupados na média", left = "Florescimento médio")
+  ggpubr::annotate_figure(figura2, top = "Respostas relativas ao genótipo Marajo", left = "Florescimento médio")
+  ggpubr::annotate_figure(figura3, top = "Respostas relativas ao genótipo Pampeira", left = "Florescimento médio")
+  ggpubr::annotate_figure(figura4, top = "Respostas relativas ao genótipo Catiana", left = "Florescimento médio")
+  ggpubr::annotate_figure(figura5, top = "Respostas relativas ao genótipo IRGA 430", left = "Florescimento médio")
+
+```
+
+
+# Erro
+
+
+```{r}
+
+Temporario<- df_Centro_oeste
+
+Temporario$`Yhat` <-predict ( modelo_Centro_oeste, Temporario)
+Temporario$`Y_yhat` = c(Temporario$FLO_M - Temporario$Yhat)
+
+
+  
+  
+  boxplot(Temporario$Y_yhat, main = "Todos os genótipos", xlab = "Y - Yhat" )
+  plot(y = Temporario$FLO_M, x = Temporario$Yhat,  main = "Todos os genótipos", xlab = "Yhat", ylab = "Y", pch = 20, 
+     col = "black") 
+
+  teste = subset(Temporario, GENOTIPO %in% "AA" )
+  boxplot(teste$Y_yhat, main = "Genótipos agrupados", xlab = "Y - Yhat" )
+  plot(y = teste$FLO_M, x = teste$Yhat,  main = "Genótipos agrupados", xlab = "Yhat", ylab = "Y", pch = 20, 
+     col = "black") 
+  
+  teste = subset(Temporario, GENOTIPO %in% "IRGA 430" )
+  boxplot(teste$Y_yhat, main = "Genótipo IRGA 430", xlab = "Y - Yhat" )
+  plot(y = teste$FLO_M, x = teste$Yhat,  main = "Genótipo IRGA 430", xlab = "Yhat", ylab = "Y", pch = 20, 
+     col = "black") 
+  
+   teste = subset(Temporario, GENOTIPO %in% "MARAJO" )
+  boxplot(teste$Y_yhat, main = "Genótipo MARAJO", xlab = "Y - Yhat" )
+  plot(y = teste$FLO_M, x = teste$Yhat,  main = "Genótipo MARAJO", xlab = "Yhat", ylab = "Y", pch = 20, 
+     col = "black") 
+  
+  teste = subset(Temporario, GENOTIPO %in% "BRS CATIANA" )
+  boxplot(teste$Y_yhat, main = "Genótipo BRS CATIANA", xlab = "Y - Yhat" )
+  plot(y = teste$FLO_M, x = teste$Yhat,  main = "Genótipo BRS CATIANA", xlab = "Yhat", ylab = "Y", pch = 20, 
+     col = "black") 
+
+  teste = subset(Temporario, GENOTIPO %in% "BRS PAMPEIRA" )
+  boxplot(teste$Y_yhat, main = "Genótipo BRS PAMPEIRA", xlab = "Y - Yhat" )
+  plot(y = teste$FLO_M, x = teste$Yhat,  main = "Genótipo BRS PAMPEIRA", xlab = "Yhat", ylab = "Y", pch = 20, 
+     col = "black") 
+  
+ 
 
 ```
 
@@ -1201,3 +1333,1368 @@ geom_point()+
 theme_bw()
 
 ```
+
+```{r}
+AIC(modelo_Centro_oeste)
+AIC(modelo_Centro_oeste_corrigido)
+
+library(car)
+
+
+ summary(modelo_Centro_oeste)
+
+```
+```{r}
+  anova(modelo_Centro_oeste_corrigido)
+ anova(modelo_Centro_oeste)
+```
+
+```{r}
+temp<- df_Centro_oeste %>% select(-Tmin_R, -Tmax_fld_m, -Tmin_ACC_R, -Tmax_Minima)
+modelo_teste<- lm(FLO_M~., temp)
+summary(modelo_teste)
+```
+```{r}
+BIC(modelo_teste)
+BIC(modelo_Centro_oeste)
+BIC(modelo_Centro_oeste_corrigido)
+```
+
+# 2º tentativa incluindo altitude
+
+## DADOS
+```{r Diretório} 
+
+# DIRETÓRIO DOS DADOS 
+
+Tabelabruta<- read.csv("d:/Users/Cristiane Resende/Desktop/Gutemberg Honorio/Mestrado/Repositorio_4/Analise_e_modelagem_Arroz/Merge_1980_2018.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE) # tabela com os dados originais
+
+# criando coluna com macrorregiões
+
+Tabelabruta<- mutate(Tabelabruta,REGIAO = case_when(UF == 'GO'| UF == 'DF' |UF == 'MS' | UF == 'MT' ~ 'Centro_Oeste',
+                              UF == 'AL'| UF == 'BA' |UF == 'CE' | UF == 'MA' | UF == 'PB' | UF == 'PE' | UF == 'PI' | UF == 'RN' | UF == 'SE' ~ 'Nordeste',
+                              UF == 'AC' | UF == 'AM' | UF == 'AP' | UF == 'PA' | UF == 'RO' | UF == 'RR' | UF == 'TO' ~ 'Norte',
+                              UF == 'ES' | UF == 'MG' | UF == 'SP' | UF == 'RJ' ~ 'Sudeste',
+                              UF == 'RS' | UF == 'SC' | UF == 'PR' ~ 'Sul'))
+
+# Tabelas acessório
+
+TabelabrutaIRR = subset(Tabelabruta, SIST_CULT == "IRRIGATED") # Somente Irrigado
+TabelabrutaTA = subset(Tabelabruta, SIST_CULT == "UPLAND") # Somente Terras altas
+
+# Filtrando os dados
+
+
+IRR<-TabelabrutaIRR %>% mutate(UR_Media=(umidade_Media),UR_V=	(umidade_V), UR_fld_m=	(umidade_fld_m),	UR_R=	(umidade_R), Graus_dia_ciclo=(graus_dia_ciclo), Graus_dia_FLO=(graus_dia_FLO+graus_dia_IP))
+
+IRR <- select(IRR,latitude, longitude, GENOTIPO, ID_ENSAIO,ano, Altitude, REGIAO, UF, FLO_E, Tmax_Maxima ,Tmax_fld_m ,	Tmax_R,	Tmax_ACC_R, Tmax_Minima,	Tmax_Media,Tmax_V ,Tmax_ACC_V,	Tmin_Maxima,Tmin_Minima ,	Tmin_Media ,	Tmin_V ,	Tmin_ACC_V , Tmin_fld_m ,	Tmin_R,	Tmin_ACC_R , Chuva_ACC ,	Chuva_ACC_V, Chuva_ACC_R, Rad_ACC_R ,	Rad_ACC ,	Rad_ACC_V, UR_Media, UR_V, UR_fld_m,	UR_R, Graus_dia_ciclo, Graus_dia_FLO)
+
+
+rm(TabelabrutaIRR,TabelabrutaTA,Tabelabruta)
+
+# Removendo os genótipos que não serão estudados
+
+IRR = IRR[IRR$GENOTIPO %in% c("ALIANCA",	"AVAXI CL",	"BR IRGA 409",	"BR IRGA 410",	"BR IRGA 412",	"BR IRGA 414",	"BRS 7 TAIM",	"BRS A701 CL",	"BRS A702 CL",	"BRS A704",	"BRS ALVORADA",	"BRS BIGUA",	"BRS CATIANA",	"BRS CIRAD 302",	"BRS FORMOSO",	"BRS FRONTEIRA",	"BRS GUARA",	"BRS JABURU",	"BRS JACANA",	"BRS PAMPA",	"BRS PAMPEIRA",	"BRS PELOTA",	"BRS QUERENCIA",	"BRS SINUELO CL",	"BRS TROPICAL",	"BRSMG RUBELITA",	"CICA 8",	"CT8452",	"DIAMANTE",	"EEA34",	"EMPASC 101",	"EMPASC 102",	"EPAGRI 108",	"EPAGRI 109",	"EPAGRI97-01",	"EPAGRI97-05",	"EPAGRI97-06",	"H6",	"H7 CL",	"IAC1289",	"IAC1298",	"IAC1299",	"IAC1307",	"IAC1311",	"IAPAR 58",	"IRGA 417",	"IRGA 422 CL",	"IRGA 424",	"IRGA 424 RI",	"IRGA 425",	"IRGA 426",	"IRGA 427",	"IRGA 428",	"IRGA 429",	"IRGA 430",	"IRGA97-05",	"IRGA97-10",	"IRGA97-11",	"IRGA97-28",	"JAVAE",	"JEQUITIBA",	"MARAJO",	"METICA 1",	"MOXOTO",	"OUROMINAS",	"PR267",	"PR268",	"PR306",	"PR331",	"PR349",	"PR380",	"PR498",	"PR631",	"PR67",	"PUITA INTA CL",	"RORAIMA",	"SAO FRANCISCO",	"SC138",	"SC173",	"SC237",	"SC240",	"SC250",	"SCS 112",	"SCS 114 ANDOSAN",	"SCS 116 SATORU",	"SCS 121 CL",	"SCSBRS 111",	"SCSBRS 113 TIO TAKA",	"SCSBRS PIRACEMA",	"SG11551",	"URUCUI"),]
+IRR = IRR[IRR$UF!="MT",]
+
+# Filtrando e gerando médias
+
+IRR_Medio<- IRR %>% group_by(ID_ENSAIO, GENOTIPO, REGIAO) %>% summarise(  FLO_M= mean(FLO_E),  latitude= mean(latitude), longitude = mean(longitude), Altitude = mean(Altitude), Tmax_Maxima = mean(Tmax_Maxima) ,Tmax_fld_m = mean(Tmax_fld_m ),	Tmax_R= mean( Tmax_R),	Tmax_ACC_R= mean(Tmax_ACC_R ), Tmax_Minima= mean(Tmax_Minima ),	Tmax_Media= mean( Tmax_Media),Tmax_V = mean(Tmax_V ),Tmax_ACC_V= mean(Tmax_ACC_V ),	Tmin_Maxima= mean(Tmin_Maxima ),Tmin_Minima = mean(Tmin_Minima ),	Tmin_Media = mean(Tmin_Media ),	Tmin_V = mean(Tmin_V ),	Tmin_ACC_V = mean(Tmin_ACC_V ), Tmin_fld_m = mean( Tmin_fld_m),	Tmin_R= mean(Tmin_R ),	Tmin_ACC_R = mean(Tmin_ACC_R ), Chuva_ACC = mean(Chuva_ACC ),	Chuva_ACC_V= mean(Chuva_ACC_V ), Chuva_ACC_R= mean(Chuva_ACC_R ), Rad_ACC_R = mean(Rad_ACC_R ),	Rad_ACC = mean(Rad_ACC ),	Rad_ACC_V= mean(Rad_ACC_V ), UR_Media= mean( UR_Media), UR_V= mean( UR_V), UR_fld_m= mean(UR_fld_m ),	UR_R= mean(UR_R ), Graus_dia_ciclo= mean(Graus_dia_ciclo ), Graus_dia_FLO= mean(Graus_dia_FLO ))
+
+# separando por macrorregião
+
+Centro_oeste<- subset(IRR_Medio, (REGIAO == "Centro_Oeste")) # filtrando por região
+```
+
+## Modelo inicial
+```{r}
+
+Temporario <- Centro_oeste[,c(-1,-3)] # retirando as vaiáveis REGIAO e ID_ENSAIO
+
+modelo_CO_<-lm(FLO_M~., Temporario) # modelo inicial
+summary(modelo_CO_)
+
+```
+
+## Remoção de não significantes
+```{r}
+# Testes de hip?teses de interesse
+
+source("teste-CB.txt")
+
+# Comparacoes multiplas
+
+# fit.model: sa?da do modelo ajustado
+# m.C: matriz de interesse
+
+testeF.CB <- function(fit.model,m.C)
+
+{
+
+v.beta <-  cbind(fit.model$coef)
+
+n <- nrow(model.matrix(fit.model))
+
+e.p <- nrow(v.beta)
+
+e.q <- nrow(m.C)
+
+m.cov.beta <- (vcov(fit.model))
+
+e.F <- t(m.C%*%v.beta)%*%solve(m.C%*%m.cov.beta%*%t(m.C))%*%(m.C%*%v.beta)/e.q
+
+e.pvalor <- 1-pf(e.F,e.q,n-e.p)
+
+cat("Estatistica F = ",round(e.F,2),"\n")
+
+cat("pvalor = ",round(e.pvalor,4),"\n")
+
+cat("Matriz C :","\n")
+
+print(m.C)
+
+}
+
+testeF.CB.poder <- function(fit.model,m.C,alpha)
+
+{
+
+v.beta <-  cbind(fit.model$coef)
+
+n <- nrow(model.matrix(fit.model))
+
+e.p <- nrow(v.beta)
+
+e.q <- nrow(m.C)
+
+m.cov.beta <- (vcov(fit.model))
+
+m.X <- model.matrix(fit.model)
+
+e.F <- t(m.C%*%v.beta)%*%solve(m.C%*%m.cov.beta%*%t(m.C))%*%(m.C%*%v.beta)/e.q   ##  m.cov.beta=sigma2(x?x)^-1 que tem dist.?qui-quadrado
+
+e.pvalor <- 1-pf(e.F,e.q,n-e.p)                                                  ##
+
+e.sigma2 <- deviance(fit.model)/df.residual(fit.model)                           ## sigma2 estimado
+
+e.delta <- (t(m.C%*%v.beta)%*%solve(m.C%*%solve(t(m.X)%*%m.X)%*%t(m.C))%*%(m.C%*%v.beta))/e.sigma2
+
+F.critico <- qf(1-alpha,e.q,n-e.p)       ## f cr?tico sob h0
+
+e.poder <- 1-pf(F.critico,e.q,n-e.p,ncp=e.delta)
+
+cat("Estatistica F = ",round(e.F,2),"\n")
+
+cat("pvalor = ",round(e.pvalor,4),"\n")
+
+cat("poder observado = ",round(e.poder,4),"\n")
+
+cat("Matriz C :","\n")
+
+print(m.C)
+
+}
+
+
+
+testeF.CBM <- function(fit.model,m.C,m.M)
+
+{
+
+v.beta <-  cbind(fit.model$coef)
+
+n <- nrow(model.matrix(fit.model))
+
+e.p <- nrow(v.beta)
+
+e.q <- nrow(m.C)
+
+m.cov.beta <- (vcov(fit.model))
+
+e.F <- t(m.C%*%v.beta-m.M)%*%solve(m.C%*%m.cov.beta%*%t(m.C))%*%(m.C%*%v.beta-m.M)/e.q
+
+e.pvalor <- 1-pf(e.F,e.q,n-e.p)
+
+cat("Estatistica F = ",round(e.F,2),"\n")
+
+cat("pvalor = ",round(e.pvalor,4),"\n")
+
+cat("Matriz C :","\n")
+
+print(m.C)
+
+cat("Matriz M :","\n")
+
+print(m.M)
+
+}
+```
+
+
+
+
+
+Ordem da remoção das variáveis numéricas
+
+
+UR_fld_m (p = 0.883706)
+
+```{r}
+fit.model<-modelo_CO_
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<-Temporario %>% select(-UR_fld_m)
+modelo_CO_1<-lm(FLO_M~., Temporario)
+summary(modelo_CO_1)
+```
+
+Rad_ACC_V  (p = 0.896049)
+
+```{r}
+fit.model<-modelo_CO_1
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<-Temporario %>% select(-Rad_ACC_V)
+modelo_CO_2<-lm(FLO_M~., Temporario)
+summary(modelo_CO_2)
+```
+
+Tmax_Media (p = 0.827138)
+
+```{r}
+fit.model<-modelo_CO_2
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<-Temporario %>% select(-Tmax_Media)
+modelo_CO_3<-lm(FLO_M~., Temporario)
+summary(modelo_CO_3)
+```
+
+Chuva_ACC_R (p = 0.841284)
+
+```{r}
+fit.model<-modelo_CO_3
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,		0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<-Temporario %>% select(-Chuva_ACC_R)
+modelo_CO_4<-lm(FLO_M~., Temporario)
+summary(modelo_CO_4)
+```
+
+Tmin_V (p = 0.831746)
+
+```{r}
+fit.model<-modelo_CO_4
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,		0,	0,		0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<-Temporario %>% select(-Tmin_V)
+modelo_CO_5<-lm(FLO_M~., Temporario)
+summary(modelo_CO_5)
+```
+
+latitude (p = 0.689773)
+
+```{r}
+fit.model<-modelo_CO_5
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,		0,	0,		0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<-Temporario %>% select(-latitude)
+modelo_CO_6<-lm(FLO_M~., Temporario)
+summary(modelo_CO_6)
+```
+
+Chuva_ACC_V (p = 0.523720)
+
+```{r}
+fit.model<-modelo_CO_6
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	1,		0,	0,		0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<-Temporario %>% select(-Chuva_ACC_V)
+modelo_CO_6<-lm(FLO_M~., Temporario)
+summary(modelo_CO_6)
+```
+
+Tmin_Minima (p = 0.571933)
+
+```{r}
+fit.model<-modelo_CO_6
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	1,	0,		0,	0,	0,	0,	0,			0,	0,		0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<-Temporario %>% select(-Tmin_Minima)
+modelo_CO_7<-lm(FLO_M~., Temporario)
+summary(modelo_CO_7)
+```
+
+Tmax_ACC_V (p = 0.179815)
+
+```{r}
+fit.model<-modelo_CO_7
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,		0,	1,	0,		0,		0,	0,	0,	0,	0,			0,	0,		0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<-Temporario %>% select(-Tmax_ACC_V)
+modelo_CO_8<-lm(FLO_M~., Temporario)
+summary(modelo_CO_8)
+```
+
+Tmax_ACC_R  (p = 0.135357)
+
+```{r}
+fit.model<-modelo_CO_8
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	1,	0,		0,		0,		0,		0,	0,	0,	0,	0,			0,	0,		0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<-Temporario %>% select(-Tmax_ACC_R)
+modelo_CO_9<-lm(FLO_M~., Temporario)
+summary(modelo_CO_9)
+```
+
+Tmax_R (p = 0.619519)
+
+```{r}
+fit.model<-modelo_CO_9
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	1,		0,		0,		0,		0,		0,	0,	0,	0,	0,			0,	0,		0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<-Temporario %>% select(-Tmax_R)
+modelo_CO_10<-lm(FLO_M~., Temporario)
+summary(modelo_CO_10)
+```
+
+Tmin_R (p = 0.121541)
+
+```{r}
+fit.model<-modelo_CO_10
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,			0,		0,		0,		0,		0,	0,	1,	0,	0,			0,	0,		0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<-Temporario %>% select(-Tmin_R)
+modelo_CO_11<-lm(FLO_M~., Temporario)
+summary(modelo_CO_11)
+```
+
+Rad_ACC_R  (p = 0.119948)
+
+```{r}
+fit.model<-modelo_CO_11
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,			0,		0,		0,		0,		0,	0,		0,	0,			1,	0,		0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<-Temporario %>% select(-Rad_ACC_R)
+modelo_CO_12<-lm(FLO_M~., Temporario)
+summary(modelo_CO_12)
+```
+
+Rad_ACC (p = 0.450497)
+
+```{r}
+fit.model<-modelo_CO_12
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,			0,		0,		0,		0,		0,	0,		0,	0,				1,		0,	0,		0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<-Temporario %>% select(-Rad_ACC)
+modelo_CO_13<-lm(FLO_M~., Temporario)
+summary(modelo_CO_13)
+```
+
+Graus_dia_FLO  (p = 0.126542)
+
+```{r}
+fit.model<-modelo_CO_13
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,			0,		0,		0,		0,		0,	0,		0,	0,						0,	0,		0,	0,	1)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<-Temporario %>% select(-Graus_dia_FLO)
+modelo_CO_14<-lm(FLO_M~., Temporario)
+summary(modelo_CO_14)
+```
+
+Graus_dia_ciclo (p = 0.559580)
+
+```{r}
+fit.model<-modelo_CO_14
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,			0,		0,		0,		0,		0,	0,		0,	0,						0,	0,		0,	1)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<-Temporario %>% select(-Graus_dia_ciclo)
+modelo_CO_15<-lm(FLO_M~., Temporario)
+summary(modelo_CO_15)
+```
+junção dos genótipos não significativos
+
+```{r}
+fit.model<-modelo_CO_15
+
+m.C <- rbind(cbind(	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	),
+cbind(	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0	))
+
+testeF.CB(fit.model,m.C)
+```
+O genotipo "BR IRGA 409" está no intercepto
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BR IRGA 409", "BR IRGA 410",	"BRS 7 TAIM",	"BRS A701 CL",	"BRS A702 CL",	"BRS CIRAD 302",	"BRS FRONTEIRA",	"BRS JACANA",	"BRS PAMPA",	"BRS PELOTA",	"BRS SINUELO CL",	"EMPASC 102",	"EPAGRI97-01",	"EPAGRI97-05",	"EPAGRI97-06",	"IRGA 417",	"IRGA 424",	"IRGA 424 RI",	"IRGA 425",	"IRGA 426",	"IRGA 427",	"IRGA 429",	"IRGA97-11",	"IRGA97-28",	"JEQUITIBA",	"PR306",	"PR349",	"PR498",	"PR631",	"SC237",	"SC240",	"SC250" )
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_CO_16<-lm(FLO_M~., Temporario) 
+summary(modelo_CO_16)
+```
+
+
+```{r}
+fit.model<-modelo_CO_16
+
+m.C <- cbind(0,					0,	0,	0,	0,		0,		0,	0,			0,			0,	0,	0,		0,	0,				0,	0,	0,		0,						0,		0,	0,	0,			0,		0,	0,	0,			0,			0,	0,	0,	0,	0,				0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("SCSBRS 111")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_CO_17<-lm(FLO_M~., Temporario) 
+summary(modelo_CO_17)
+```
+Tmin_fld_m (p = 0.113990) 
+
+```{r}
+fit.model<-modelo_CO_17
+
+m.C <- cbind(0,					0,	0,	0,	0,		0,		0,	0,			0,			0,	0,	0,		0,	0,				0,	0,	0,		0,						0,		0,	0,	0,			0,		0,	0,	0,			0,			0,	0,	0,	0,	0,				0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0)
+
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(-Tmin_fld_m)
+modelo_CO_18<-lm(FLO_M~., Temporario) 
+summary(modelo_CO_18)
+```
+Tmax_Minima (p = 0.139449)  
+
+```{r}
+fit.model<-modelo_CO_18
+
+m.C <- cbind(0,					0,	0,	0,	0,		0,		0,	0,			0,			0,	0,	0,		0,	0,				0,	0,	0,		0,						0,		0,	0,	0,			0,		0,	0,	0,			0,			0,	0,	0,	0,	0,				0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(-Tmax_Minima)
+modelo_CO_19<-lm(FLO_M~., Temporario) 
+summary(modelo_CO_19)
+```
+Altitude (p = 0.124819)
+
+```{r}
+fit.model<-modelo_CO_19
+
+m.C <- cbind(0,					0,	0,	0,	0,		0,		0,	0,			0,			0,	0,	0,		0,	0,				0,	0,	0,		0,						0,		0,	0,	0,			0,		0,	0,	0,			0,			0,	0,	0,	0,	0,				0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(-Altitude)
+modelo_CO_20<-lm(FLO_M~., Temporario) 
+summary(modelo_CO_20)
+```
+Chuva_ACC (p = 0.182805)  
+
+```{r}
+fit.model<-modelo_CO_20
+
+m.C <- cbind(0,					0,	0,	0,	0,		0,		0,	0,			0,			0,	0,	0,		0,	0,				0,	0,	0,		0,						0,		0,	0,	0,			0,		0,	0,	0,			0,			0,	0,	0,	0,	0,				0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0)
+
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(-Chuva_ACC)
+modelo_CO_20<-lm(FLO_M~., Temporario) 
+summary(modelo_CO_20)
+```
+
+
+```{r}
+fit.model<-modelo_CO_20
+
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("SG11551")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_CO_21<-lm(FLO_M~., Temporario) 
+summary(modelo_CO_21)
+```
+```{r}
+fit.model<-modelo_CO_21
+
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("SC173")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_CO_22<-lm(FLO_M~., Temporario) 
+summary(modelo_CO_22)
+```
+UR_V (p = 0.097035)
+
+```{r}
+fit.model<-modelo_CO_22
+
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0)
+
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(-UR_V)
+modelo_CO_23<-lm(FLO_M~., Temporario) 
+summary(modelo_CO_23)
+```
+Tmax_Maxima (p = 0.107514)
+
+```{r}
+fit.model<-modelo_CO_23
+
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,		0,	0,	1,	0,	0,	0,	0,	0,	0,	0,		0)
+
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Temporario<- Temporario %>% select(-Tmax_Maxima)
+modelo_CO_24<-lm(FLO_M~., Temporario) 
+summary(modelo_CO_24)
+```
+```{r}
+fit.model<-modelo_CO_24
+
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,		0,	0,	0,	0,	0,	0,		0,	0,		0,	0,	0,	0,	0,	0,	0,		0)
+
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("PR67")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_CO_25<-lm(FLO_M~., Temporario) 
+summary(modelo_CO_25)
+```
+```{r}
+fit.model<-modelo_CO_25
+
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,		0,	0,	0,	0,	0,	0,		0,	0,		0,	0,	0,	0,	0,	0,	0,		0)
+
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("H6")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_CO_26<-lm(FLO_M~., Temporario) 
+summary(modelo_CO_26)
+```
+```{r}
+fit.model<-modelo_CO_26
+
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,		0,	0,	0,	0,	0,	1,		0,	0,		0,	0,	0,	0,	0,	0,	0,		0)
+
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("SCSBRS PIRACEMA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_CO_27<-lm(FLO_M~., Temporario) 
+summary(modelo_CO_27)
+```
+
+```{r}
+fit.model<-modelo_CO_27
+
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,		0,	0,	0,		0,	0,	0,	0,	0,			0,	0,		0,	0,	0,	0,	0,	0,	0,		0)
+
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("IAC1289")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_CO_28<-lm(FLO_M~., Temporario) 
+summary(modelo_CO_28)
+```
+## Analise de residuos
+```{r}
+#------------------------------------------------------------#
+# Para  rodar este programa deixe no objeto fit.model a saída 
+# do ajuste da regressão do modelo normal linear.Deixe também
+# os dados disponíveis através do comando attach(...). Depois
+# use o comando source(...) no R ou S-plus para executar o 
+# programa. A sequência de comandos é a seguinte:
+fit.model <- modelo_CO_28
+attach(Temporario)
+source("envel_norm_corrigido.txt")
+#
+# A saída será o gráfico de envelope para o resíduo
+# padronizado. Para colocar  um  título no gráfico após a
+# saída use o comando title("...").
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+si <- lm.influence(fit.model)$sigma
+r <- resid(fit.model)
+tsi <- r/(si*sqrt(1-h))
+#
+ident <- diag(n)
+epsilon <- matrix(0,n,100)
+e <- matrix(0,n,100)
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:100){
+     epsilon[,i] <- rnorm(n,0,1)
+     e[,i] <- (ident - H)%*%epsilon[,i]
+     u <- diag(ident - H)
+     e[,i] <- e[,i]/sqrt(u)
+     e[,i] <- sort(e[,i],na.last = TRUE)}
+#
+for(i in 1:n){
+     eo <- sort(e[i,])
+     e1[i] <- (eo[2]+eo[3])/2
+     e2[i] <- (eo[97]+eo[98])/2 }
+#
+med <- apply(e,1,mean)
+faixa <- range(tsi,e1,e2,na.rm = TRUE)
+#
+par(pty="s")
+qqnorm(tsi,xlab="Percentil da N(0,1)",
+ylab="Residuo Studentizado", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
+
+#------------------------------------------------------------#
+```
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erro normal. Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+ fit.model <- modelo_CO_28
+attach(Temporario)
+ source("diag_norm_corrigido.txt")
+#
+# A saída terá quatro gráficos: de pontos de alavanca, 
+# de pontos influentes  e  dois de resíduos. Para identificar
+# os pontos que  mais  se destacam usar o comando 
+# identify(...). Se por exemplo se destacam três pontos no 
+# plot(fitted(fit.model),h,...), após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram traçados os limites ylim=c(a-1,b+1), em que a
+# é o menor valor e b o maior valor para o resíduo.Mude esses 
+# limites  se  necessário.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+lms <- summary(fit.model)
+s <- lms$sigma
+r <- resid(lms)
+ts <- r/(s*sqrt(1-h))
+di <- (1/p)*(h/(1-h))*(ts^2)
+si <- lm.influence(fit.model)$sigma
+tsi <- r/(si*sqrt(1-h))
+fitted.model <- fitted(fit.model)
+ir = which(is.nan(tsi))
+if(length(ir) > 0){
+        tsi = tsi[-ir]
+        fitted.model = fitted.model[-ir]
+}
+
+a <- max(tsi)
+b <- min(tsi)
+par(mfrow=c(2,2))
+plot(h,xlab="Índice", ylab="Medida h", pch=16, ylim=c(0,1))
+cut <- 2*p/n
+abline(cut,0,lty=2)
+identify(h, n=1)
+#title(sub="(a)")
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+identify(di, n=2)
+#
+plot(tsi,xlab="Índice", ylab="Resíduo Padronizado",
+ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(tsi, n=1)
+#
+plot(fitted.model,tsi,xlab="Valor Ajustado", 
+ylab="Resíduo Padronizado", ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),tsi, n=1)
+par(mfrow=c(1,1))
+#------------------------------------------------------------#
+```
+```{r}
+Temporario<- Temporario[c(-70,-116),]
+modelo_CO_28<- lm(FLO_M~., Temporario)
+summary(modelo_CO_28)
+```
+```{r}
+#------------------------------------------------------------#
+# Para  rodar este programa deixe no objeto fit.model a saída 
+# do ajuste da regressão do modelo normal linear.Deixe também
+# os dados disponíveis através do comando attach(...). Depois
+# use o comando source(...) no R ou S-plus para executar o 
+# programa. A sequência de comandos é a seguinte:
+fit.model <- modelo_CO_28
+attach(Temporario)
+source("envel_norm_corrigido.txt")
+#
+# A saída será o gráfico de envelope para o resíduo
+# padronizado. Para colocar  um  título no gráfico após a
+# saída use o comando title("...").
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+si <- lm.influence(fit.model)$sigma
+r <- resid(fit.model)
+tsi <- r/(si*sqrt(1-h))
+#
+ident <- diag(n)
+epsilon <- matrix(0,n,100)
+e <- matrix(0,n,100)
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:100){
+     epsilon[,i] <- rnorm(n,0,1)
+     e[,i] <- (ident - H)%*%epsilon[,i]
+     u <- diag(ident - H)
+     e[,i] <- e[,i]/sqrt(u)
+     e[,i] <- sort(e[,i],na.last = TRUE)}
+#
+for(i in 1:n){
+     eo <- sort(e[i,])
+     e1[i] <- (eo[2]+eo[3])/2
+     e2[i] <- (eo[97]+eo[98])/2 }
+#
+med <- apply(e,1,mean)
+faixa <- range(tsi,e1,e2,na.rm = TRUE)
+#
+par(pty="s")
+qqnorm(tsi,xlab="Percentil da N(0,1)",
+ylab="Residuo Studentizado", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
+
+#------------------------------------------------------------#
+```
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erro normal. Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+ fit.model <- modelo_CO_28
+attach(Temporario)
+ source("diag_norm_corrigido.txt")
+#
+# A saída terá quatro gráficos: de pontos de alavanca, 
+# de pontos influentes  e  dois de resíduos. Para identificar
+# os pontos que  mais  se destacam usar o comando 
+# identify(...). Se por exemplo se destacam três pontos no 
+# plot(fitted(fit.model),h,...), após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram traçados os limites ylim=c(a-1,b+1), em que a
+# é o menor valor e b o maior valor para o resíduo.Mude esses 
+# limites  se  necessário.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+lms <- summary(fit.model)
+s <- lms$sigma
+r <- resid(lms)
+ts <- r/(s*sqrt(1-h))
+di <- (1/p)*(h/(1-h))*(ts^2)
+si <- lm.influence(fit.model)$sigma
+tsi <- r/(si*sqrt(1-h))
+fitted.model <- fitted(fit.model)
+ir = which(is.nan(tsi))
+if(length(ir) > 0){
+        tsi = tsi[-ir]
+        fitted.model = fitted.model[-ir]
+}
+
+a <- max(tsi)
+b <- min(tsi)
+par(mfrow=c(2,2))
+plot(h,xlab="Índice", ylab="Medida h", pch=16, ylim=c(0,1))
+cut <- 2*p/n
+abline(cut,0,lty=2)
+identify(h, n=1)
+#title(sub="(a)")
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+identify(di, n=2)
+#
+plot(tsi,xlab="Índice", ylab="Resíduo Padronizado",
+ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(tsi, n=1)
+#
+plot(fitted.model,tsi,xlab="Valor Ajustado", 
+ylab="Resíduo Padronizado", ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),tsi, n=1)
+par(mfrow=c(1,1))
+#------------------------------------------------------------# pontos a 0,06 =  202 256 312
+```
+```{r}
+#Normalidade dos residuos
+jarque.bera.test(tsi) #Residuo Studentizado # p > 0,05 = normal
+
+```
+```{r}
+# Homocedasticidade (Breusch-Pagan)
+ols_test_breusch_pagan(modelo_CO_28) # Prob > Chi2   =  ou > 0,05 = Homocedastico
+```
+## Modelo final
+
+```{r}
+df_Centro_oeste_corrigido<- Temporario
+modelo_Centro_oeste_corrigido<- modelo_CO_28
+summary(modelo_Centro_oeste_corrigido)
+```
+## Importancia dos preditores
+
+```{r}
+Anova<- anova(modelo_Centro_oeste_corrigido)
+Anova
+```
+
+```{r}
+
+C_E<-data.frame("Variaveis" = row.names(Anova), "importancia" = (Anova$`Sum Sq`/sum(Anova$`Sum Sq`)))
+C_E<- C_E %>% arrange(desc(importancia))
+options(scipen = 999)
+C_E
+```
+```{r}
+ggplot(aes(x=reorder(Variaveis,-importancia ), y = importancia ),data = C_E)+
+  geom_col(stat = "identity")+
+  labs(y = "Capacidade explicativa", x="" )+
+   scale_y_continuous(labels = percent_format()) +
+        theme_classic()+
+  theme(axis.text.x = element_text(angle=45, hjust=1, vjust = 1))
+```
+
+## Contribuição individual dos preditores relacionados aos GENOTIPOs contidos no AA
+
+```{r}
+# Calculando coeficiente de variação e médias considerando os valores relacionados aos GENOTIPOs contidos no AA
+
+# Coeficiente de variação
+coef_var = function(x) {
+  coefi<-sd(x)/mean(x)*100
+  return(coefi)
+}
+
+# variáveis
+ variaveis = c('longitude','Tmax_fld_m',
+              'Tmax_V',  "Tmin_Maxima" ,"Tmin_Media","Tmin_ACC_V","Tmin_ACC_R","UR_Media","UR_R", "FLO_M" ) # 10 variaveis
+ 
+# Estimativas
+ 
+ Estimativas<-summary(modelo_Centro_oeste_corrigido)
+Estimativas<-data.frame(Estimativas$coefficients)
+Estimativas<-data.frame("variaveis" = rownames(Estimativas) ,"Estimativa" = Estimativas$Estimate)
+
+coef_med<-list()
+
+data = c ("coef_med_AA",
+"coef_med_PAMPEIRA",
+"coef_med_CATIANA",
+"coef_med_IRGA430")
+
+genotipos = c("AA", "BRS PAMPEIRA" , "BRS CATIANA" , "IRGA 430")
+
+# filtro
+for (i in 1:length(genotipos)) {
+  
+
+ Temporario1 = subset(df_Centro_oeste_corrigido, GENOTIPO %in% genotipos[i] )
+
+
+
+ for(variavel in variaveis){
+        # Selecionando colunas
+        indexVar = which(names(Temporario1) %in% c('GENOTIPO','FLO_M','latitude',variavel))
+        
+        # Calculando coeficiente de variação
+        coef_variacao = lapply(Temporario1[,-indexVar],coef_var)
+        coef_variacao = do.call('rbind',coef_variacao)
+        coef_variacao = as.data.frame(coef_variacao)
+        
+        # calculando a media
+        
+        media = lapply(Temporario1[,-indexVar],mean)
+        media = do.call('rbind',media)
+        media = as.data.frame(media)
+ }
+ 
+
+
+# data frame 
+ coef_med[[i]]<- c("variaveis" = c(row.names(coef_variacao)),"CV" = c(coef_variacao$V1), "Medias" = c(media$V1))
+
+ }
+ 
+teste<-do.call(cbind.data.frame, coef_med)
+
+coef_med_AA<- data.frame("variaveis"= c(teste[c(1:9),1]), "CV" =as.numeric(c(teste[c(10:18),1])), "Medias"= as.numeric(c(teste[c(19:27),1]) ))
+  coef_med_AA[10,1]<- c("(Intercept)")
+  coef_med_AA[10,3]<- c(1)
+  coef_med_AA<-coef_med_AA %>% inner_join(Estimativas)
+  coef_med_AA$`Est_X_Med`<- c(coef_med_AA$Estimativa*coef_med_AA$Medias)
+coef_med_AA
+
+
+coef_med_PAMPEIRA<- data.frame("variaveis"= c(teste[c(1:9),2]), "CV" =as.numeric(c(teste[c(10:18),2])), "Medias"= as.numeric(c(teste[c(19:27),2]) ))
+  coef_med_PAMPEIRA[10,1]<- c("(Intercept)")
+  coef_med_PAMPEIRA[10,3]<- c(1)
+  coef_med_PAMPEIRA<-coef_med_PAMPEIRA %>% inner_join(Estimativas)
+  coef_med_PAMPEIRA[10,4]<- c(coef_med_PAMPEIRA[10,4]+Estimativas[9,2])# linha 9 é pampeira
+  coef_med_PAMPEIRA$`Est_X_Med`<- c(coef_med_PAMPEIRA$Estimativa*coef_med_PAMPEIRA$Medias)
+coef_med_PAMPEIRA
+
+coef_med_CATIANA<- data.frame("variaveis"= c(teste[c(1:9),3]), "CV" =as.numeric(c(teste[c(10:18),3])), "Medias"= as.numeric(c(teste[c(19:27),3]) ))
+  coef_med_CATIANA[10,1]<- c("(Intercept)")
+  coef_med_CATIANA[10,3]<- c(1)
+  coef_med_CATIANA<-coef_med_CATIANA %>% inner_join(Estimativas)
+  coef_med_CATIANA[10,4]<- c(coef_med_CATIANA[10,4]+Estimativas[5,2])# linha 5 é catiana
+  coef_med_CATIANA$`Est_X_Med`<- c(coef_med_CATIANA$Estimativa*coef_med_CATIANA$Medias)
+coef_med_CATIANA
+
+coef_med_IRGA430<- data.frame("variaveis"= c(teste[c(1:9),4]), "CV" =as.numeric(c(teste[c(10:18),4])), "Medias"= as.numeric(c(teste[c(19:27),4]) ))
+  coef_med_IRGA430[10,1]<- c("(Intercept)")
+  coef_med_IRGA430[10,3]<- c(1)
+  coef_med_IRGA430<-coef_med_IRGA430 %>% inner_join(Estimativas)
+  coef_med_IRGA430[10,4]<- c(coef_med_IRGA430[10,4]+Estimativas[17,2])# linha 17 é irga 430
+  coef_med_IRGA430$`Est_X_Med`<- c(coef_med_IRGA430$Estimativa*coef_med_IRGA430$Medias)
+coef_med_IRGA430
+
+```
+
+```{r, message=F , warning= F, include=F}
+ # Intervalo observado das variáveis
+ # formula é y = B1X1+B2X2 ... + BnXn em que todas as variáveis (Xn) estão fixadas na média,  com exeção da variável que se deseja ver a relação. Bn é o Estimate no modelo_Centro_oeste_corrigido
+ 
+ # Nomes variaveis
+ interVariaveis = c('longitude','Tmax_fld_m',
+              'Tmax_V',  "Tmin_Maxima" ,"Tmin_Media","Tmin_ACC_V","Tmin_ACC_R","UR_Media","UR_R")
+
+ plots = list()
+ plot  = list()
+ coef_meds = list()
+ 
+ FLOR_previsto_temp<- list()
+ FLOR_previsto<- list()
+ 
+ coef_meds[1]<- list(coef_med_AA)
+ coef_meds[2]<- list(coef_med_PAMPEIRA)
+ coef_meds[3]<- list(coef_med_CATIANA)
+ coef_meds[4]<- list(coef_med_IRGA430)
+
+
+for (j in 1:4) {
+ coef<- as.data.frame(coef_meds[[j]])
+
+ for(i in 1:length(interVariaveis)){
+   
+   # Obtendo index
+   indexCOEF = which(coef$variaveis %in% interVariaveis[i])
+ 
+   if(length(indexCOEF) > 0){
+     
+     # Calculo
+     Est_X_med = sum(coef[-indexCOEF, 5])
+     OBS = unique(df_Centro_oeste_corrigido[, interVariaveis[i]])
+     
+      
+     
+     # Criando data.frame temporario
+     previsto_temp = data.frame(OBS,
+                                prev = Est_X_med + (OBS * (coef[indexCOEF, 4])))
+     # Renomeando colunas
+     nomesColunas = c(
+       paste(interVariaveis[i]),
+       paste(interVariaveis[i], "FLO", "prev", sep = "_")
+     )
+     colnames(previsto_temp) = nomesColunas
+     
+     FLOR_previsto_temp[[i]]<-previsto_temp
+     
+
+     # Graficos
+     g = ggplot(previsto_temp, aes_string(x = nomesColunas[1], y = nomesColunas[2] )) +
+       geom_point()+ 
+       geom_smooth(formula = y ~ x)+
+        labs(x = nomesColunas[1], y = "")
+      
+
+     
+     plot[[i]] = g
+     
+   }
+   FLOR_previsto[[j]]<-FLOR_previsto_temp
+
+       plots[[j]] =  plot
+ }  
+ }
+    
+
+# Plotando graficos
+
+ figura1<- ggarrange(plots = plots[[1]])  # AA 
+  
+ figura2<- ggarrange(plots = plots[[2]])  # PAMPEIRA
+
+ figura3<- ggarrange(plots = plots[[3]])  # CATIANA
+
+ figura4<- ggarrange(plots = plots[[4]])  # IRGA 430
+```
+```{r}
+  ggpubr::annotate_figure(figura1, top = "Respostas relativas aos genótipos agrupados na média", left = "Florescimento médio previsto")
+  ggpubr::annotate_figure(figura2, top = "Respostas relativas ao genótipo Pampeira", left = "Florescimento médio previsto")
+  ggpubr::annotate_figure(figura3, top = "Respostas relativas ao genótipo Catiana", left = "Florescimento médio previsto ")
+  ggpubr::annotate_figure(figura4, top = "Respostas relativas ao genótipo IRGA 430", left = "Florescimento médio previsto")
+
+```
+
+
+```{r , message=F , warning= F, include=F}
+ # Intervalo observado das variáveis
+ # formula é y = B1X1+B2X2 ... + BnXn em que todas as variáveis (Xn) estão fixadas na média,  com exeção da variável que se deseja ver a relação. Bn é o Estimate no modelo_Centro_oeste_corrigido
+ 
+ # Nomes variaveis
+  interVariaveis = c('longitude','Tmax_fld_m',
+              'Tmax_V',  "Tmin_Maxima" ,"Tmin_Media","Tmin_ACC_V","Tmin_ACC_R","UR_Media","UR_R")
+genotipos = c("AA", "BRS PAMPEIRA" , "BRS CATIANA" , "IRGA 430")
+
+
+ plots = list()
+ plot  = list()
+ coef_meds = list()
+ 
+ coef_meds[1]<- list(coef_med_AA)
+ coef_meds[2]<- list(coef_med_PAMPEIRA)
+ coef_meds[3]<- list(coef_med_CATIANA)
+ coef_meds[4]<- list(coef_med_IRGA430)
+  FLO_OBS = data.frame()
+ FLOR_previsto<- list()
+ FLOR_previsto_temp<- list()
+
+ for (j in 1:4) {
+ coef<- as.data.frame(coef_meds[[j]])
+ filtro = subset(df_Centro_oeste_corrigido, GENOTIPO %in% genotipos[j] )
+ 
+ for(i in 1:length(interVariaveis)){
+   
+   # Obtendo index
+   indexCOEF = which(coef$variaveis %in% interVariaveis[i])
+ 
+   if(length(indexCOEF) > 0){
+     
+     # Calculo
+     Est_X_med = sum(coef[-indexCOEF, 5])
+     OBS = unique(df_Centro_oeste_corrigido[, interVariaveis[i]])
+     FLO_OBS = filtro %>% group_by_at(interVariaveis[i]) %>% summarise(FLO_M)
+      colnames(FLO_OBS) <- c("X", "FLO_M")
+      
+     
+     # Criando data.frame temporario
+     previsto_temp = data.frame(OBS,
+                                prev = Est_X_med + (OBS * (coef[indexCOEF, 4])))
+     # Renomeando colunas
+     nomesColunas = c(
+       paste(interVariaveis[i]),
+       paste(interVariaveis[i], "FLO", "prev", sep = "_")
+     )
+     colnames(previsto_temp) = nomesColunas
+     
+     FLOR_previsto_temp[[i]]<-previsto_temp
+     
+           # previsto_temp = previsto_temp %>%  filter(between(previsto_temp[,2], 50 , 110))
+
+     
+     # Graficos
+     g = ggplot() +
+       geom_point(data = FLO_OBS, aes_string(x = "X" , y = "FLO_M"  ), color = "black") +
+       geom_smooth(data = FLO_OBS, aes_string(x = "X" , y = "FLO_M"), formula = y ~ x, color = "blue"  )+
+        geom_point(data = previsto_temp, aes_string(x = nomesColunas[1], y = nomesColunas[2] ), color = "red") +
+       geom_smooth(data = previsto_temp, aes_string(x = nomesColunas[1], y = nomesColunas[2] ),formula = y ~ x, color = "red")+
+        labs(x = nomesColunas[1], y = "")
+      
+
+     
+     plot[[i]] = g
+     
+   }
+   FLOR_previsto[[j]]<-FLOR_previsto_temp
+
+       plots[[j]] =  plot
+ }  
+ }
+    
+
+# Plotando graficos
+
+ figura1<- ggarrange(plots = plots[[1]])  # AA 
+  
+ figura2<- ggarrange(plots = plots[[2]])  # PAMPEIRA
+
+ figura3<- ggarrange(plots = plots[[3]])  # CATIANA
+
+ figura4<- ggarrange(plots = plots[[4]])  # IRGA 430
+```
+```{r}
+  ggpubr::annotate_figure(figura1, top = "Respostas relativas aos genótipos agrupados na média", left = "Florescimento médio")
+  ggpubr::annotate_figure(figura2, top = "Respostas relativas ao genótipo Pampeira", left = "Florescimento médio")
+  ggpubr::annotate_figure(figura3, top = "Respostas relativas ao genótipo Catiana", left = "Florescimento médio ")
+  ggpubr::annotate_figure(figura4, top = "Respostas relativas ao genótipo IRGA 430", left = "Florescimento médio")
+
+```
+
+## Erro
+
+
+```{r}
+
+Temporario1<- df_Centro_oeste_corrigido
+
+Temporario1$`Yhat` <-predict ( modelo_Centro_oeste_corrigido, Temporario1)
+Temporario1$`Y_yhat` = c(Temporario1$FLO_M - Temporario1$Yhat)
+
+
+  
+  
+  boxplot(Temporario1$Y_yhat, main = "Todos os genótipos", xlab = "Y - Yhat" )
+  plot(y = Temporario1$FLO_M, x = Temporario1$Yhat,  main = "Todos os genótipos", xlab = "Yhat", ylab = "Y", pch = 20, 
+     col = "black") 
+
+  teste = subset(Temporario1, GENOTIPO %in% "AA" )
+  boxplot(teste$Y_yhat, main = "Genótipos agrupados", xlab = "Y - Yhat" )
+  plot(y = teste$FLO_M, x = teste$Yhat,  main = "Genótipos agrupados", xlab = "Yhat", ylab = "Y", pch = 20, 
+     col = "black") 
+  
+  teste = subset(Temporario1, GENOTIPO %in% "IRGA 430" )
+  boxplot(teste$Y_yhat, main = "Genótipo IRGA 430", xlab = "Y - Yhat" )
+  plot(y = teste$FLO_M, x = teste$Yhat,  main = "Genótipo IRGA 430", xlab = "Yhat", ylab = "Y", pch = 20, 
+     col = "black") 
+  
+  teste = subset(Temporario1, GENOTIPO %in% "BRS CATIANA" )
+  boxplot(teste$Y_yhat, main = "Genótipo BRS CATIANA", xlab = "Y - Yhat" )
+  plot(y = teste$FLO_M, x = teste$Yhat,  main = "Genótipo BRS CATIANA", xlab = "Yhat", ylab = "Y", pch = 20, 
+     col = "black") 
+
+  teste = subset(Temporario1, GENOTIPO %in% "BRS PAMPEIRA" )
+  boxplot(teste$Y_yhat, main = "Genótipo BRS PAMPEIRA", xlab = "Y - Yhat" )
+  plot(y = teste$FLO_M, x = teste$Yhat,  main = "Genótipo BRS PAMPEIRA", xlab = "Yhat", ylab = "Y", pch = 20, 
+     col = "black") 
+  
+ 
+
+```
+
+```{r}
+# filtrando por região
+Ano_GENOTIPO <- subset(IRR, (REGIAO == "Centro_Oeste")) 
+
+# filtrando por ano e genótipo
+Ano_GENOTIPO<- Ano_GENOTIPO %>% group_by(ano,GENOTIPO) %>% summarise(FLO_M = mean(FLO_E))
+
+# filtrando o primeiro ano de cada genótipo
+Ano_GENOTIPO<- Ano_GENOTIPO %>%group_by(GENOTIPO) %>% filter(ano==min(ano))
+
+# Organizando os estimate do modelo_Centro_oeste_corrigido
+Estimativas$variaveis<-gsub("GENOTIPO", "", Estimativas$variaveis)
+Estimativas <- rename(Estimativas, "GENOTIPO" = "variaveis")
+Estimativas<- Estimativas[-c(37:47),]
+
+# Juntando ano, genótipo e estimate 
+Ano_GENOTIPO_Estimate<-Estimativas[-1,] %>% full_join(Ano_GENOTIPO)
+
+# somando o estimate do genótipo com o do intercepto
+Ano_GENOTIPO_Estimate$Estimativa<- c(Ano_GENOTIPO_Estimate$Estimativa+Estimativas[1,2])
+
+# Usando o valor do estimate do intercepto para os genótipos não significativos
+Ano_GENOTIPO_Estimate$Estimativa[which((is.na(Ano_GENOTIPO_Estimate$Estimativa)))] <- Estimativas[1,2]
+
+# Plotando
+ggplot(Ano_GENOTIPO_Estimate, aes(x= ano, y = Estimativa))+
+geom_point()+
+  geom_smooth(formula  = y ~ x) +
+    labs(y = "Florescimento estimado", x="Ano de lançamento do genótipo" )+
+theme_bw()
+
+```
+
+
+
+```{r}
+boxplot(Centro_oeste$Altitude)
+hist(Centro_oeste$Altitude)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
