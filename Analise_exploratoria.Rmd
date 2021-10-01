@@ -9,6 +9,8 @@ output: html_document
 ```{r}
 
 if(!require(tidyverse)) install.packages("tidyverse")
+if(!require(patchwork)) install.packages("patchwork")
+
 # para o mapa
 if(!require(geobr)) install.packages("geobr")
 if(!require(ggspatial)) install.packages("ggspatial")
@@ -37,7 +39,10 @@ if(!require(factoextra)) install.packages("factoextra")
 ```
 
 # DADOS
+
+
 ```{r Diretório} 
+
 
 # DIRETÓRIO DOS DADOS 
 
@@ -45,7 +50,7 @@ Tabelabruta<- read.csv("d:/Users/Cristiane Resende/Desktop/Gutemberg Honorio/Mes
 
 # criando coluna com macrorregiões
 
-Tabelabruta<- mutate(Tabelabruta,REGIAO = case_when(UF == 'GO'| UF == 'DF' |UF == 'MS' | UF == 'MT' ~ 'Centro_Oeste',
+Tabelabruta<- mutate(Tabelabruta,REGIAO = case_when(UF == 'GO'| UF == 'DF' |UF == 'MS' | UF == 'MT' ~ 'Centro-oeste',
                               UF == 'AL'| UF == 'BA' |UF == 'CE' | UF == 'MA' | UF == 'PB' | UF == 'PE' | UF == 'PI' | UF == 'RN' | UF == 'SE' ~ 'Nordeste',
                               UF == 'AC' | UF == 'AM' | UF == 'AP' | UF == 'PA' | UF == 'RO' | UF == 'RR' | UF == 'TO' ~ 'Norte',
                               UF == 'ES' | UF == 'MG' | UF == 'SP' | UF == 'RJ' ~ 'Sudeste',
@@ -61,13 +66,10 @@ TabelabrutaTA = subset(Tabelabruta, SIST_CULT == "UPLAND") # Somente Terras alta
 
 IRR<-TabelabrutaIRR %>% mutate(UR_Media=(umidade_Media),UR_V=	(umidade_V), UR_fld_m=	(umidade_fld_m),	UR_R=	(umidade_R), Graus_dia_ciclo=(graus_dia_ciclo), Graus_dia_FLO=(graus_dia_FLO+graus_dia_IP))
 
-IRR <- select(IRR,latitude, longitude, GENOTIPO, ID_ENSAIO, REGIAO, UF, FLO_E, Tmax_Maxima ,Tmax_fld_m ,	Tmax_R,	Tmax_ACC_R, Tmax_Minima,	Tmax_Media,Tmax_V ,Tmax_ACC_V,	Tmin_Maxima,Tmin_Minima ,	Tmin_Media ,	Tmin_V ,	Tmin_ACC_V , Tmin_fld_m ,	Tmin_R,	Tmin_ACC_R , Chuva_ACC ,	Chuva_ACC_V, Chuva_ACC_R, Rad_ACC_R ,	Rad_ACC ,	Rad_ACC_V, UR_Media, UR_V, UR_fld_m,	UR_R, Graus_dia_ciclo, Graus_dia_FLO)
+IRR <- select(IRR,latitude, longitude, GENOTIPO, ID_ENSAIO,ano, Altitude, REGIAO, UF, FLO_E, Tmax_Maxima ,Tmax_fld_m ,	Tmax_R,	Tmax_ACC_R, Tmax_Minima,	Tmax_Media,Tmax_V ,Tmax_ACC_V,	Tmin_Maxima,Tmin_Minima ,	Tmin_Media ,	Tmin_V ,	Tmin_ACC_V , Tmin_fld_m ,	Tmin_R,	Tmin_ACC_R , Chuva_ACC ,	Chuva_ACC_V, Chuva_ACC_R, Rad_ACC_R ,	Rad_ACC ,	Rad_ACC_V, UR_Media, UR_V, UR_fld_m,	UR_R, Graus_dia_ciclo, Graus_dia_FLO, ano)
 
-TA<-TabelabrutaTA %>% mutate(UR_Media=(umidade_Media),UR_V=	(umidade_V), UR_fld_m=	(umidade_fld_m),	UR_R=	(umidade_R), Graus_dia_ciclo=(graus_dia_ciclo), Graus_dia_FLO=(graus_dia_FLO+graus_dia_IP))
 
-TA <- select(TA,latitude, longitude, GENOTIPO, ID_ENSAIO, REGIAO, UF, FLO_E, Tmax_Maxima ,Tmax_fld_m ,	Tmax_R,	Tmax_ACC_R, Tmax_Minima,	Tmax_Media,Tmax_V ,Tmax_ACC_V,	Tmin_Maxima,Tmin_Minima ,	Tmin_Media ,	Tmin_V ,	Tmin_ACC_V , Tmin_fld_m ,	Tmin_R,	Tmin_ACC_R , Chuva_ACC ,	Chuva_ACC_V, Chuva_ACC_R, Rad_ACC_R ,	Rad_ACC ,	Rad_ACC_V, UR_Media, UR_V, UR_fld_m,	UR_R, Graus_dia_ciclo, Graus_dia_FLO)
-
-rm(TabelabrutaIRR,TabelabrutaTA,Tabelabruta)
+#rm(TabelabrutaIRR,TabelabrutaTA,Tabelabruta)
 
 # Removendo os genótipos que não serão estudados
 
@@ -76,11 +78,13 @@ IRR = IRR[IRR$UF!="MT",]
 
 # Filtrando e gerando médias
 
-IRR_Medio<- IRR %>% group_by(ID_ENSAIO, GENOTIPO, REGIAO) %>% summarise(  FLO_M= mean(FLO_E), Tmax_Maxima = mean(Tmax_Maxima) ,Tmax_fld_m = mean(Tmax_fld_m ),	Tmax_R= mean( Tmax_R),	Tmax_ACC_R= mean(Tmax_ACC_R ), Tmax_Minima= mean(Tmax_Minima ),	Tmax_Media= mean( Tmax_Media),Tmax_V = mean(Tmax_V ),Tmax_ACC_V= mean(Tmax_ACC_V ),	Tmin_Maxima= mean(Tmin_Maxima ),Tmin_Minima = mean(Tmin_Minima ),	Tmin_Media = mean(Tmin_Media ),	Tmin_V = mean(Tmin_V ),	Tmin_ACC_V = mean(Tmin_ACC_V ), Tmin_fld_m = mean( Tmin_fld_m),	Tmin_R= mean(Tmin_R ),	Tmin_ACC_R = mean(Tmin_ACC_R ), Chuva_ACC = mean(Chuva_ACC ),	Chuva_ACC_V= mean(Chuva_ACC_V ), Chuva_ACC_R= mean(Chuva_ACC_R ), Rad_ACC_R = mean(Rad_ACC_R ),	Rad_ACC = mean(Rad_ACC ),	Rad_ACC_V= mean(Rad_ACC_V ), UR_Media= mean( UR_Media), UR_V= mean( UR_V), UR_fld_m= mean(UR_fld_m ),	UR_R= mean(UR_R ), Graus_dia_ciclo= mean(Graus_dia_ciclo ), Graus_dia_FLO= mean(Graus_dia_FLO ))
+IRR_Medio<- IRR %>% group_by(ID_ENSAIO, GENOTIPO, REGIAO) %>% summarise(  FLO_M= mean(FLO_E),  latitude= mean(latitude), longitude = mean(longitude), Altitude = mean(Altitude), Tmax_Maxima = mean(Tmax_Maxima) ,Tmax_fld_m = mean(Tmax_fld_m ),	Tmax_R= mean( Tmax_R),	Tmax_ACC_R= mean(Tmax_ACC_R ), Tmax_Minima= mean(Tmax_Minima ),	Tmax_Media= mean( Tmax_Media),Tmax_V = mean(Tmax_V ),Tmax_ACC_V= mean(Tmax_ACC_V ),	Tmin_Maxima= mean(Tmin_Maxima ),Tmin_Minima = mean(Tmin_Minima ),	Tmin_Media = mean(Tmin_Media ),	Tmin_V = mean(Tmin_V ),	Tmin_ACC_V = mean(Tmin_ACC_V ), Tmin_fld_m = mean( Tmin_fld_m),	Tmin_R= mean(Tmin_R ),	Tmin_ACC_R = mean(Tmin_ACC_R ), Chuva_ACC = mean(Chuva_ACC ),	Chuva_ACC_V= mean(Chuva_ACC_V ), Chuva_ACC_R= mean(Chuva_ACC_R ), Rad_ACC_R = mean(Rad_ACC_R ),	Rad_ACC = mean(Rad_ACC ),	Rad_ACC_V= mean(Rad_ACC_V ), UR_Media= mean( UR_Media), UR_V= mean( UR_V), UR_fld_m= mean(UR_fld_m ),	UR_R= mean(UR_R ), Graus_dia_ciclo= mean(Graus_dia_ciclo ), Graus_dia_FLO= mean(Graus_dia_FLO ))
+
+
 
 # separando por macrorregião
 
-Centro_oeste<- subset(IRR_Medio, (REGIAO == "Centro_Oeste")) # filtrando por região
+Centro_oeste<- subset(IRR_Medio, (REGIAO == "Centro-oeste")) # filtrando por região
 Norte<- subset(IRR_Medio, (REGIAO == "Norte")) # filtrando por região
 Nordeste<- subset(IRR_Medio, (REGIAO == "Nordeste")) # filtrando por região
 Sul<- subset(IRR_Medio, (REGIAO == "Sul")) # filtrando por região
@@ -113,9 +117,10 @@ rm(Brasil, latTA,latIRR)
 ```{r , echo=FALSE, fig.align='center', out.width='100%', fig.asp=0.6, fig.width=9}
 Mapa
 ```
-## Ensaios
 
-Número de ensáios realizados por macrorregião.
+##Ensaios
+
+### Número de ensáios realizados por macrorregião.
 ```{r}
 
 macrorregiao_Ensaios<-apply(with(IRR,table(REGIAO,ID_ENSAIO))>0,1:1,sum)
@@ -132,10 +137,79 @@ Estados_Ensaios<-apply(with(IRR,table(UF,ID_ENSAIO))>0,1:1,sum)
 Estados_Ensaios
 ```
 ```{r}
-barplot(macrorregiao_Ensaios, cex.names =  0.7, main = "Ensaios realizados por macrorregião")
-barplot(Estados_Ensaios, cex.names =  0.7, main = "Ensaios realizados por estado")
+barplot(macrorregiao_Ensaios, cex.names =  0.8, main = "Ensaios realizados por macrorregião",cex.axis = 0.8, las=2 )
+barplot(Estados_Ensaios, cex.names =  0.8, main = "Ensaios realizados por estado" , cex.axis = 0.8)
 ```
+### Núm ensaio  Ano 
+```{r}
+
+Ano_ensaio<-apply(with(TabelabrutaIRR,table(ano,ID_ENSAIO))>0,1:1,sum)
+Ano_ensaio
+```
+
+```{r}
+
+barplot(Ano_ensaio, cex.names =  0.8, main = "Número de ensaios por ano", cex.axis = 0.8, las=2)
+
+
+```
+
+```{r}
+teste<- IRR %>% group_by(ano) %>% summarise(FLO_E = FLO_E)
+teste<- Teste[Teste$ano >= 1995,]
+
+graf_ano_flo = ggplot(teste)+
+  geom_smooth(aes(y=FLO_E , x = ano), se = FALSE,method = 'loess', span = 0.9)+
+    labs(x = "Ano", y = "Florescimento (DAE)", title = "(A)")+
+  scale_x_continuous(breaks=c(seq(1995,2018,5)))+
+  scale_y_continuous(breaks=c(seq(80,95,2)))+
+  theme_classic(base_size= 17)
+
+  
+```
+
 ## Genótipos
+
+### tendenc. flore. ano de lans. genotipos 
+```{r}
+# filtrando por região
+Ano_GENOTIPO <- IRR 
+
+# filtrando por ano e genótipo
+Ano_GENOTIPO<- Ano_GENOTIPO %>% group_by(ano,GENOTIPO) %>% summarise(FLO_M = mean(FLO_E))
+
+# filtrando o primeiro ano de cada genótipo
+Ano_lan<- Ano_GENOTIPO %>%group_by(GENOTIPO) %>% filter(ano==min(ano))
+
+Ano_GENOTIPO<- Ano_lan %>% group_by(ano) %>% summarise(FLO_M = FLO_M)
+Ano_GENOTIPO<- Ano_GENOTIPO[Ano_GENOTIPO$ano >= 1995,]
+
+graf_ano_genotipo = ggplot(Ano_GENOTIPO)+
+  geom_smooth(aes(y=FLO_M , x = ano), se = FALSE, span = 0.99)+
+    labs(x = "Ano", y = "", title = "(B)")+
+  scale_x_continuous(breaks=c(seq(1995,2018,5)))+
+  scale_y_continuous(breaks=c(seq(80,95,2)))+
+  theme_classic(base_size= 17)
+```
+```{r}
+an_geno(graf_ano_flo | graf_ano_genotipo)
+
+```
+### N. genot. lan. ano
+
+```{r}
+Ano_GENOTIPO<-apply(with(Ano_lan,table(ano,GENOTIPO))>0,1:1,sum)
+Ano_GENOTIPO
+```
+
+
+```{r}
+
+barplot(Ano_gen, cex.names =  0.8, main = "Número de genotipos lançados por ano ", cex.axis = 0.8, las=2)
+
+```
+
+
 ### Número de genótipos testados por macrorregião.
 ```{r}
 
@@ -146,9 +220,19 @@ macrorregiao_Genotipo
 TOTAL de 91 genótipos testados
 
 ```{r}
-ggplot(IRR)+
-  geom_point(aes(x = GENOTIPO, y= REGIAO))
-barplot(macrorregiao_Genotipo, cex.names =  0.7, main = "Número de genótipos testados por macrorregião")
+
+d<- data.frame("Regioes" = names(macrorregiao_Ensaios),"quant" = macrorregiao_Ensaios, "Legenda" = "Nº de ensaios realizados")
+e<- data.frame("Regioes" = names(macrorregiao_Genotipo),"quant" = macrorregiao_Genotipo, "Legenda" = "Nº de genótipos testados")
+aa<- bind_rows(d,e)
+
+graf_ens_reg<-
+  ggplot()+
+  geom_col(data= aa, aes(y=Regioes , x = quant, fill = Legenda ) ,position = "dodge")+
+    theme_classic(base_size = 15)+
+  labs(y = "Macrorregiões", x= "", fill = NULL, title = "(A)")+
+  scale_fill_viridis_d()+
+   theme(legend.position='bottom')
+graf_ens_reg
 ```
 
 ### Número de genótipos testados por estado.
@@ -160,7 +244,94 @@ Estados_Genotipo
 ```{r}
 ggplot(IRR)+
   geom_point(aes(x = GENOTIPO, y= UF))
-barplot(Estados_Genotipo, cex.names =  0.7, main = "Número de genótipos testados por estado")
+barplot(Estados_Genotipo, cex.names =  0.8, main = "Número de genótipos testados por estado", cex.axis = 0.8, las=2)
+
+```
+```{r}
+
+d<- data.frame("Estados" = names(Estados_Ensaios),"quant" = Estados_Ensaios, "Legenda" = "Nº de ensaios realizados")
+e<- data.frame("Estados" = names(Estados_Genotipo),"quant" = Estados_Genotipo, "Legenda" = "Nº de genótipos testados")
+aa<- bind_rows(d,e)
+
+graf_ens_est<-
+  ggplot()+
+  geom_col(data= aa, aes(y=Estados , x = quant, fill = Legenda ) ,position = "dodge")+
+    theme_classic(base_size = 15)+
+  labs(y = "Estados", x= "", fill = NULL, title = "(B)")+
+  scale_fill_viridis_d()+
+   theme(legend.position="none")
+graf_ens_est
+```
+
+```{r}
+(graf_ens_reg | graf_ens_est)+plot_layout(guides = 'collect') & theme(legend.position='bottom', text = element_text(size=20))
+```
+
+```{r}
+unique(Sudeste$GENOTIPO) %in% unique(Centro_oeste$GENOTIPO) & unique(Sudeste$GENOTIPO) %in% unique(Norte$GENOTIPO) & unique(Sudeste$GENOTIPO) %in% unique(Nordeste$GENOTIPO)& unique(Sudeste$GENOTIPO) %in% unique(Sul$GENOTIPO)
+
+a<- c(unique(Sudeste$GENOTIPO))
+a[c(1,3,6,7, 22, 23, 25, 28, 35, 36,39,40,41, 47, 48, 51 )]
+
+```
+```{r}
+unique(IRR$ID_ENSAIO)
+
+n_ens<-data.frame(table(IRR$ID_ENSAIO))
+
+sort(n_ens$Freq)
+summary(n_ens$Freq)
+```
+
+
+```{r}
+getmode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+getmode(n_ens$Freq)
+boxplot(n_ens$Freq)
+ncol(TabelabrutaIRR)
+```
+
+### Núm gen. Ano 
+```{r}
+
+Ano_GEN<-apply(with(IRR,table(ano,GENOTIPO))>0,1:1,sum)
+Ano_GEN
+```
+
+```{r}
+
+barplot(Ano_GEN, cex.names =  0.8, main = "Número de genótipos testados por ano", cex.axis = 0.8, las=2)
+
+```
+
+```{r}
+unique(IRR$GENOTIPO) %in% unique(IRR$ano)
+```
+```{r}
+
+aa <- data.frame("Ano" = names(Ano_ensaio), "Nº" = Ano_ensaio, "Legenda" = "Nº de ensaios no ano")
+
+bb <- data.frame("Ano" = names(Ano_GEN), "Nº" = Ano_GEN, "Legenda" = "Nº de genótipos testados no ano")
+
+cc <- data.frame("Ano" = names(Ano_GENOTIPO), "Nº" = Ano_GENOTIPO, "Legenda" = "Nº de genótipos lançados no ano")
+
+a<- bind_rows(aa,bb,cc)
+
+a<- a[a$Ano >= 1995,]
+
+ano_geno<-ggplot()+
+  geom_col(data= a, aes(x=Ano, y = Nº, fill= Legenda),position = "dodge")+
+    theme_classic(base_size = 15)+
+  labs(y = "", fill = NULL)+
+  scale_fill_viridis_d()+
+  coord_flip()+
+  theme(legend.position='bottom')
+  
+
 
 ```
 
@@ -168,8 +339,9 @@ barplot(Estados_Genotipo, cex.names =  0.7, main = "Número de genótipos testad
 
 ```{r}
 ggplot(IRR)+
-  geom_boxplot(aes(y=FLO_E , x = REGIAO))+
-    labs(x = "Macrorregião", y = "Dias após a emergencia (DAE)", title = "Data de florescimento por região")
+  geom_boxplot(aes(y=FLO_E , x = REGIAO), fill="grey")+
+    labs(x = "Macrorregião", y = "Florescimento (DAE)", title = "Data de florescimento por região")+
+  theme_test( base_size= 17)
 boxplot(IRR$FLO_E)
 
 par(mfrow=c(3,3))
@@ -182,7 +354,27 @@ hist(Sul$FLO_M, main= "Sul", xlab= "Data de florescimento")
 hist(Sudeste$FLO_M, main= "Sudeste", xlab= "Data de florescimento")
 
 
+
 ```
+```{r}
+summary(IRR$FLO_E)
+```
+```{r}
+summary(Sudeste$FLO_M)
+sd(Sudeste$FLO_M)
+```
+```{r}
+summary(Norte$FLO_M)
+sd(Norte$FLO_M)
+```
+```{r}
+sd(IRR$FLO_E)
+```
+```{r}
+getmode(IRR$FLO_E)
+```
+
+
 ```{r}
 cv<-function(x){coef<-sd(x)/mean(x)*100 
 return(coef)}
@@ -197,16 +389,18 @@ boxplot(CV$Coef_var, main = "Coeficiente de variação para data de floresciment
 cv<-function(x){coef<-sd(x)/mean(x)*100 
 return(coef)}
 
+
+
+CV1<- IRR %>% group_by(GENOTIPO,REGIAO) %>% summarise(FLO_M = mean(FLO_E), Coef_var = cv(FLO_E))
+ggplot(CV1)+
+  geom_boxplot(aes(y=Coef_var , x = REGIAO),fill="grey")+
+    labs(x = "Macrorregião", y = "CV (%)", title = "Coeficiente de variação para data de florescimento por genótipo")+
+  theme_test( base_size= 17)
+
 CV<- IRR %>% group_by(ID_ENSAIO,REGIAO) %>% summarise(FLO_M = mean(FLO_E), Coef_var = cv(FLO_E))
 ggplot(CV)+
   geom_boxplot(aes(y=Coef_var , x = REGIAO))+
     labs(x = "Macrorregião", y = "CV", title = "Coeficiente de variação para data de florescimento por ensaio")
-
-CV<- IRR %>% group_by(GENOTIPO,REGIAO) %>% summarise(FLO_M = mean(FLO_E), Coef_var = cv(FLO_E))
-ggplot(CV)+
-  geom_boxplot(aes(y=Coef_var , x = REGIAO))+
-    labs(x = "Macrorregião", y = "CV", title = "Coeficiente de variação para data de florescimento por genótipo")
-
 CV<- IRR %>% group_by(GENOTIPO,ID_ENSAIO,REGIAO) %>% summarise(FLO_M = mean(FLO_E), Coef_var = cv(FLO_E))
 ggplot(CV)+
   geom_boxplot(aes(y=Coef_var , x = REGIAO))+
@@ -217,7 +411,315 @@ CV<- IRR %>% group_by(GENOTIPO,ID_ENSAIO,REGIAO) %>% summarise(FLO_M = mean(FLO_
 View(CV)
 ```
 
+## anova FLO 
+
+```{r}
+modelo <- aov(FLO_E ~ GENOTIPO*latitude , IRR)
+summary(modelo)
+```
+
+
+```{r}
+modelo <- aov(FLO_E ~ GENOTIPO*longitude , IRR)
+summary(modelo)
+```
+
+
+```{r}
+modelo <- aov(FLO_E ~ GENOTIPO*Altitude , IRR)
+summary(modelo)
+
+```
+```{r}
+modelo <- aov(log(FLO_E) ~ GENOTIPO*ano , IRR)
+summary(modelo)
+```
+
+```{r}
+
+
+Teste<- IRR[IRR$GENOTIPO %in% c("BRS CATIANA", "BRS PAMPEIRA", "EPAGRI 109", "OUROMINAS", "BRS PAMPA", "BR IRGA 409", "IRGA 417", "METICA 1", "BRS FORMOSO", "CICA 8", "JEQUITIBA", "PR306", "PR349", "JAVAE", "SCSBRS 111","BRS JABURU"),]
+modelo <- aov(FLO_E ~ GENOTIPO*REGIAO , Teste)
+summary(modelo)
+
+```
+
+
+## Variáveis 
+```{r}
+ad_variaveis<- IRR %>% group_by(GENOTIPO,REGIAO) %>% summarise(T_Media = (Tmin_Media+Tmax_Media)/2 ,Tmin_Media, Tmax_Media, Tmax_Maxima, Tmin_Minima, UR_Media, Chuva_ACC, Rad_ACC, Graus_dia_ciclo,Graus_dia_FLO)
+```
+
+```{r}
+a<-ggplot(IRR, aes(x = REGIAO, y = FLO_E, color = REGIAO, fill = REGIAO)) +
+    scale_y_continuous() +
+  scale_color_viridis_d( guide = "none") +
+  scale_fill_viridis_d( guide = "none")+
+ geom_violin(
+    aes(fill = REGIAO, fill = after_scale(colorspace::lighten(fill, .5))),
+    size = 1.2, color = NA
+  ) +
+  geom_boxplot(
+    width = .1, size = 1.2
+  ) +
+  stat_summary(
+    geom = "point",
+    fun = median,
+    color = "white",
+    size = 5
+  )+
+  theme_classic()+
+  labs(x="", y="Florescimento observado (DAE)")
+
+```
+```{r}
+CV1<- IRR %>% group_by(GENOTIPO,REGIAO) %>% summarise(FLO_M = mean(FLO_E), Coef_var = cv(FLO_E))
+
+b<-ggplot(CV1, aes(x = REGIAO, y = Coef_var, color = REGIAO, fill = REGIAO)) +
+  scale_color_viridis_d( guide = "none") +
+  scale_fill_viridis_d( guide = "none")+ 
+      labs( y = "CV(%)")+
+    geom_boxplot(
+    aes(fill = REGIAO, fill = after_scale(colorspace::lighten(fill, .5))),
+    size = 1.5, outlier.size = 2
+  )+
+  theme_classic()
+```
+```{r}
+(a|b)+plot_annotation(tag_levels = 'A', tag_prefix = '(', tag_suffix = ')') 
+
+```
+
+```{r}
+a2<- data.frame("Temperatura" = ad_variaveis$Tmax_Maxima, "REGIAO" = ad_variaveis$REGIAO, "Tipo" = "Máxima máxima")
+b2<- data.frame("Temperatura" = ad_variaveis$T_Media, "REGIAO" = ad_variaveis$REGIAO, "Tipo" = "Média")
+c2<- data.frame("Temperatura" = ad_variaveis$Tmin_Minima, "REGIAO" = ad_variaveis$REGIAO, "Tipo" = "Mínima mínima")
+
+
+
+
+a2<- ggplot(a2, aes(y=Temperatura, x= REGIAO, color = REGIAO, fill = REGIAO))+
+geom_boxplot(
+    width = .2, fill = "white",
+    size = 1
+  ) +
+  ggdist::stat_halfeye(
+    #adjust = .33, ## bandwidth
+    width = .67, 
+    color = NA, ## remove slab interval
+    position = position_nudge(x = .15)
+  ) +
+  scale_color_viridis_d() +
+  scale_fill_viridis_d( guide = "none") +
+  theme_classic()+
+        theme(legend.position="none")+
+       labs(y = "ºC",x= "", )+
+  facet_wrap(~Tipo, strip.position = "left")
+
+b2<-ggplot(b2, aes(y=Temperatura, x= REGIAO, color = REGIAO, fill = REGIAO))+
+geom_boxplot(
+    width = .2, fill = "white",
+    size = 1
+  ) +
+  ggdist::stat_halfeye(
+    #adjust = .33, ## bandwidth
+    width = .67, 
+    color = NA, ## remove slab interval
+    position = position_nudge(x = .15)
+  ) +
+  scale_color_viridis_d() +
+  scale_fill_viridis_d( guide = "none") +
+  theme_classic()+
+        theme(legend.position="none")+
+       labs(y = "ºC",x= "")+
+  facet_wrap(~Tipo, strip.position = "left")
+
+
+c2<-ggplot(c2, aes(y=Temperatura, x= REGIAO, color = REGIAO, fill = REGIAO))+
+geom_boxplot(
+    width = .2, fill = "white",
+    size = 1
+  ) +
+  ggdist::stat_halfeye(
+    #adjust = .33, ## bandwidth
+    width = .67, 
+    color = NA, ## remove slab interval
+    position = position_nudge(x = .15)
+  ) +
+  scale_color_viridis_d() +
+  scale_fill_viridis_d( guide = "none") +
+  theme_classic()+
+        theme(legend.position="none")+
+       labs(y = "ºC",x= "")+
+    scale_y_continuous(labels= scales::number_format(accuracy = 0.1,
+                                 decimal.mark = '.'))+
+  facet_wrap(~Tipo, strip.position = "left")
+
+(a2/b2/c2)+plot_annotation(tag_levels = 'A', tag_prefix = '(', tag_suffix = ')')
+```
+
+
+```{r}
+d<- ggplot(ad_variaveis, aes(y=UR_Media, x= REGIAO, color = REGIAO, fill = REGIAO))+
+geom_boxplot(
+    width = .2, fill = "white",
+    size = 1
+  ) +
+  ggdist::stat_halfeye(
+    #adjust = .33, ## bandwidth
+    width = .67, 
+    color = NA, ## remove slab interval
+    position = position_nudge(x = .15)
+  ) +
+  scale_color_viridis_d() +
+  scale_fill_viridis_d( guide = "none") +
+  theme_classic()+
+        theme(legend.position="none")+
+       labs(y = "Umidade relativa do ar (%)",x= "")
+```
+```{r}
+
+e<- ggplot(ad_variaveis, aes(y=Chuva_ACC, x= REGIAO, color = REGIAO, fill = REGIAO))+
+geom_boxplot(
+    width = .2, fill = "white",
+    size = 1
+  ) +
+  ggdist::stat_halfeye(
+    #adjust = .33, ## bandwidth
+    width = .67, 
+    color = NA, ## remove slab interval
+    position = position_nudge(x = .15)
+  ) +
+  scale_color_viridis_d() +
+  scale_fill_viridis_d( guide = "none") +
+  theme_classic()+
+        theme(legend.position="none")+
+       labs(y = "Precipitação acumulada (mm)",x= "")
+```
+```{r}
+
+
+f<- ggplot(ad_variaveis, aes(y=Rad_ACC, x= REGIAO, color = REGIAO, fill = REGIAO))+
+geom_boxplot(
+    width = .2, fill = "white",
+    size = 1
+  ) +
+  ggdist::stat_halfeye(
+    #adjust = .33, ## bandwidth
+    width = .67, 
+    color = NA, ## remove slab interval
+    position = position_nudge(x = .15)
+  ) +
+  scale_color_viridis_d() +
+  scale_fill_viridis_d( guide = "none") +
+  theme_classic()+
+        theme(legend.position="none")+
+       labs(y = "Radiação solar acumulada (MJ/m²)",x= "")
+
+```
+```{r}
+(d/e/f)+plot_annotation(tag_levels = 'A', tag_prefix = '(', tag_suffix = ')')
+```
+
+
+```{r}
+a3<- data.frame("graus" = ad_variaveis$Graus_dia_ciclo, "REGIAO" = ad_variaveis$REGIAO, "Tipo" = "Graus_dia_ciclo")
+b3<- data.frame("graus" = ad_variaveis$Graus_dia_FLO, "REGIAO" = ad_variaveis$REGIAO, "Tipo" = "Graus_dia_FLO")
+temp<- data.frame()
+temp<- bind_rows(a3,b3)
+
+g<-  ggplot(temp)+
+  geom_boxplot(aes(y=graus, color = Tipo))+
+      labs(y = "Graus-dia (ºC)", color = NULL)+
+scale_color_manual(values = c( "red","blue" 
+ )) +
+  theme_bw()+
+        theme(legend.position="bottom", axis.text.x=element_blank(),strip.background = element_blank(),
+  strip.text.x = element_blank())+
+ facet_wrap(~ REGIAO, ncol=5)
+g
+ 
+
+ggplot(temp, aes(y=graus, x= REGIAO, color = Tipo, fill = Tipo))+
+geom_boxplot(
+    width = .2, fill = "white",
+    size = 1
+  ) +
+  ggdist::stat_halfeye(
+    #adjust = .33, ## bandwidth
+    width = .67, 
+    color = NA, ## remove slab interval
+    position = position_nudge(x = .15), alpha = .5
+  ) +
+  scale_color_viridis_d() +
+  scale_fill_viridis_d( guide = "none") +
+  theme_classic()+
+        theme(legend.position="bottom")+
+       labs(y = "Graus-dia (ºC)",x= "", color = NULL, fill = NULL)
+
+
+
+```
+```{r}
+h<- ggplot(ad_variaveis)+
+  geom_boxplot(aes(y=Graus_dia_FLO , color = REGIAO))+
+      labs( y = "Graus-dia (ºC)")+
+  theme_bw()+
+     scale_color_viridis_d()+
+   theme(legend.position="none", axis.text.x=element_blank(), strip.background = element_blank(),
+  strip.text.x = element_blank())+
+ facet_grid(~ REGIAO)
+h
+
+```
+
+
+
+```{r}
+a/b/d/e/f/c/g +plot_annotation(tag_levels = 'A', tag_prefix = '(', tag_suffix = ')') 
+
+```
+
+```{r}
+teste<- subset(ad_variaveis, (REGIAO == "Centro_Oeste"))
+summary(teste)
+```
+```{r}
+sd(teste$T_Media)
+```
+
+```{r}
+teste<- subset(ad_variaveis, (REGIAO == "Sul"))
+summary(teste)
+```
+```{r}
+sd(teste$T_Media)
+```
+
+```{r}
+teste<- subset(ad_variaveis, (REGIAO == "Norte"))
+summary(teste)
+```
+```{r}
+sd(teste$T_Media)
+```
+```{r}
+teste<- subset(ad_variaveis, (REGIAO == "Nordeste"))
+summary(teste)
+```
+```{r}
+sd(teste$T_Media)
+```
+```{r}
+teste<- subset(ad_variaveis, (REGIAO == "Sudeste"))
+summary(teste)
+```
+```{r}
+sd(teste$T_Media)
+```
+
 ## Boxplot
+
 
 
 ```{r}
@@ -273,6 +775,64 @@ Temporario<- Temporario[,c(8,12,17,20,21,22,23,24,25,26,31,32)] # retirando as v
 boxplot(Temporario, horizontal = T, las = 1, cex.axis=0.55, main = "Boxplot com os valores das médias por genótipo/ensaio para Sudeste")
 
 ```
+
+
+```{r}
+ad_variaveis<- IRR %>% group_by(GENOTIPO,REGIAO) %>% summarise(T_Media = (Tmin_Media+Tmax_Media)/2 ,Tmin_Media, Tmax_Media, Tmax_Maxima, Tmin_Minima, UR_Media, Chuva_ACC, Rad_ACC, Graus_dia_ciclo,Graus_dia_FLO)
+ggplot(ad_variaveis)+
+  geom_boxplot(aes(y=Tmin_Media , x = REGIAO),fill="grey")+
+    labs(x = "Macrorregião", y = "Temperatura (Cº)", title = "Tmin_Media")+
+  theme_test( base_size= 17)
+ggplot(ad_variaveis)+
+  geom_boxplot(aes(y=Tmax_Media , x = REGIAO),fill="grey")+
+    labs(x = "Macrorregião", y = "Temperatura (Cº)", title = "Tmax_Media")+
+  theme_test( base_size= 17)
+
+ggplot(ad_variaveis)+
+  geom_boxplot(aes(y=Tmin_Minima , x = REGIAO),fill="grey")+
+    labs(x = "Macrorregião", y = "Temperatura (Cº)", title = "Tmin_Minima")+
+  theme_test( base_size= 17)
+
+
+ggplot(ad_variaveis)+
+  geom_boxplot(aes(y=Tmax_Maxima , x = REGIAO),fill="grey")+
+    labs(x = "Macrorregião", y = "Temperatura (Cº)", title = "Tmax_Maxima")+
+  theme_test( base_size= 17)
+
+ggplot(ad_variaveis)+
+  geom_boxplot(aes(y=T_Media , x = REGIAO),fill="grey")+
+    labs(x = "Macrorregião", y = "Temperatura média (Cº)", title = "Temperatura média")+
+  theme_test( base_size= 17)
+
+ggplot(ad_variaveis)+
+  geom_boxplot(aes(y=UR_Media , x = REGIAO),fill="grey")+
+    labs(x = "Macrorregião", y = "Umidade relativa (%)", title = "Umidade relativa")+
+  theme_test( base_size= 17)
+
+ggplot(ad_variaveis)+
+  geom_boxplot(aes(y=Chuva_ACC , x = REGIAO),fill="grey")+
+    labs(x = "Macrorregião", y = "Milimetros (mm)", title = "chuva")+
+  theme_test( base_size= 17)
+
+ggplot(ad_variaveis)+
+  geom_boxplot(aes(y=Rad_ACC , x = REGIAO),fill="grey")+
+    labs(x = "Macrorregião", y = "Radiação solar global (W/m²)", title = "Rad_ACC")+
+  theme_test( base_size= 17)
+
+ggplot(ad_variaveis)+
+  geom_boxplot(aes(y=Graus_dia_ciclo , x = REGIAO),fill="grey")+
+    labs(x = "Macrorregião", y = "Graus-dia (Cº)", title = "Graus_dia_ciclo")+
+  theme_test( base_size= 17)
+
+ggplot(ad_variaveis)+
+  geom_boxplot(aes(y=Graus_dia_FLO , x = REGIAO),fill="grey")+
+    labs(x = "Macrorregião", y = "Graus-dia (Cº)", title = "Graus_dia_FLO")+
+  theme_test( base_size= 17)
+```
+
+
+
+
 ## Matrix de correlação
 
 ```{r}
@@ -312,34 +872,41 @@ title("Matrix de correlação Sudeste", line = 1)
 ```{r}
 
 Temporario<-IRR_Medio[,c(-1,-2,-3)]
-ppsr :: visualize_pps ( df = Temporario, y  = "FLO_M" ) + 
- ggplot2 :: labs ( title  =  'PPS com dados não regionalizados' )
+pps1<- ppsr :: visualize_pps ( df = Temporario, y  = "FLO_M" ) + 
+ggplot2 :: labs ( title  =  'PPS com dados não regionalizados' )
 
 
 Temporario<- subset(IRR_Medio, (REGIAO == "Centro_Oeste"))
 Temporario<- Temporario[,c(-1,-2,-3)]
-ppsr :: visualize_pps ( df = Temporario, y  = "FLO_M" ) + 
+pps2<-ppsr :: visualize_pps ( df = Temporario, y  = "FLO_M" ) + 
  ggplot2 :: labs ( title  =  'PPS Centro-Oeste' )
 
 Temporario<- subset(IRR_Medio, (REGIAO == "Norte"))
 Temporario<- Temporario[,c(-1,-2,-3)]
-ppsr :: visualize_pps ( df = Temporario, y  = "FLO_M"  ) + 
+pps3<-ppsr :: visualize_pps ( df = Temporario, y  = "FLO_M"  ) + 
  ggplot2 :: labs ( title  =  'PPS Norte' )
 
 Temporario<- subset(IRR_Medio, (REGIAO == "Nordeste"))
 Temporario<- Temporario[,c(-1,-2,-3)]
-ppsr :: visualize_pps ( df = Temporario, y  = "FLO_M" ) + 
+pps4<-ppsr :: visualize_pps ( df = Temporario, y  = "FLO_M" ) + 
  ggplot2 :: labs ( title  =  'PPS Nordeste' )
 
 Temporario<- subset(IRR_Medio, (REGIAO == "Sul"))
 Temporario<- Temporario[,c(-1,-2,-3)]
-ppsr :: visualize_pps ( df = Temporario, y  = "FLO_M" ) + 
+pps5<-ppsr :: visualize_pps ( df = Temporario, y  = "FLO_M" ) + 
  ggplot2 :: labs ( title  =  'PPS Sul' )
 
 Temporario<- subset(IRR_Medio, (REGIAO == "Sudeste"))
 Temporario<- Temporario[,c(-1,-2,-3)]
-ppsr :: visualize_pps ( df = Temporario, y  = "FLO_M") + 
+pps6<-ppsr :: visualize_pps ( df = Temporario, y  = "FLO_M") + 
  ggplot2 :: labs ( title  =  'PPS Sudeste' )
+
+pps1
+pps2
+pps3
+pps4
+pps5
+pps6
 
 ```
 
@@ -347,33 +914,35 @@ ppsr :: visualize_pps ( df = Temporario, y  = "FLO_M") +
 
 
 Temporario<-IRR_Medio[,c(-1,-2,-3)]
-ppsr :: visualize_pps ( df = Temporario) + 
+pps7<-ppsr :: visualize_pps ( df = Temporario) + 
  ggplot2 :: labs ( title  =  'PPS com dados não regionalizados' )
 
 Temporario<- subset(IRR_Medio, (REGIAO == "Centro_Oeste"))
 Temporario<- Temporario[,c(-1,-2,-3)]
-ppsr :: visualize_pps ( df = Temporario ) + 
+pps8<-ppsr :: visualize_pps ( df = Temporario ) + 
  ggplot2 :: labs ( title  =  'PPS Centro-Oeste' )
 
 Temporario<- subset(IRR_Medio, (REGIAO == "Norte"))
 Temporario<- Temporario[,c(-1,-2,-3)]
-ppsr :: visualize_pps ( df = Temporario ) + 
+pps9<-ppsr :: visualize_pps ( df = Temporario ) + 
  ggplot2 :: labs ( title  =  'PPS Norte' )
 
 Temporario<- subset(IRR_Medio, (REGIAO == "Nordeste"))
 Temporario<- Temporario[,c(-1,-2,-3)]
-ppsr :: visualize_pps ( df = Temporario ) + 
+pps10<-ppsr :: visualize_pps ( df = Temporario ) + 
  ggplot2 :: labs ( title  =  'PPS Nordeste' )
 
 Temporario<- subset(IRR_Medio, (REGIAO == "Sul"))
 Temporario<- Temporario[,c(-1,-2,-3)]
-ppsr :: visualize_pps ( df = Temporario ) + 
+pps11<-ppsr :: visualize_pps ( df = Temporario ) + 
  ggplot2 :: labs ( title  =  'PPS Sul' )
 
 Temporario<- subset(IRR_Medio, (REGIAO == "Sudeste"))
 Temporario<- Temporario[,c(-1,-2,-3)]
-ppsr :: visualize_pps ( df = Temporario ) + 
+pps12<-ppsr :: visualize_pps ( df = Temporario ) + 
  ggplot2 :: labs ( title  =  'PPS Sudeste' )
+
+pps11 
 
 ```
 
@@ -382,60 +951,61 @@ ppsr :: visualize_pps ( df = Temporario ) +
 ```{r}
 Temporario<-IRR_Medio[,c(-1,-2,-3)]
 res_pca<- PCA(Temporario, graph = F)
-fviz_eig(res_pca,addlabels = T)+
+pca1<- fviz_eig(res_pca,addlabels = T)+
   theme_bw()+
   labs(title = "PCA com os dados não regionálizados")
-fviz_pca_biplot(res_pca,geom.ind = "point") +
+pca1_2<-fviz_pca_biplot(res_pca,geom.ind = "point") +
   theme_bw()+
   labs(title = "PCA com os dados não regionálizados")
 
 Temporario<-Centro_oeste[,c(-1,-2,-3)]
 res_pca<- PCA(Temporario, graph = F)
-fviz_eig(res_pca,addlabels = T)+
+pca2<-fviz_eig(res_pca,addlabels = T)+
   theme_bw()+
   labs(title = "PCA  Centro-oeste")
-fviz_pca_biplot(res_pca,geom.ind = "point") +
+pca2_2<-fviz_pca_biplot(res_pca,geom.ind = "point") +
   theme_bw()+
   labs(title = "PCA  Centro-oeste")
 
 Temporario<-Norte[,c(-1,-2,-3)]
 res_pca<- PCA(Temporario, graph = F)
-fviz_eig(res_pca,addlabels = T)+
+pca3<-fviz_eig(res_pca,addlabels = T)+
   theme_bw()+
   labs(title = "PCA  Norte")
-fviz_pca_biplot(res_pca,geom.ind = "point") +
+pca3_3<-fviz_pca_biplot(res_pca,geom.ind = "point") +
   theme_bw()+
   labs(title = "PCA  Norte")
 
 Temporario<-Nordeste[,c(-1,-2,-3)]
 res_pca<- PCA(Temporario, graph = F)
-fviz_eig(res_pca,addlabels = T)+
+pca4<-fviz_eig(res_pca,addlabels = T)+
   theme_bw()+
   labs(title = "PCA  Nordeste")
-fviz_pca_biplot(res_pca,geom.ind = "point") +
+pca4_4<-fviz_pca_biplot(res_pca,geom.ind = "point") +
   theme_bw()+
   labs(title = "PCA  Nordeste")
 
 Temporario<-Sul[,c(-1,-2,-3)]
 res_pca<- PCA(Temporario, graph = F)
-fviz_eig(res_pca,addlabels = T)+
+pca5<-fviz_eig(res_pca,addlabels = T)+
   theme_bw()+
   labs(title = "PCA  Sul")
-fviz_pca_biplot(res_pca,geom.ind = "point") +
+pca5_5<-fviz_pca_biplot(res_pca,geom.ind = "point") +
   theme_bw()+
   labs(title = "PCA  Sul")
 
 Temporario<-Sudeste[,c(-1,-2,-3)]
 res_pca<- PCA(Temporario, graph = F)
-fviz_eig(res_pca,addlabels = T)+
+pca6<-fviz_eig(res_pca,addlabels = T)+
   theme_bw()+
   labs(title = "PCA  Sudeste")
-fviz_pca_biplot(res_pca,geom.ind = "point") +
+pca6_6<-fviz_pca_biplot(res_pca,geom.ind = "point") +
   theme_bw()+
   labs(title = "PCA  Sudeste")
 
 
-
+pca5
+pca5_5
 ```
 
 

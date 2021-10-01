@@ -73,7 +73,10 @@ IRR_Medio<- IRR %>% group_by(ID_ENSAIO, GENOTIPO, REGIAO) %>% summarise(  FLO_M=
 Nordeste<- subset(IRR_Medio, (REGIAO == "Nordeste")) # filtrando por região
 ```
 
-# modelo inicial
+# MODELO 1
+
+Ajuste removendo as quantitativas
+
 ```{r}
 
 Temporario <- Nordeste[,c(-1,-3)] # retirando as vaiáveis REGIAO e ID_ENSAIO
@@ -82,7 +85,6 @@ modelo_NE_<-lm(FLO_M~., Temporario) # modelo inicial
 summary(modelo_NE_)
 
 ```
-# Remoção de não significantes
 ```{r}
 # Testes de hip?teses de interesse
 
@@ -522,7 +524,7 @@ summary(modelo_NE_20)
 #
 fit.model <- modelo_NE_20
 attach(Temporario)
-source("envel_norm_corrigido.txt")
+#source("envel_norm_corrigido.txt")
 #
 # A saída será o gráfico de envelope para o resíduo
 # padronizado. Para colocar  um  título no gráfico após a
@@ -656,7 +658,7 @@ ols_test_breusch_pagan(fit.model)
 plot(density(Temporario$FLO_M))
 
 ```
-## Transformação log
+# MODELO 1.2 Transformação log
 
 ```{r}
 Temporario<-Nordeste[,c(-1,-3)]
@@ -1093,7 +1095,12 @@ jarque.bera.test(tsi) #Residuo Studentizado # p > 0,05 = normal
 # Homocedasticidade (Breusch-Pagan)
 ols_test_breusch_pagan(modelo_LOG_NE_18)
 ```
-### log-log
+
+
+
+
+
+# MODELO 1.3 log-log
 
 
 ```{r}
@@ -1581,3 +1588,3760 @@ jarque.bera.test(tsi) #Residuo Studentizado # p > 0,05 = normal
 # Homocedasticidade (Breusch-Pagan)
 ols_test_breusch_pagan(modelo_LOG_LOG_NE_20)
 ```
+
+
+# MODELO 2 Removento linhas
+
+```{r}
+teste<-r
+teste1 <- sort(teste)
+match(teste1[1:8], teste)
+```
+```{r}
+
+modelo_NE_21<- lm(FLO_M~., Temporario[c( -392, -224, -291, -177, -375, -215, -175, -261),])
+summary(modelo_NE_21)
+```
+```{r}
+#------------------------------------------------------------#
+# Para  rodar este programa deixe no objeto fit.model a saída 
+# do ajuste da regressão do modelo normal linear.Deixe também
+# os dados disponíveis através do comando attach(...). Depois
+# use o comando source(...) no R ou S-plus para executar o 
+# programa. A sequência de comandos é a seguinte:
+#
+fit.model <- modelo_NE_21
+attach(Temporario)
+#source("envel_norm_corrigido.txt")
+#
+# A saída será o gráfico de envelope para o resíduo
+# padronizado. Para colocar  um  título no gráfico após a
+# saída use o comando title("...").
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+si <- lm.influence(fit.model)$sigma
+r <- resid(fit.model)
+tsi <- r/(si*sqrt(1-h))
+#
+ident <- diag(n)
+epsilon <- matrix(0,n,100)
+e <- matrix(0,n,100)
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:100){
+     epsilon[,i] <- rnorm(n,0,1)
+     e[,i] <- (ident - H)%*%epsilon[,i]
+     u <- diag(ident - H)
+     e[,i] <- e[,i]/sqrt(u)
+     e[,i] <- sort(e[,i],na.last = TRUE)}
+#
+for(i in 1:n){
+     eo <- sort(e[i,])
+     e1[i] <- (eo[2]+eo[3])/2
+     e2[i] <- (eo[97]+eo[98])/2 }
+#
+med <- apply(e,1,mean)
+faixa <- range(tsi,e1,e2,na.rm = TRUE)
+#
+par(pty="s")
+qqnorm(tsi,xlab="Percentil da N(0,1)",
+ylab="Residuo Studentizado", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
+#------------------------------------------------------------#
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erro normal. Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+ fit.model <- modelo_NE_21
+ attach(Temporario)
+source("diag_norm_corrigido.txt")
+#
+# A saída terá quatro gráficos: de pontos de alavanca, 
+# de pontos influentes  e  dois de resíduos. Para identificar
+# os pontos que  mais  se destacam usar o comando 
+# identify(...). Se por exemplo se destacam três pontos no 
+# plot(fitted(fit.model),h,...), após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram traçados os limites ylim=c(a-1,b+1), em que a
+# é o menor valor e b o maior valor para o resíduo.Mude esses 
+# limites  se  necessário.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+lms <- summary(fit.model)
+s <- lms$sigma
+r <- resid(lms)
+ts <- r/(s*sqrt(1-h))
+di <- (1/p)*(h/(1-h))*(ts^2)
+si <- lm.influence(fit.model)$sigma
+tsi <- r/(si*sqrt(1-h))
+fitted.model <- fitted(fit.model)
+ir = which(is.nan(tsi))
+if(length(ir) > 0){
+        tsi = tsi[-ir]
+        fitted.model = fitted.model[-ir]
+}
+
+a <- max(tsi)
+b <- min(tsi)
+par(mfrow=c(2,2))
+plot(h,xlab="Índice", ylab="Medida h", pch=16, ylim=c(0,1))
+cut <- 2*p/n
+abline(cut,0,lty=2)
+identify(h, n=1)
+#title(sub="(a)")
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+identify(di, n=2)
+#
+plot(tsi,xlab="Índice", ylab="Resíduo Padronizado",
+ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(tsi, n=1)
+#
+plot(fitted.model,tsi,xlab="Valor Ajustado", 
+ylab="Resíduo Padronizado", ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),tsi, n=1)
+par(mfrow=c(1,1))
+#------------------------------------------------------------#
+```
+
+```{r}
+#Normalidade dos residuos
+options(scipen = 999)
+
+jarque.bera.test(tsi) #Residuo Studentizado # p > 0,05 = normal
+
+```
+```{r}
+# Homocedasticidade (Breusch-Pagan)
+ols_test_breusch_pagan(modelo_NE_21)
+```
+
+# MODELO 2.2 Log Removento linhas
+
+```{r}
+teste<-r
+teste1 <- sort(teste)
+match(teste1[1:8], teste)
+```
+```{r}
+
+modelo_LOG_NE_19<- lm(FLO_M~., Temporario[c( -392, -224, -291, -177, -375, -215, -175, -261),])
+summary(modelo_LOG_NE_19)
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para  rodar este programa deixe no objeto fit.model a saída 
+# do ajuste da regressão do modelo normal linear.Deixe também
+# os dados disponíveis através do comando attach(...). Depois
+# use o comando source(...) no R ou S-plus para executar o 
+# programa. A sequência de comandos é a seguinte:
+#
+fit.model <- modelo_LOG_NE_19
+attach(Temporario)
+source("envel_norm_corrigido.txt")
+#
+# A saída será o gráfico de envelope para o resíduo
+# padronizado. Para colocar  um  título no gráfico após a
+# saída use o comando title("...").
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+si <- lm.influence(fit.model)$sigma
+r <- resid(fit.model)
+tsi <- r/(si*sqrt(1-h))
+#
+ident <- diag(n)
+epsilon <- matrix(0,n,100)
+e <- matrix(0,n,100)
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:100){
+     epsilon[,i] <- rnorm(n,0,1)
+     e[,i] <- (ident - H)%*%epsilon[,i]
+     u <- diag(ident - H)
+     e[,i] <- e[,i]/sqrt(u)
+     e[,i] <- sort(e[,i],na.last = TRUE)}
+#
+for(i in 1:n){
+     eo <- sort(e[i,])
+     e1[i] <- (eo[2]+eo[3])/2
+     e2[i] <- (eo[97]+eo[98])/2 }
+#
+med <- apply(e,1,mean)
+faixa <- range(tsi,e1,e2,na.rm = TRUE)
+#
+par(pty="s")
+qqnorm(tsi,xlab="Percentil da N(0,1)",
+ylab="Residuo Studentizado", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
+#------------------------------------------------------------#
+```
+
+```{r}
+#Normalidade dos residuos
+options(scipen = 999)
+
+jarque.bera.test(tsi) #Residuo Studentizado # p > 0,05 = normal
+
+```
+```{r}
+# Homocedasticidade (Breusch-Pagan)
+ols_test_breusch_pagan(modelo_LOG_NE_19)
+```
+
+
+# MODELO 2.3  Removento 8 linhas
+
+```{r}
+
+teste<-r
+teste1 <- sort(teste)
+match(teste1[1:8], teste)
+```
+```{r}
+
+modelo_LOG_LOG_NE_21<- lm(log(log(FLO_M))~., Temporario[c( -177, -392, -175, -291, -224, -375, -215, -435),])
+summary(modelo_LOG_LOG_NE_21)
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para  rodar este programa deixe no objeto fit.model a saída 
+# do ajuste da regressão do modelo normal linear.Deixe também
+# os dados disponíveis através do comando attach(...). Depois
+# use o comando source(...) no R ou S-plus para executar o 
+# programa. A sequência de comandos é a seguinte:
+#
+fit.model <- modelo_LOG_LOG_NE_21
+attach(Temporario)
+source("envel_norm_corrigido.txt")
+#
+# A saída será o gráfico de envelope para o resíduo
+# padronizado. Para colocar  um  título no gráfico após a
+# saída use o comando title("...").
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+si <- lm.influence(fit.model)$sigma
+r <- resid(fit.model)
+tsi <- r/(si*sqrt(1-h))
+#
+ident <- diag(n)
+epsilon <- matrix(0,n,100)
+e <- matrix(0,n,100)
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:100){
+     epsilon[,i] <- rnorm(n,0,1)
+     e[,i] <- (ident - H)%*%epsilon[,i]
+     u <- diag(ident - H)
+     e[,i] <- e[,i]/sqrt(u)
+     e[,i] <- sort(e[,i],na.last = TRUE)}
+#
+for(i in 1:n){
+     eo <- sort(e[i,])
+     e1[i] <- (eo[2]+eo[3])/2
+     e2[i] <- (eo[97]+eo[98])/2 }
+#
+med <- apply(e,1,mean)
+faixa <- range(tsi,e1,e2,na.rm = TRUE)
+#
+par(pty="s")
+qqnorm(tsi,xlab="Percentil da N(0,1)",
+ylab="Residuo Studentizado", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
+#------------------------------------------------------------#
+```
+
+```{r}
+#Normalidade dos residuos
+options(scipen = 999)
+
+jarque.bera.test(tsi) #Residuo Studentizado # p > 0,05 = normal
+
+```
+```{r}
+# Homocedasticidade (Breusch-Pagan)
+ols_test_breusch_pagan(modelo_LOG_LOG_NE_21)
+```
+
+# MODELO 2.4 Removendo mais 12 linhas 
+
+```{r}
+Temporario2<- Temporario[c(  -177, -392, -175, -291, -224, -375, -215, -435),]
+
+teste<-r
+teste1 <- sort(teste)
+match(teste1[1:11], teste)
+
+```
+```{r}
+
+
+modelo_LOG_LOG_NE_22<- lm(log(log(FLO_M))~., Temporario2[c( -257,- 167,- 165,- 431,- 229,- 389,- 383,- 275,- 247,- 362,- 251, - 184 ),])
+summary(modelo_LOG_LOG_NE_22)
+```
+
+```{r}
+fit.model<-modelo_LOG_LOG_NE_22
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,		0,			0,		0,	0,		0,	0,	0,	0,	0,				0,	0,	0,	0,	0,	0,	0,	0,	0,				0,	1,	0,	0,	0,				0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+
+testeF.CB(fit.model,m.C)
+```
+
+
+```{r}
+
+
+Genotipos  <- Temporario2$GENOTIPO
+SELECAO_GEN <- c("PR331" )
+
+Temporario2$GENOTIPO <- c(ifelse(Temporario2$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_LOG_LOG_NE_23<-lm(log(log(FLO_M))~., Temporario2) 
+summary(modelo_LOG_LOG_NE_23)
+
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para  rodar este programa deixe no objeto fit.model a saída 
+# do ajuste da regressão do modelo normal linear.Deixe também
+# os dados disponíveis através do comando attach(...). Depois
+# use o comando source(...) no R ou S-plus para executar o 
+# programa. A sequência de comandos é a seguinte:
+#
+fit.model <- modelo_LOG_LOG_NE_23
+attach(Temporario2)
+source("envel_norm_corrigido.txt")
+#
+# A saída será o gráfico de envelope para o resíduo
+# padronizado. Para colocar  um  título no gráfico após a
+# saída use o comando title("...").
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+si <- lm.influence(fit.model)$sigma
+r <- resid(fit.model)
+tsi <- r/(si*sqrt(1-h))
+#
+ident <- diag(n)
+epsilon <- matrix(0,n,100)
+e <- matrix(0,n,100)
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:100){
+     epsilon[,i] <- rnorm(n,0,1)
+     e[,i] <- (ident - H)%*%epsilon[,i]
+     u <- diag(ident - H)
+     e[,i] <- e[,i]/sqrt(u)
+     e[,i] <- sort(e[,i],na.last = TRUE)}
+#
+for(i in 1:n){
+     eo <- sort(e[i,])
+     e1[i] <- (eo[2]+eo[3])/2
+     e2[i] <- (eo[97]+eo[98])/2 }
+#
+med <- apply(e,1,mean)
+faixa <- range(tsi,e1,e2,na.rm = TRUE)
+#
+par(pty="s")
+qqnorm(tsi,xlab="Percentil da N(0,1)",
+ylab="Residuo Studentizado", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
+#------------------------------------------------------------#
+```
+
+```{r}
+#Normalidade dos residuos
+options(scipen = 999)
+
+jarque.bera.test(tsi) #Residuo Studentizado # p > 0,05 = normal
+
+```
+```{r}
+# Homocedasticidade (Breusch-Pagan)
+ols_test_breusch_pagan(modelo_LOG_LOG_NE_23)
+```
+
+
+# MODELO 3
+
+```{r}
+Temporario<- Nordeste[,c(-1,-3)]
+table(Temporario$GENOTIPO)
+
+```
+
+
+
+```{r}
+Temporario <- Nordeste[,c(-1,-3)] # retirando as vaiáveis REGIAO e ID_ENSAIO
+
+modelo_NE_<-lm(FLO_M~., Temporario) # modelo inicial
+summary(modelo_NE_)
+
+```
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("ALIANCA", "BRS A704",	"BRS JABURU",	"CICA 8",	"EMPASC 101",	"EPAGRI 108",	"EPAGRI 109",	"MOXOTO",	"PR268")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(FLO_M~., Temporario) 
+summary(modelo_NE_)
+
+```
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS FORMOSO", "BRS GUARA",	"IAC1298",	"PR267",	"SCS 114 ANDOSAN",	"SCS 116 SATORU",	"SCS 121 CL")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(FLO_M~., Temporario) 
+summary(modelo_NE_)
+
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS CATIANA",	"BRSMG RUBELITA",	"IAC1299",	"OUROMINAS",	"SCSBRS 113 TIO"
+)
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(FLO_M~., Temporario) 
+summary(modelo_NE_)
+
+```
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS ALVORADA",	"IAC1307", "SCSBRS 113 TIO TAKA"
+)
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(FLO_M~., Temporario) 
+summary(modelo_NE_)
+
+```
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS PAMPEIRA"
+)
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(FLO_M~., Temporario) 
+summary(modelo_NE_)
+
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("SCS 112"
+)
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(FLO_M~., Temporario) 
+summary(modelo_NE_)
+
+```
+Graus_dia_ciclo        -0.002933   0.049432  -0.059             0.952708
+
+
+```{r}
+Temporario<-Temporario %>% select(-Graus_dia_ciclo)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+Tmin_Media             -0.990094   3.273669  -0.302             0.762473
+
+```{r}
+Temporario<-Temporario %>% select(-Tmin_Media)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+Tmax_ACC_R             -0.017986   0.026129  -0.688             0.491639
+
+```{r}
+Temporario<-Temporario %>% select(-Tmax_ACC_R)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+Tmax_fld_m              0.420975   0.676951   0.622             0.534381
+
+```{r}
+Temporario<-Temporario %>% select(-Tmax_fld_m)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+Tmax_Minima             0.130918   0.198713   0.659             0.510380
+
+```{r}
+Temporario<-Temporario %>% select(-Tmax_Minima)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+
+Rad_ACC_R              -0.005030   0.007439  -0.676             0.499362
+```{r}
+Temporario<-Temporario %>% select(-Rad_ACC_R)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+Rad_ACC                 0.0009237   0.0022416   0.412             0.680514 
+
+```{r}
+Temporario<-Temporario %>% select(-Rad_ACC)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+
+Tmax_Maxima            -0.165544   0.321139  -0.515             0.60649
+
+```{r}
+Temporario<-Temporario %>% select(-Tmax_Maxima)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+UR_fld_m                0.091426   0.094927   0.963             0.336062
+
+```{r}
+Temporario<-Temporario %>% select(-UR_fld_m)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+Chuva_ACC               0.005985   0.005662   1.057             0.291120
+
+```{r}
+Temporario<-Temporario %>% select(-Chuva_ACC)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+Tmin_fld_m             -0.831305   0.566757  -1.467             0.143208
+
+```{r}
+Temporario<-Temporario %>% select(-Tmin_fld_m)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+latitude                0.214955   0.115646   1.859             0.063784
+```{r}
+Temporario<-Temporario %>% select(-latitude)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+
+longitude               0.192535   0.123544   1.558             0.119902
+
+```{r}
+Temporario<-Temporario %>% select(-longitude)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+### Analise dos residos
+
+```{r}
+#------------------------------------------------------------#
+# Para  rodar este programa deixe no objeto fit.model a saída 
+# do ajuste da regressão do modelo normal linear.Deixe também
+# os dados disponíveis através do comando attach(...). Depois
+# use o comando source(...) no R ou S-plus para executar o 
+# programa. A sequência de comandos é a seguinte:
+#
+fit.model <- modelo_NE_
+attach(Temporario)
+#source("envel_norm_corrigido.txt")
+#
+# A saída será o gráfico de envelope para o resíduo
+# padronizado. Para colocar  um  título no gráfico após a
+# saída use o comando title("...").
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+si <- lm.influence(fit.model)$sigma
+r <- resid(fit.model)
+tsi <- r/(si*sqrt(1-h))
+#
+ident <- diag(n)
+epsilon <- matrix(0,n,100)
+e <- matrix(0,n,100)
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:100){
+     epsilon[,i] <- rnorm(n,0,1)
+     e[,i] <- (ident - H)%*%epsilon[,i]
+     u <- diag(ident - H)
+     e[,i] <- e[,i]/sqrt(u)
+     e[,i] <- sort(e[,i],na.last = TRUE)}
+#
+for(i in 1:n){
+     eo <- sort(e[i,])
+     e1[i] <- (eo[2]+eo[3])/2
+     e2[i] <- (eo[97]+eo[98])/2 }
+#
+med <- apply(e,1,mean)
+faixa <- range(tsi,e1,e2,na.rm = TRUE)
+#
+par(pty="s")
+qqnorm(tsi,xlab="Percentil da N(0,1)",
+ylab="Residuo Studentizado", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
+#------------------------------------------------------------#
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erro normal. Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+ fit.model <- modelo_NE_
+ attach(Temporario)
+source("diag_norm_corrigido.txt")
+#
+# A saída terá quatro gráficos: de pontos de alavanca, 
+# de pontos influentes  e  dois de resíduos. Para identificar
+# os pontos que  mais  se destacam usar o comando 
+# identify(...). Se por exemplo se destacam três pontos no 
+# plot(fitted(fit.model),h,...), após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram traçados os limites ylim=c(a-1,b+1), em que a
+# é o menor valor e b o maior valor para o resíduo.Mude esses 
+# limites  se  necessário.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+lms <- summary(fit.model)
+s <- lms$sigma
+r <- resid(lms)
+ts <- r/(s*sqrt(1-h))
+di <- (1/p)*(h/(1-h))*(ts^2)
+si <- lm.influence(fit.model)$sigma
+tsi <- r/(si*sqrt(1-h))
+fitted.model <- fitted(fit.model)
+ir = which(is.nan(tsi))
+if(length(ir) > 0){
+        tsi = tsi[-ir]
+        fitted.model = fitted.model[-ir]
+}
+
+a <- max(tsi)
+b <- min(tsi)
+par(mfrow=c(2,2))
+plot(h,xlab="Índice", ylab="Medida h", pch=16, ylim=c(0,1))
+cut <- 2*p/n
+abline(cut,0,lty=2)
+identify(h, n=1)
+#title(sub="(a)")
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+identify(di, n=2)
+#
+plot(tsi,xlab="Índice", ylab="Resíduo Padronizado",
+ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(tsi, n=1)
+#
+plot(fitted.model,tsi,xlab="Valor Ajustado", 
+ylab="Resíduo Padronizado", ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),tsi, n=1)
+par(mfrow=c(1,1))
+#---------------------------------------------------
+```
+```{r}
+#Normalidade dos residuos
+options(scipen = 999)
+
+jarque.bera.test(tsi) #Residuo Studentizado # p > 0,05 = normal
+
+```
+```{r}
+# Homocedasticidade (Breusch-Pagan)
+ols_test_breusch_pagan(modelo_NE_)
+```
+```{r}
+
+modelo_teste<- lm(FLO_M~.,Temporario[c(-6 ,-18, -20, -25, -33, -44 ,-51,-5  ,-17 ,- 2,- 437),])
+summary(modelo_teste)
+
+```
+### Analise dos residos
+
+```{r}
+#------------------------------------------------------------#
+# Para  rodar este programa deixe no objeto fit.model a saída 
+# do ajuste da regressão do modelo normal linear.Deixe também
+# os dados disponíveis através do comando attach(...). Depois
+# use o comando source(...) no R ou S-plus para executar o 
+# programa. A sequência de comandos é a seguinte:
+#
+fit.model <- modelo_teste
+attach(Temporario)
+#source("envel_norm_corrigido.txt")
+#
+# A saída será o gráfico de envelope para o resíduo
+# padronizado. Para colocar  um  título no gráfico após a
+# saída use o comando title("...").
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+si <- lm.influence(fit.model)$sigma
+r <- resid(fit.model)
+tsi <- r/(si*sqrt(1-h))
+#
+ident <- diag(n)
+epsilon <- matrix(0,n,100)
+e <- matrix(0,n,100)
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:100){
+     epsilon[,i] <- rnorm(n,0,1)
+     e[,i] <- (ident - H)%*%epsilon[,i]
+     u <- diag(ident - H)
+     e[,i] <- e[,i]/sqrt(u)
+     e[,i] <- sort(e[,i],na.last = TRUE)}
+#
+for(i in 1:n){
+     eo <- sort(e[i,])
+     e1[i] <- (eo[2]+eo[3])/2
+     e2[i] <- (eo[97]+eo[98])/2 }
+#
+med <- apply(e,1,mean)
+faixa <- range(tsi,e1,e2,na.rm = TRUE)
+#
+par(pty="s")
+qqnorm(tsi,xlab="Percentil da N(0,1)",
+ylab="Residuo Studentizado", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
+#------------------------------------------------------------#
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erro normal. Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+ fit.model <- modelo_teste
+ attach(Temporario)
+source("diag_norm_corrigido.txt")
+#
+# A saída terá quatro gráficos: de pontos de alavanca, 
+# de pontos influentes  e  dois de resíduos. Para identificar
+# os pontos que  mais  se destacam usar o comando 
+# identify(...). Se por exemplo se destacam três pontos no 
+# plot(fitted(fit.model),h,...), após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram traçados os limites ylim=c(a-1,b+1), em que a
+# é o menor valor e b o maior valor para o resíduo.Mude esses 
+# limites  se  necessário.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+lms <- summary(fit.model)
+s <- lms$sigma
+r <- resid(lms)
+ts <- r/(s*sqrt(1-h))
+di <- (1/p)*(h/(1-h))*(ts^2)
+si <- lm.influence(fit.model)$sigma
+tsi <- r/(si*sqrt(1-h))
+fitted.model <- fitted(fit.model)
+ir = which(is.nan(tsi))
+if(length(ir) > 0){
+        tsi = tsi[-ir]
+        fitted.model = fitted.model[-ir]
+}
+
+a <- max(tsi)
+b <- min(tsi)
+par(mfrow=c(2,2))
+plot(h,xlab="Índice", ylab="Medida h", pch=16, ylim=c(0,1))
+cut <- 2*p/n
+abline(cut,0,lty=2)
+identify(h, n=1)
+#title(sub="(a)")
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+identify(di, n=2)
+#
+plot(tsi,xlab="Índice", ylab="Resíduo Padronizado",
+ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(tsi, n=1)
+#
+plot(fitted.model,tsi,xlab="Valor Ajustado", 
+ylab="Resíduo Padronizado", ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),tsi, n=1)
+par(mfrow=c(1,1))
+#---------------------------------------------------
+```
+```{r}
+#Normalidade dos residuos
+options(scipen = 999)
+
+jarque.bera.test(tsi) #Residuo Studentizado # p > 0,05 = normal
+
+```
+```{r}
+# Homocedasticidade (Breusch-Pagan)
+ols_test_breusch_pagan(modelo_teste)
+```
+```{r}
+Temporario2<- Temporario[c(-6 ,-18, -20, -25, -33, -44 ,-51,-5  ,-17 ,- 2,- 437),]
+modelo_teste<- lm(FLO_M~.,Temporario2[c(-4 ,- 5 ,-14,- 19),])
+summary(modelo_teste)
+
+```
+### Analise dos residos
+
+```{r}
+#------------------------------------------------------------#
+# Para  rodar este programa deixe no objeto fit.model a saída 
+# do ajuste da regressão do modelo normal linear.Deixe também
+# os dados disponíveis através do comando attach(...). Depois
+# use o comando source(...) no R ou S-plus para executar o 
+# programa. A sequência de comandos é a seguinte:
+#
+fit.model <- modelo_teste
+attach(Temporario)
+#source("envel_norm_corrigido.txt")
+#
+# A saída será o gráfico de envelope para o resíduo
+# padronizado. Para colocar  um  título no gráfico após a
+# saída use o comando title("...").
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+si <- lm.influence(fit.model)$sigma
+r <- resid(fit.model)
+tsi <- r/(si*sqrt(1-h))
+#
+ident <- diag(n)
+epsilon <- matrix(0,n,100)
+e <- matrix(0,n,100)
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:100){
+     epsilon[,i] <- rnorm(n,0,1)
+     e[,i] <- (ident - H)%*%epsilon[,i]
+     u <- diag(ident - H)
+     e[,i] <- e[,i]/sqrt(u)
+     e[,i] <- sort(e[,i],na.last = TRUE)}
+#
+for(i in 1:n){
+     eo <- sort(e[i,])
+     e1[i] <- (eo[2]+eo[3])/2
+     e2[i] <- (eo[97]+eo[98])/2 }
+#
+med <- apply(e,1,mean)
+faixa <- range(tsi,e1,e2,na.rm = TRUE)
+#
+par(pty="s")
+qqnorm(tsi,xlab="Percentil da N(0,1)",
+ylab="Residuo Studentizado", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
+#------------------------------------------------------------#
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erro normal. Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+ fit.model <- modelo_teste
+ attach(Temporario)
+source("diag_norm_corrigido.txt")
+#
+# A saída terá quatro gráficos: de pontos de alavanca, 
+# de pontos influentes  e  dois de resíduos. Para identificar
+# os pontos que  mais  se destacam usar o comando 
+# identify(...). Se por exemplo se destacam três pontos no 
+# plot(fitted(fit.model),h,...), após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram traçados os limites ylim=c(a-1,b+1), em que a
+# é o menor valor e b o maior valor para o resíduo.Mude esses 
+# limites  se  necessário.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+lms <- summary(fit.model)
+s <- lms$sigma
+r <- resid(lms)
+ts <- r/(s*sqrt(1-h))
+di <- (1/p)*(h/(1-h))*(ts^2)
+si <- lm.influence(fit.model)$sigma
+tsi <- r/(si*sqrt(1-h))
+fitted.model <- fitted(fit.model)
+ir = which(is.nan(tsi))
+if(length(ir) > 0){
+        tsi = tsi[-ir]
+        fitted.model = fitted.model[-ir]
+}
+
+a <- max(tsi)
+b <- min(tsi)
+par(mfrow=c(2,2))
+plot(h,xlab="Índice", ylab="Medida h", pch=16, ylim=c(0,1))
+cut <- 2*p/n
+abline(cut,0,lty=2)
+identify(h, n=1)
+#title(sub="(a)")
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+identify(di, n=2)
+#
+plot(tsi,xlab="Índice", ylab="Resíduo Padronizado",
+ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(tsi, n=1)
+#
+plot(fitted.model,tsi,xlab="Valor Ajustado", 
+ylab="Resíduo Padronizado", ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),tsi, n=1)
+par(mfrow=c(1,1))
+#---------------------------------------------------
+```
+```{r}
+#Normalidade dos residuos
+options(scipen = 999)
+
+jarque.bera.test(tsi) #Residuo Studentizado # p > 0,05 = normal
+
+```
+```{r}
+# Homocedasticidade (Breusch-Pagan)
+ols_test_breusch_pagan(modelo_teste)
+```
+```{r}
+Temporario2<- Temporario[c(-6 ,-18, -20, -25, -33, -44 ,-51,-5  ,-17 ,- 2,- 437),]
+modelo_teste<- lm(FLO_M~.,Temporario2[c(-4 ,- 5 ,-14,- 19),])
+summary(modelo_teste)
+
+```
+
+
+
+
+# MODELO 3 Removento linhas
+
+```{r}
+teste<-r
+teste1 <- sort(teste)
+match(teste1[1:10], teste)
+```
+```{r}
+
+modelo_teste<- lm(FLO_M~., Temporario[c( -392, -224, -291, -177, -375, -215, -175, -261, -251,- 396),])
+summary(modelo_teste)
+```
+
+### Analise dos residos
+
+```{r}
+#------------------------------------------------------------#
+# Para  rodar este programa deixe no objeto fit.model a saída 
+# do ajuste da regressão do modelo normal linear.Deixe também
+# os dados disponíveis através do comando attach(...). Depois
+# use o comando source(...) no R ou S-plus para executar o 
+# programa. A sequência de comandos é a seguinte:
+#
+fit.model <- modelo_teste
+attach(Temporario)
+#source("envel_norm_corrigido.txt")
+#
+# A saída será o gráfico de envelope para o resíduo
+# padronizado. Para colocar  um  título no gráfico após a
+# saída use o comando title("...").
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+si <- lm.influence(fit.model)$sigma
+r <- resid(fit.model)
+tsi <- r/(si*sqrt(1-h))
+#
+ident <- diag(n)
+epsilon <- matrix(0,n,100)
+e <- matrix(0,n,100)
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:100){
+     epsilon[,i] <- rnorm(n,0,1)
+     e[,i] <- (ident - H)%*%epsilon[,i]
+     u <- diag(ident - H)
+     e[,i] <- e[,i]/sqrt(u)
+     e[,i] <- sort(e[,i],na.last = TRUE)}
+#
+for(i in 1:n){
+     eo <- sort(e[i,])
+     e1[i] <- (eo[2]+eo[3])/2
+     e2[i] <- (eo[97]+eo[98])/2 }
+#
+med <- apply(e,1,mean)
+faixa <- range(tsi,e1,e2,na.rm = TRUE)
+#
+par(pty="s")
+qqnorm(tsi,xlab="Percentil da N(0,1)",
+ylab="Residuo Studentizado", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
+#------------------------------------------------------------#
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erro normal. Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+ fit.model <- modelo_teste
+ attach(Temporario)
+source("diag_norm_corrigido.txt")
+#
+# A saída terá quatro gráficos: de pontos de alavanca, 
+# de pontos influentes  e  dois de resíduos. Para identificar
+# os pontos que  mais  se destacam usar o comando 
+# identify(...). Se por exemplo se destacam três pontos no 
+# plot(fitted(fit.model),h,...), após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram traçados os limites ylim=c(a-1,b+1), em que a
+# é o menor valor e b o maior valor para o resíduo.Mude esses 
+# limites  se  necessário.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+lms <- summary(fit.model)
+s <- lms$sigma
+r <- resid(lms)
+ts <- r/(s*sqrt(1-h))
+di <- (1/p)*(h/(1-h))*(ts^2)
+si <- lm.influence(fit.model)$sigma
+tsi <- r/(si*sqrt(1-h))
+fitted.model <- fitted(fit.model)
+ir = which(is.nan(tsi))
+if(length(ir) > 0){
+        tsi = tsi[-ir]
+        fitted.model = fitted.model[-ir]
+}
+
+a <- max(tsi)
+b <- min(tsi)
+par(mfrow=c(2,2))
+plot(h,xlab="Índice", ylab="Medida h", pch=16, ylim=c(0,1))
+cut <- 2*p/n
+abline(cut,0,lty=2)
+identify(h, n=1)
+#title(sub="(a)")
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+identify(di, n=2)
+#
+plot(tsi,xlab="Índice", ylab="Resíduo Padronizado",
+ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(tsi, n=1)
+#
+plot(fitted.model,tsi,xlab="Valor Ajustado", 
+ylab="Resíduo Padronizado", ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),tsi, n=1)
+par(mfrow=c(1,1))
+#---------------------------------------------------
+```
+```{r}
+#Normalidade dos residuos
+options(scipen = 999)
+
+jarque.bera.test(tsi) #Residuo Studentizado # p > 0,05 = normal
+
+```
+```{r}
+# Homocedasticidade (Breusch-Pagan)
+ols_test_breusch_pagan(modelo_NE_)
+```
+
+```{r}
+teste<-r
+teste1 <- sort(teste)
+match(teste1[1], teste)
+
+match(teste1[3:6], teste)
+```
+```{r}
+Temporario2<- Temporario[c( -392, -224, -291, -177, -375, -215, -175, -261, -251,- 396),]
+modelo_teste<- lm(FLO_M~., Temporario2[c( -229, -250,  -160, -184 ),])
+summary(modelo_teste)
+```
+### Analise dos residos
+
+```{r}
+#------------------------------------------------------------#
+# Para  rodar este programa deixe no objeto fit.model a saída 
+# do ajuste da regressão do modelo normal linear.Deixe também
+# os dados disponíveis através do comando attach(...). Depois
+# use o comando source(...) no R ou S-plus para executar o 
+# programa. A sequência de comandos é a seguinte:
+#
+fit.model <- modelo_teste
+attach(Temporario)
+#source("envel_norm_corrigido.txt")
+#
+# A saída será o gráfico de envelope para o resíduo
+# padronizado. Para colocar  um  título no gráfico após a
+# saída use o comando title("...").
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+si <- lm.influence(fit.model)$sigma
+r <- resid(fit.model)
+tsi <- r/(si*sqrt(1-h))
+#
+ident <- diag(n)
+epsilon <- matrix(0,n,100)
+e <- matrix(0,n,100)
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:100){
+     epsilon[,i] <- rnorm(n,0,1)
+     e[,i] <- (ident - H)%*%epsilon[,i]
+     u <- diag(ident - H)
+     e[,i] <- e[,i]/sqrt(u)
+     e[,i] <- sort(e[,i],na.last = TRUE)}
+#
+for(i in 1:n){
+     eo <- sort(e[i,])
+     e1[i] <- (eo[2]+eo[3])/2
+     e2[i] <- (eo[97]+eo[98])/2 }
+#
+med <- apply(e,1,mean)
+faixa <- range(tsi,e1,e2,na.rm = TRUE)
+#
+par(pty="s")
+qqnorm(tsi,xlab="Percentil da N(0,1)",
+ylab="Residuo Studentizado", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
+#------------------------------------------------------------#
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erro normal. Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+ fit.model <- modelo_teste
+ attach(Temporario)
+source("diag_norm_corrigido.txt")
+#
+# A saída terá quatro gráficos: de pontos de alavanca, 
+# de pontos influentes  e  dois de resíduos. Para identificar
+# os pontos que  mais  se destacam usar o comando 
+# identify(...). Se por exemplo se destacam três pontos no 
+# plot(fitted(fit.model),h,...), após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram traçados os limites ylim=c(a-1,b+1), em que a
+# é o menor valor e b o maior valor para o resíduo.Mude esses 
+# limites  se  necessário.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+lms <- summary(fit.model)
+s <- lms$sigma
+r <- resid(lms)
+ts <- r/(s*sqrt(1-h))
+di <- (1/p)*(h/(1-h))*(ts^2)
+si <- lm.influence(fit.model)$sigma
+tsi <- r/(si*sqrt(1-h))
+fitted.model <- fitted(fit.model)
+ir = which(is.nan(tsi))
+if(length(ir) > 0){
+        tsi = tsi[-ir]
+        fitted.model = fitted.model[-ir]
+}
+
+a <- max(tsi)
+b <- min(tsi)
+par(mfrow=c(2,2))
+plot(h,xlab="Índice", ylab="Medida h", pch=16, ylim=c(0,1))
+cut <- 2*p/n
+abline(cut,0,lty=2)
+identify(h, n=1)
+#title(sub="(a)")
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+identify(di, n=2)
+#
+plot(tsi,xlab="Índice", ylab="Resíduo Padronizado",
+ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(tsi, n=1)
+#
+plot(fitted.model,tsi,xlab="Valor Ajustado", 
+ylab="Resíduo Padronizado", ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),tsi, n=1)
+par(mfrow=c(1,1))
+#---------------------------------------------------
+```
+```{r}
+#Normalidade dos residuos
+options(scipen = 999)
+
+jarque.bera.test(tsi) #Residuo Studentizado # p > 0,05 = normal
+
+```
+```{r}
+# Homocedasticidade (Breusch-Pagan)
+ols_test_breusch_pagan(modelo_teste)
+```
+
+```{r}
+teste<-r
+teste1 <- sort(teste)
+match(teste1[2:3], teste)
+
+```
+```{r}
+Temporario3<- Temporario2[c( -229, -250,  -160, -184 ),]
+modelo_teste<- lm(FLO_M~., Temporario3[c( -377,- 164, - 371 ),])
+summary(modelo_teste)
+```
+
+### Analise dos residos
+
+```{r}
+#------------------------------------------------------------#
+# Para  rodar este programa deixe no objeto fit.model a saída 
+# do ajuste da regressão do modelo normal linear.Deixe também
+# os dados disponíveis através do comando attach(...). Depois
+# use o comando source(...) no R ou S-plus para executar o 
+# programa. A sequência de comandos é a seguinte:
+#
+fit.model <- modelo_teste
+attach(Temporario)
+#source("envel_norm_corrigido.txt")
+#
+# A saída será o gráfico de envelope para o resíduo
+# padronizado. Para colocar  um  título no gráfico após a
+# saída use o comando title("...").
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+si <- lm.influence(fit.model)$sigma
+r <- resid(fit.model)
+tsi <- r/(si*sqrt(1-h))
+#
+ident <- diag(n)
+epsilon <- matrix(0,n,100)
+e <- matrix(0,n,100)
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:100){
+     epsilon[,i] <- rnorm(n,0,1)
+     e[,i] <- (ident - H)%*%epsilon[,i]
+     u <- diag(ident - H)
+     e[,i] <- e[,i]/sqrt(u)
+     e[,i] <- sort(e[,i],na.last = TRUE)}
+#
+for(i in 1:n){
+     eo <- sort(e[i,])
+     e1[i] <- (eo[2]+eo[3])/2
+     e2[i] <- (eo[97]+eo[98])/2 }
+#
+med <- apply(e,1,mean)
+faixa <- range(tsi,e1,e2,na.rm = TRUE)
+#
+par(pty="s")
+qqnorm(tsi,xlab="Percentil da N(0,1)",
+ylab="Residuo Studentizado", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
+#------------------------------------------------------------#
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erro normal. Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+ fit.model <- modelo_teste
+ attach(Temporario)
+source("diag_norm_corrigido.txt")
+#
+# A saída terá quatro gráficos: de pontos de alavanca, 
+# de pontos influentes  e  dois de resíduos. Para identificar
+# os pontos que  mais  se destacam usar o comando 
+# identify(...). Se por exemplo se destacam três pontos no 
+# plot(fitted(fit.model),h,...), após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram traçados os limites ylim=c(a-1,b+1), em que a
+# é o menor valor e b o maior valor para o resíduo.Mude esses 
+# limites  se  necessário.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+lms <- summary(fit.model)
+s <- lms$sigma
+r <- resid(lms)
+ts <- r/(s*sqrt(1-h))
+di <- (1/p)*(h/(1-h))*(ts^2)
+si <- lm.influence(fit.model)$sigma
+tsi <- r/(si*sqrt(1-h))
+fitted.model <- fitted(fit.model)
+ir = which(is.nan(tsi))
+if(length(ir) > 0){
+        tsi = tsi[-ir]
+        fitted.model = fitted.model[-ir]
+}
+
+a <- max(tsi)
+b <- min(tsi)
+par(mfrow=c(2,2))
+plot(h,xlab="Índice", ylab="Medida h", pch=16, ylim=c(0,1))
+cut <- 2*p/n
+abline(cut,0,lty=2)
+identify(h, n=1)
+#title(sub="(a)")
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+identify(di, n=2)
+#
+plot(tsi,xlab="Índice", ylab="Resíduo Padronizado",
+ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(tsi, n=1)
+#
+plot(fitted.model,tsi,xlab="Valor Ajustado", 
+ylab="Resíduo Padronizado", ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),tsi, n=1)
+par(mfrow=c(1,1))
+#---------------------------------------------------
+```
+```{r}
+#Normalidade dos residuos
+options(scipen = 999)
+
+jarque.bera.test(tsi) #Residuo Studentizado # p > 0,05 = normal
+
+```
+```{r}
+# Homocedasticidade (Breusch-Pagan)
+ols_test_breusch_pagan(modelo_teste)
+```
+
+```{r}
+teste<-r
+teste1 <- sort(teste)
+match(teste1[2], teste)
+
+```
+```{r}
+Temporario4<- Temporario3[c( -377,- 164, - 371 ),]
+modelo_teste<- lm(FLO_M~., Temporario4[c( -355 ),])
+summary(modelo_teste)
+```
+### Analise dos residos
+
+```{r}
+#------------------------------------------------------------#
+# Para  rodar este programa deixe no objeto fit.model a saída 
+# do ajuste da regressão do modelo normal linear.Deixe também
+# os dados disponíveis através do comando attach(...). Depois
+# use o comando source(...) no R ou S-plus para executar o 
+# programa. A sequência de comandos é a seguinte:
+#
+fit.model <- modelo_teste
+attach(Temporario)
+#source("envel_norm_corrigido.txt")
+#
+# A saída será o gráfico de envelope para o resíduo
+# padronizado. Para colocar  um  título no gráfico após a
+# saída use o comando title("...").
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+si <- lm.influence(fit.model)$sigma
+r <- resid(fit.model)
+tsi <- r/(si*sqrt(1-h))
+#
+ident <- diag(n)
+epsilon <- matrix(0,n,100)
+e <- matrix(0,n,100)
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:100){
+     epsilon[,i] <- rnorm(n,0,1)
+     e[,i] <- (ident - H)%*%epsilon[,i]
+     u <- diag(ident - H)
+     e[,i] <- e[,i]/sqrt(u)
+     e[,i] <- sort(e[,i],na.last = TRUE)}
+#
+for(i in 1:n){
+     eo <- sort(e[i,])
+     e1[i] <- (eo[2]+eo[3])/2
+     e2[i] <- (eo[97]+eo[98])/2 }
+#
+med <- apply(e,1,mean)
+faixa <- range(tsi,e1,e2,na.rm = TRUE)
+#
+par(pty="s")
+qqnorm(tsi,xlab="Percentil da N(0,1)",
+ylab="Residuo Studentizado", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
+#------------------------------------------------------------#
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erro normal. Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+ fit.model <- modelo_teste
+ attach(Temporario)
+source("diag_norm_corrigido.txt")
+#
+# A saída terá quatro gráficos: de pontos de alavanca, 
+# de pontos influentes  e  dois de resíduos. Para identificar
+# os pontos que  mais  se destacam usar o comando 
+# identify(...). Se por exemplo se destacam três pontos no 
+# plot(fitted(fit.model),h,...), após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram traçados os limites ylim=c(a-1,b+1), em que a
+# é o menor valor e b o maior valor para o resíduo.Mude esses 
+# limites  se  necessário.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+lms <- summary(fit.model)
+s <- lms$sigma
+r <- resid(lms)
+ts <- r/(s*sqrt(1-h))
+di <- (1/p)*(h/(1-h))*(ts^2)
+si <- lm.influence(fit.model)$sigma
+tsi <- r/(si*sqrt(1-h))
+fitted.model <- fitted(fit.model)
+ir = which(is.nan(tsi))
+if(length(ir) > 0){
+        tsi = tsi[-ir]
+        fitted.model = fitted.model[-ir]
+}
+
+a <- max(tsi)
+b <- min(tsi)
+par(mfrow=c(2,2))
+plot(h,xlab="Índice", ylab="Medida h", pch=16, ylim=c(0,1))
+cut <- 2*p/n
+abline(cut,0,lty=2)
+identify(h, n=1)
+#title(sub="(a)")
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+identify(di, n=2)
+#
+plot(tsi,xlab="Índice", ylab="Resíduo Padronizado",
+ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(tsi, n=1)
+#
+plot(fitted.model,tsi,xlab="Valor Ajustado", 
+ylab="Resíduo Padronizado", ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),tsi, n=1)
+par(mfrow=c(1,1))
+#---------------------------------------------------
+```
+```{r}
+#Normalidade dos residuos
+options(scipen = 999)
+
+jarque.bera.test(tsi) #Residuo Studentizado # p > 0,05 = normal
+
+```
+```{r}
+# Homocedasticidade (Breusch-Pagan)
+ols_test_breusch_pagan(modelo_teste)
+```
+
+```{r}
+teste<-r
+teste1 <- sort(teste)
+match(teste1[8:10], teste)
+
+```
+```{r}
+Temporario5<- Temporario4[c( -355 ),]
+modelo_teste<- lm(FLO_M~., Temporario5[c( -356,- 338,- 344 ),])
+summary(modelo_teste)
+```
+
+### Analise dos residos
+
+```{r}
+#------------------------------------------------------------#
+# Para  rodar este programa deixe no objeto fit.model a saída 
+# do ajuste da regressão do modelo normal linear.Deixe também
+# os dados disponíveis através do comando attach(...). Depois
+# use o comando source(...) no R ou S-plus para executar o 
+# programa. A sequência de comandos é a seguinte:
+#
+fit.model <- modelo_teste
+attach(Temporario)
+#source("envel_norm_corrigido.txt")
+#
+# A saída será o gráfico de envelope para o resíduo
+# padronizado. Para colocar  um  título no gráfico após a
+# saída use o comando title("...").
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+si <- lm.influence(fit.model)$sigma
+r <- resid(fit.model)
+tsi <- r/(si*sqrt(1-h))
+#
+ident <- diag(n)
+epsilon <- matrix(0,n,100)
+e <- matrix(0,n,100)
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:100){
+     epsilon[,i] <- rnorm(n,0,1)
+     e[,i] <- (ident - H)%*%epsilon[,i]
+     u <- diag(ident - H)
+     e[,i] <- e[,i]/sqrt(u)
+     e[,i] <- sort(e[,i],na.last = TRUE)}
+#
+for(i in 1:n){
+     eo <- sort(e[i,])
+     e1[i] <- (eo[2]+eo[3])/2
+     e2[i] <- (eo[97]+eo[98])/2 }
+#
+med <- apply(e,1,mean)
+faixa <- range(tsi,e1,e2,na.rm = TRUE)
+#
+par(pty="s")
+qqnorm(tsi,xlab="Percentil da N(0,1)",
+ylab="Residuo Studentizado", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
+#------------------------------------------------------------#
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erro normal. Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+ fit.model <- modelo_teste
+ attach(Temporario)
+source("diag_norm_corrigido.txt")
+#
+# A saída terá quatro gráficos: de pontos de alavanca, 
+# de pontos influentes  e  dois de resíduos. Para identificar
+# os pontos que  mais  se destacam usar o comando 
+# identify(...). Se por exemplo se destacam três pontos no 
+# plot(fitted(fit.model),h,...), após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram traçados os limites ylim=c(a-1,b+1), em que a
+# é o menor valor e b o maior valor para o resíduo.Mude esses 
+# limites  se  necessário.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+lms <- summary(fit.model)
+s <- lms$sigma
+r <- resid(lms)
+ts <- r/(s*sqrt(1-h))
+di <- (1/p)*(h/(1-h))*(ts^2)
+si <- lm.influence(fit.model)$sigma
+tsi <- r/(si*sqrt(1-h))
+fitted.model <- fitted(fit.model)
+ir = which(is.nan(tsi))
+if(length(ir) > 0){
+        tsi = tsi[-ir]
+        fitted.model = fitted.model[-ir]
+}
+
+a <- max(tsi)
+b <- min(tsi)
+par(mfrow=c(2,2))
+plot(h,xlab="Índice", ylab="Medida h", pch=16, ylim=c(0,1))
+cut <- 2*p/n
+abline(cut,0,lty=2)
+identify(h, n=1)
+#title(sub="(a)")
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+identify(di, n=2)
+#
+plot(tsi,xlab="Índice", ylab="Resíduo Padronizado",
+ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(tsi, n=1)
+#
+plot(fitted.model,tsi,xlab="Valor Ajustado", 
+ylab="Resíduo Padronizado", ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),tsi, n=1)
+par(mfrow=c(1,1))
+#---------------------------------------------------
+```
+```{r}
+#Normalidade dos residuos
+options(scipen = 999)
+
+jarque.bera.test(tsi) #Residuo Studentizado # p > 0,05 = normal
+
+```
+```{r}
+# Homocedasticidade (Breusch-Pagan)
+ols_test_breusch_pagan(modelo_teste)
+```
+
+```{r}
+teste<-r
+teste1 <- sort(teste)
+match(teste1[1:8], teste)
+
+```
+```{r}
+Temporario5<- Temporario5[c( -356,- 338,- 344 ),]
+modelo_teste<- lm(FLO_M~., Temporario5[c( -165 ,-376, -418,- 254,- 214,- 414 ,-247),])
+summary(modelo_teste)
+```
+
+### Analise dos residos
+
+```{r}
+#------------------------------------------------------------#
+# Para  rodar este programa deixe no objeto fit.model a saída 
+# do ajuste da regressão do modelo normal linear.Deixe também
+# os dados disponíveis através do comando attach(...). Depois
+# use o comando source(...) no R ou S-plus para executar o 
+# programa. A sequência de comandos é a seguinte:
+#
+fit.model <- modelo_teste
+attach(Temporario)
+#source("envel_norm_corrigido.txt")
+#
+# A saída será o gráfico de envelope para o resíduo
+# padronizado. Para colocar  um  título no gráfico após a
+# saída use o comando title("...").
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+si <- lm.influence(fit.model)$sigma
+r <- resid(fit.model)
+tsi <- r/(si*sqrt(1-h))
+#
+ident <- diag(n)
+epsilon <- matrix(0,n,100)
+e <- matrix(0,n,100)
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:100){
+     epsilon[,i] <- rnorm(n,0,1)
+     e[,i] <- (ident - H)%*%epsilon[,i]
+     u <- diag(ident - H)
+     e[,i] <- e[,i]/sqrt(u)
+     e[,i] <- sort(e[,i],na.last = TRUE)}
+#
+for(i in 1:n){
+     eo <- sort(e[i,])
+     e1[i] <- (eo[2]+eo[3])/2
+     e2[i] <- (eo[97]+eo[98])/2 }
+#
+med <- apply(e,1,mean)
+faixa <- range(tsi,e1,e2,na.rm = TRUE)
+#
+par(pty="s")
+qqnorm(tsi,xlab="Percentil da N(0,1)",
+ylab="Residuo Studentizado", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
+#------------------------------------------------------------#
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erro normal. Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+ fit.model <- modelo_teste
+ attach(Temporario)
+source("diag_norm_corrigido.txt")
+#
+# A saída terá quatro gráficos: de pontos de alavanca, 
+# de pontos influentes  e  dois de resíduos. Para identificar
+# os pontos que  mais  se destacam usar o comando 
+# identify(...). Se por exemplo se destacam três pontos no 
+# plot(fitted(fit.model),h,...), após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram traçados os limites ylim=c(a-1,b+1), em que a
+# é o menor valor e b o maior valor para o resíduo.Mude esses 
+# limites  se  necessário.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+lms <- summary(fit.model)
+s <- lms$sigma
+r <- resid(lms)
+ts <- r/(s*sqrt(1-h))
+di <- (1/p)*(h/(1-h))*(ts^2)
+si <- lm.influence(fit.model)$sigma
+tsi <- r/(si*sqrt(1-h))
+fitted.model <- fitted(fit.model)
+ir = which(is.nan(tsi))
+if(length(ir) > 0){
+        tsi = tsi[-ir]
+        fitted.model = fitted.model[-ir]
+}
+
+a <- max(tsi)
+b <- min(tsi)
+par(mfrow=c(2,2))
+plot(h,xlab="Índice", ylab="Medida h", pch=16, ylim=c(0,1))
+cut <- 2*p/n
+abline(cut,0,lty=2)
+identify(h, n=1)
+#title(sub="(a)")
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+identify(di, n=2)
+#
+plot(tsi,xlab="Índice", ylab="Resíduo Padronizado",
+ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(tsi, n=1)
+#
+plot(fitted.model,tsi,xlab="Valor Ajustado", 
+ylab="Resíduo Padronizado", ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),tsi, n=1)
+par(mfrow=c(1,1))
+#---------------------------------------------------
+```
+```{r}
+#Normalidade dos residuos
+options(scipen = 999)
+
+jarque.bera.test(tsi) #Residuo Studentizado # p > 0,05 = normal
+
+```
+```{r}
+# Homocedasticidade (Breusch-Pagan)
+ols_test_breusch_pagan(modelo_teste)
+```
+```{r}
+lmtest::bptest(modelo_teste)
+```
+
+```{r}
+
+modelo_teste<- lm(log(FLO_M)~., Temporario5[c( -165 ,-376, -418,- 254,- 214,- 414 ,-247),])
+summary(modelo_teste)
+```
+
+### Analise dos residos
+
+```{r}
+#------------------------------------------------------------#
+# Para  rodar este programa deixe no objeto fit.model a saída 
+# do ajuste da regressão do modelo normal linear.Deixe também
+# os dados disponíveis através do comando attach(...). Depois
+# use o comando source(...) no R ou S-plus para executar o 
+# programa. A sequência de comandos é a seguinte:
+#
+fit.model <- modelo_teste
+attach(Temporario)
+#source("envel_norm_corrigido.txt")
+#
+# A saída será o gráfico de envelope para o resíduo
+# padronizado. Para colocar  um  título no gráfico após a
+# saída use o comando title("...").
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+si <- lm.influence(fit.model)$sigma
+r <- resid(fit.model)
+tsi <- r/(si*sqrt(1-h))
+#
+ident <- diag(n)
+epsilon <- matrix(0,n,100)
+e <- matrix(0,n,100)
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:100){
+     epsilon[,i] <- rnorm(n,0,1)
+     e[,i] <- (ident - H)%*%epsilon[,i]
+     u <- diag(ident - H)
+     e[,i] <- e[,i]/sqrt(u)
+     e[,i] <- sort(e[,i],na.last = TRUE)}
+#
+for(i in 1:n){
+     eo <- sort(e[i,])
+     e1[i] <- (eo[2]+eo[3])/2
+     e2[i] <- (eo[97]+eo[98])/2 }
+#
+med <- apply(e,1,mean)
+faixa <- range(tsi,e1,e2,na.rm = TRUE)
+#
+par(pty="s")
+qqnorm(tsi,xlab="Percentil da N(0,1)",
+ylab="Residuo Studentizado", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
+#------------------------------------------------------------#
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erro normal. Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+ fit.model <- modelo_teste
+ attach(Temporario)
+source("diag_norm_corrigido.txt")
+#
+# A saída terá quatro gráficos: de pontos de alavanca, 
+# de pontos influentes  e  dois de resíduos. Para identificar
+# os pontos que  mais  se destacam usar o comando 
+# identify(...). Se por exemplo se destacam três pontos no 
+# plot(fitted(fit.model),h,...), após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram traçados os limites ylim=c(a-1,b+1), em que a
+# é o menor valor e b o maior valor para o resíduo.Mude esses 
+# limites  se  necessário.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+lms <- summary(fit.model)
+s <- lms$sigma
+r <- resid(lms)
+ts <- r/(s*sqrt(1-h))
+di <- (1/p)*(h/(1-h))*(ts^2)
+si <- lm.influence(fit.model)$sigma
+tsi <- r/(si*sqrt(1-h))
+fitted.model <- fitted(fit.model)
+ir = which(is.nan(tsi))
+if(length(ir) > 0){
+        tsi = tsi[-ir]
+        fitted.model = fitted.model[-ir]
+}
+
+a <- max(tsi)
+b <- min(tsi)
+par(mfrow=c(2,2))
+plot(h,xlab="Índice", ylab="Medida h", pch=16, ylim=c(0,1))
+cut <- 2*p/n
+abline(cut,0,lty=2)
+identify(h, n=1)
+#title(sub="(a)")
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+identify(di, n=2)
+#
+plot(tsi,xlab="Índice", ylab="Resíduo Padronizado",
+ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(tsi, n=1)
+#
+plot(fitted.model,tsi,xlab="Valor Ajustado", 
+ylab="Resíduo Padronizado", ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),tsi, n=1)
+par(mfrow=c(1,1))
+#---------------------------------------------------
+```
+```{r}
+#Normalidade dos residuos
+options(scipen = 999)
+
+jarque.bera.test(tsi) #Residuo Studentizado # p > 0,05 = normal
+
+```
+```{r}
+# Homocedasticidade (Breusch-Pagan)
+ols_test_breusch_pagan(modelo_teste)
+```
+```{r}
+lmtest::bptest(modelo_teste)
+```
+
+```{r}
+teste<-r
+teste1 <- sort(teste)
+match(teste1[1:8], teste)
+
+```
+```{r}
+Temporario5<- Temporario5[c( -356,- 338,- 344 ),]
+modelo_teste<- lm(FLO_M~., Temporario5[c( -165 ,-376, -418,- 254,- 214,- 414 ,-247),])
+summary(modelo_teste)
+```
+
+
+
+# MODELO 4
+
+```{r}
+Temporario<- Nordeste[,c(-1,-3)]
+
+Temporario2<- Temporario[c( -392, -224, -291, -177, -375, -215, -175, -261, -251,- 396),]
+Temporario3<- Temporario2[c( -229, -250,  -160, -184 ),]
+Temporario4<- Temporario3[c( -377,- 164, - 371 ),]
+Temporario5<- Temporario4[c( -355 ),]
+Temporario6 <- Temporario5[c( -356,- 338,- 344 ),]
+Temporario<- Temporario6[c( -165 ,-376, -418,- 254,- 214,- 414 ,-247),]
+
+modelo_NE_<-lm(FLO_M~., Temporario) # modelo inicial
+summary(modelo_NE_)
+
+
+```
+Tmax_Maxima                  -0.001316   0.288131  -0.005             0.996358
+
+```{r}
+Temporario<-Temporario %>% select(-Tmax_Maxima)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+Tmax_ACC_R                    0.002544   0.020569   0.124             0.901641 
+```{r}
+Temporario<-Temporario %>% select(-Tmax_ACC_R)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+Chuva_ACC_R                  -0.003450   0.008670  -0.398             0.690892
+
+```{r}
+Temporario<-Temporario %>% select(-Chuva_ACC_R)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+UR_fld_m                      0.047490   0.117409   0.404             0.686105
+
+
+```{r}
+Temporario<-Temporario %>% select(-UR_fld_m)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+Tmin_fld_m                   -0.311407   0.498525  -0.625             0.532604
+
+```{r}
+Temporario<-Temporario %>% select(-Tmin_fld_m)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+Tmin_Media                   -1.486787   2.289051  -0.650             0.516426
+
+```{r}
+Temporario<-Temporario %>% select(-Tmin_Media)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+Graus_dia_FLO                -0.016908   0.023216  -0.728             0.466941 
+
+```{r}
+Temporario<-Temporario %>% select(-Graus_dia_FLO)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+Rad_ACC_R                    -0.004273   0.005223  -0.818             0.413853
+
+```{r}
+Temporario<-Temporario %>% select(-Rad_ACC_R)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+Rad_ACC                       0.001147   0.001687   0.680             0.497198
+
+```{r}
+Temporario<-Temporario %>% select(-Rad_ACC)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+Tmax_fld_m                    0.216277   0.260595   0.830             0.407133
+```{r}
+Temporario<-Temporario %>% select(-Tmax_fld_m)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+UR_Media                      0.514568   0.326732   1.575             0.116169
+
+```{r}
+Temporario<-Temporario %>% select(-UR_Media)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+longitude                     0.120319   0.084009   1.432             0.152957
+
+```{r}
+Temporario<-Temporario %>% select(-longitude)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+
+```{r}
+Temporario<-Temporario %>% select(-UR_V)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("ALIANCA","BRS A704",	"BRS JABURU",	"CICA 8",	"EPAGRI 108",	"EPAGRI 109",	"MOXOTO",	"PR268")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(FLO_M~., Temporario) 
+summary(modelo_NE_)
+
+```
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("EMPASC 101", "SCS 114 ANDOSAN")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(FLO_M~., Temporario) 
+summary(modelo_NE_)
+
+```
+
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS FORMOSO")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(FLO_M~., Temporario) 
+summary(modelo_NE_)
+
+```
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS GUARA", "SCS 121 CL", "IAC1298", "PR267")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(FLO_M~., Temporario) 
+summary(modelo_NE_)
+
+```
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("IAC1299", "SCS 116 SATORU")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(FLO_M~., Temporario) 
+summary(modelo_NE_)
+
+```
+
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("SCSBRS 113 TIO TAKA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(FLO_M~., Temporario) 
+summary(modelo_NE_)
+
+```
+
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS CATIANA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(FLO_M~., Temporario) 
+summary(modelo_NE_)
+
+```
+
+### Analise dos residos
+
+```{r}
+#------------------------------------------------------------#
+# Para  rodar este programa deixe no objeto fit.model a saída 
+# do ajuste da regressão do modelo normal linear.Deixe também
+# os dados disponíveis através do comando attach(...). Depois
+# use o comando source(...) no R ou S-plus para executar o 
+# programa. A sequência de comandos é a seguinte:
+#
+fit.model <- modelo_NE_
+attach(Temporario)
+#source("envel_norm_corrigido.txt")
+#
+# A saída será o gráfico de envelope para o resíduo
+# padronizado. Para colocar  um  título no gráfico após a
+# saída use o comando title("...").
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+si <- lm.influence(fit.model)$sigma
+r <- resid(fit.model)
+tsi <- r/(si*sqrt(1-h))
+#
+ident <- diag(n)
+epsilon <- matrix(0,n,100)
+e <- matrix(0,n,100)
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:100){
+     epsilon[,i] <- rnorm(n,0,1)
+     e[,i] <- (ident - H)%*%epsilon[,i]
+     u <- diag(ident - H)
+     e[,i] <- e[,i]/sqrt(u)
+     e[,i] <- sort(e[,i],na.last = TRUE)}
+#
+for(i in 1:n){
+     eo <- sort(e[i,])
+     e1[i] <- (eo[2]+eo[3])/2
+     e2[i] <- (eo[97]+eo[98])/2 }
+#
+med <- apply(e,1,mean)
+faixa <- range(tsi,e1,e2,na.rm = TRUE)
+#
+par(pty="s")
+qqnorm(tsi,xlab="Percentil da N(0,1)",
+ylab="Residuo Studentizado", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
+#------------------------------------------------------------#
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erro normal. Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+ fit.model <- modelo_NE_
+ attach(Temporario)
+source("diag_norm_corrigido.txt")
+#
+# A saída terá quatro gráficos: de pontos de alavanca, 
+# de pontos influentes  e  dois de resíduos. Para identificar
+# os pontos que  mais  se destacam usar o comando 
+# identify(...). Se por exemplo se destacam três pontos no 
+# plot(fitted(fit.model),h,...), após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram traçados os limites ylim=c(a-1,b+1), em que a
+# é o menor valor e b o maior valor para o resíduo.Mude esses 
+# limites  se  necessário.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+lms <- summary(fit.model)
+s <- lms$sigma
+r <- resid(lms)
+ts <- r/(s*sqrt(1-h))
+di <- (1/p)*(h/(1-h))*(ts^2)
+si <- lm.influence(fit.model)$sigma
+tsi <- r/(si*sqrt(1-h))
+fitted.model <- fitted(fit.model)
+ir = which(is.nan(tsi))
+if(length(ir) > 0){
+        tsi = tsi[-ir]
+        fitted.model = fitted.model[-ir]
+}
+
+a <- max(tsi)
+b <- min(tsi)
+par(mfrow=c(2,2))
+plot(h,xlab="Índice", ylab="Medida h", pch=16, ylim=c(0,1))
+cut <- 2*p/n
+abline(cut,0,lty=2)
+identify(h, n=1)
+#title(sub="(a)")
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+identify(di, n=2)
+#
+plot(tsi,xlab="Índice", ylab="Resíduo Padronizado",
+ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(tsi, n=1)
+#
+plot(fitted.model,tsi,xlab="Valor Ajustado", 
+ylab="Resíduo Padronizado", ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),tsi, n=1)
+par(mfrow=c(1,1))
+#---------------------------------------------------
+```
+```{r}
+#Normalidade dos residuos
+options(scipen = 999)
+
+jarque.bera.test(tsi) #Residuo Studentizado # p > 0,05 = normal
+
+```
+```{r}
+# Homocedasticidade (Breusch-Pagan)
+ols_test_breusch_pagan(modelo_NE_)
+```
+
+
+# MODELO 4 log
+
+```{r}
+Temporario<- Nordeste[,c(-1,-3)]
+
+Temporario2<- Temporario[c( -392, -224, -291, -177, -375, -215, -175, -261, -251,- 396),]
+Temporario3<- Temporario2[c( -229, -250,  -160, -184 ),]
+Temporario4<- Temporario3[c( -377,- 164, - 371 ),]
+Temporario5<- Temporario4[c( -355 ),]
+Temporario6 <- Temporario5[c( -356,- 338,- 344 ),]
+Temporario<- Temporario6[c( -165 ,-376, -418,- 254,- 214,- 414 ,-247),]
+
+modelo_NE_<-lm(log(FLO_M)~., Temporario) # modelo inicial
+summary(modelo_NE_)
+
+
+```
+Chuva_ACC_R                  0.000009949  0.000092757   0.107             0.914649
+
+```{r}
+Temporario<-Temporario %>% select(-Chuva_ACC_R)
+modelo_NE_<-lm(log(FLO_M)~., Temporario)
+summary(modelo_NE_)
+```
+UR_fld_m                    -0.00032731  0.00130745  -0.250             0.802473
+```{r}
+Temporario<-Temporario %>% select(-UR_fld_m)
+modelo_NE_<-lm(log(FLO_M)~., Temporario)
+summary(modelo_NE_)
+```
+Graus_dia_ciclo             -0.00011167  0.00035666  -0.313             0.754399 
+```{r}
+Temporario<-Temporario %>% select(-Graus_dia_ciclo)
+modelo_NE_<-lm(log(FLO_M)~., Temporario)
+summary(modelo_NE_)
+```
+Tmax_ACC_R                  -0.00004764  0.00019585  -0.243             0.807938 
+
+```{r}
+Temporario<-Temporario %>% select(-Tmax_ACC_R)
+modelo_NE_<-lm(log(FLO_M)~., Temporario)
+summary(modelo_NE_)
+```
+longitude                    0.00085176  0.00095198   0.895             0.371546
+
+```{r}
+Temporario<-Temporario %>% select(-longitude)
+modelo_NE_<-lm(log(FLO_M)~., Temporario)
+summary(modelo_NE_)
+```
+Tmax_Maxima                 -0.00235216  0.00275109  -0.855             0.393139 
+```{r}
+Temporario<-Temporario %>% select(-Tmax_Maxima)
+modelo_NE_<-lm(log(FLO_M)~., Temporario)
+summary(modelo_NE_)
+```
+Tmin_fld_m                  -0.00506109  0.00505413  -1.001             0.317332 
+```{r}
+Temporario<-Temporario %>% select(-Tmin_fld_m)
+modelo_NE_<-lm(log(FLO_M)~., Temporario)
+summary(modelo_NE_)
+```
+UR_Media                     0.00378690  0.00370403   1.022             0.307305
+```{r}
+Temporario<-Temporario %>% select(-UR_Media)
+modelo_NE_<-lm(log(FLO_M)~., Temporario)
+summary(modelo_NE_)
+```
+UR_V                        -0.00041701  0.00109615  -0.380             0.703853
+```{r}
+Temporario<-Temporario %>% select(-UR_V)
+modelo_NE_<-lm(log(FLO_M)~., Temporario)
+summary(modelo_NE_)
+```
+Rad_ACC_R                   -0.00005683  0.00005536  -1.027             0.305308
+```{r}
+Temporario<-Temporario %>% select(-Rad_ACC_R)
+modelo_NE_<-lm(log(FLO_M)~., Temporario)
+summary(modelo_NE_)
+```
+Tmax_fld_m                   0.00292930  0.00275387   1.064             0.288184 
+```{r}
+Temporario<-Temporario %>% select(-Tmax_fld_m)
+modelo_NE_<-lm(log(FLO_M)~., Temporario)
+summary(modelo_NE_)
+```
+Tmin_Media                  -0.02426243  0.01548831  -1.566             0.118118
+```{r}
+Temporario<-Temporario %>% select(-Tmin_Media)
+modelo_NE_<-lm(log(FLO_M)~., Temporario)
+summary(modelo_NE_)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("ALIANCA","BRS A704",    "BRS JABURU",     "CICA 8",      "EPAGRI 108",    "EPAGRI 109",    "MOXOTO",    "PR268")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(log(FLO_M)~., Temporario) 
+summary(modelo_NE_)
+
+```
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS FORMOSO", "EMPASC 101", "SCS 114 ANDOSAN")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(log(FLO_M)~., Temporario) 
+summary(modelo_NE_)
+
+```
+Tmax_Minima                  0.00214088  0.00119558   1.791             0.074168 .  
+
+```{r}
+Temporario<-Temporario %>% select(-Tmax_Minima)
+modelo_NE_<-lm(log(FLO_M)~., Temporario)
+summary(modelo_NE_)
+```
+
+
+
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS GUARA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(log(FLO_M)~., Temporario) 
+summary(modelo_NE_)
+
+```
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("IAC1298", "SCS 121 CL")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(log(FLO_M)~., Temporario) 
+summary(modelo_NE_)
+
+```
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("IAC1299", "PR267", "SCS 116 SATORU", "SCSBRS 113 TIO TAKA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(log(FLO_M)~., Temporario) 
+summary(modelo_NE_)
+
+```
+
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("OUROMINAS")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(log(FLO_M)~., Temporario) 
+summary(modelo_NE_)
+
+```
+latitude                0.00160456  0.00082060   1.955             0.051280
+
+```{r}
+Temporario<-Temporario %>% select(-latitude)
+modelo_NE_<-lm(log(FLO_M)~., Temporario)
+summary(modelo_NE_)
+```
+
+
+
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS CATIANA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(log(FLO_M)~., Temporario) 
+summary(modelo_NE_)
+
+```
+
+### Analise dos residos
+
+```{r}
+#------------------------------------------------------------#
+# Para  rodar este programa deixe no objeto fit.model a saída 
+# do ajuste da regressão do modelo normal linear.Deixe também
+# os dados disponíveis através do comando attach(...). Depois
+# use o comando source(...) no R ou S-plus para executar o 
+# programa. A sequência de comandos é a seguinte:
+#
+fit.model <- modelo_NE_
+attach(Temporario)
+#source("envel_norm_corrigido.txt")
+#
+# A saída será o gráfico de envelope para o resíduo
+# padronizado. Para colocar  um  título no gráfico após a
+# saída use o comando title("...").
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+si <- lm.influence(fit.model)$sigma
+r <- resid(fit.model)
+tsi <- r/(si*sqrt(1-h))
+#
+ident <- diag(n)
+epsilon <- matrix(0,n,100)
+e <- matrix(0,n,100)
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:100){
+     epsilon[,i] <- rnorm(n,0,1)
+     e[,i] <- (ident - H)%*%epsilon[,i]
+     u <- diag(ident - H)
+     e[,i] <- e[,i]/sqrt(u)
+     e[,i] <- sort(e[,i],na.last = TRUE)}
+#
+for(i in 1:n){
+     eo <- sort(e[i,])
+     e1[i] <- (eo[2]+eo[3])/2
+     e2[i] <- (eo[97]+eo[98])/2 }
+#
+med <- apply(e,1,mean)
+faixa <- range(tsi,e1,e2,na.rm = TRUE)
+#
+par(pty="s")
+qqnorm(tsi,xlab="Percentil da N(0,1)",
+ylab="Residuo Studentizado", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
+#------------------------------------------------------------#
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erro normal. Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+ fit.model <- modelo_NE_
+ attach(Temporario)
+source("diag_norm_corrigido.txt")
+#
+# A saída terá quatro gráficos: de pontos de alavanca, 
+# de pontos influentes  e  dois de resíduos. Para identificar
+# os pontos que  mais  se destacam usar o comando 
+# identify(...). Se por exemplo se destacam três pontos no 
+# plot(fitted(fit.model),h,...), após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram traçados os limites ylim=c(a-1,b+1), em que a
+# é o menor valor e b o maior valor para o resíduo.Mude esses 
+# limites  se  necessário.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+lms <- summary(fit.model)
+s <- lms$sigma
+r <- resid(lms)
+ts <- r/(s*sqrt(1-h))
+di <- (1/p)*(h/(1-h))*(ts^2)
+si <- lm.influence(fit.model)$sigma
+tsi <- r/(si*sqrt(1-h))
+fitted.model <- fitted(fit.model)
+ir = which(is.nan(tsi))
+if(length(ir) > 0){
+        tsi = tsi[-ir]
+        fitted.model = fitted.model[-ir]
+}
+
+a <- max(tsi)
+b <- min(tsi)
+par(mfrow=c(2,2))
+plot(h,xlab="Índice", ylab="Medida h", pch=16, ylim=c(0,1))
+cut <- 2*p/n
+abline(cut,0,lty=2)
+identify(h, n=1)
+#title(sub="(a)")
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+identify(di, n=2)
+#
+plot(tsi,xlab="Índice", ylab="Resíduo Padronizado",
+ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(tsi, n=1)
+#
+plot(fitted.model,tsi,xlab="Valor Ajustado", 
+ylab="Resíduo Padronizado", ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),tsi, n=1)
+par(mfrow=c(1,1))
+#---------------------------------------------------
+```
+```{r}
+#Normalidade dos residuos
+options(scipen = 999)
+
+jarque.bera.test(tsi) #Residuo Studentizado # p > 0,05 = normal
+
+```
+```{r}
+# Homocedasticidade (Breusch-Pagan)
+ols_test_breusch_pagan(modelo_NE_)
+```
+
+```{r}
+modelo_Nordeste_4<- modelo_NE_
+df_Nordeste_4 <- Temporario
+```
+
+
+# MODELO 5
+
+```{r}
+Temporario<- Nordeste[,c(-1,-3)]
+
+Temporario2<- Temporario[c( -392, -224, -291, -177, -375, -215, -175, -261, -251,- 396),]
+Temporario3<- Temporario2[c( -229, -250,  -160, -184 ),]
+Temporario4<- Temporario3[c( -377,- 164, - 371 ),]
+Temporario5<- Temporario4[c( -355 ),]
+Temporario6 <- Temporario5[c( -356,- 338,- 344 ),]
+Temporario<- Temporario6[c( -165 ,-376, -418,- 254,- 214,- 414 ,-247),]
+
+modelo_NE_<-lm(FLO_M~., Temporario) # modelo inicial
+summary(modelo_NE_)
+
+
+```
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("ALIANCA", "BRS A704","BRS JABURU","CICA 8","EPAGRI 108","EPAGRI 109","MOXOTO",
+"PR268")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(FLO_M~., Temporario) 
+summary(modelo_NE_)
+
+```
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS FORMOSO","EMPASC 101","SCS 114 ANDOSAN")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(FLO_M~., Temporario) 
+summary(modelo_NE_)
+
+```
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS GUARA","IAC1298","PR267","SCS 116 SATORU","SCS 121 CL")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(FLO_M~., Temporario) 
+summary(modelo_NE_)
+
+```
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("IAC1299","SCSBRS 113 TIO TAKA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(FLO_M~., Temporario) 
+summary(modelo_NE_)
+
+```
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS CATIANA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(FLO_M~., Temporario) 
+summary(modelo_NE_)
+
+```
+
+Chuva_ACC_R             -0.0001339   0.0085986  -0.016             0.987581
+
+```{r}
+Temporario<-Temporario %>% select(-Chuva_ACC_R)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+Tmax_Maxima             -0.078136   0.284312  -0.275             0.783606    
+
+
+```{r}
+Temporario<-Temporario %>% select(-Tmax_Maxima)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+Tmax_ACC_R              -0.006929   0.019839  -0.349             0.727098
+
+
+
+```{r}
+Temporario<-Temporario %>% select(-Tmax_ACC_R)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+Tmin_Media              -1.420637   2.321281  -0.612             0.540913
+
+
+```{r}
+Temporario<-Temporario %>% select(-Tmin_Media)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+Rad_ACC                  0.001360   0.002120   0.641             0.521680    
+
+```{r}
+Temporario<-Temporario %>% select(-Rad_ACC)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+Rad_ACC_R               -0.001905   0.004288  -0.444             0.657080
+
+```{r}
+Temporario<-Temporario %>% select(-Rad_ACC_R)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+UR_fld_m                 0.056317   0.105830   0.532             0.594944
+
+```{r}
+Temporario<-Temporario %>% select(-UR_fld_m)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+Tmax_fld_m               0.079633   0.297708   0.267             0.789243
+
+```{r}
+Temporario<-Temporario %>% select(-Tmax_fld_m)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+
+Tmin_fld_m              -0.295049   0.399551  -0.738             0.460707 
+```{r}
+Temporario<-Temporario %>% select(-Tmin_fld_m)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+Graus_dia_FLO           -0.019181   0.021723  -0.883             0.377822 
+
+```{r}
+Temporario<-Temporario %>% select(-Graus_dia_FLO)
+modelo_NE_<-lm(FLO_M~., Temporario)
+summary(modelo_NE_)
+```
+### Analise dos residos
+
+```{r}
+#------------------------------------------------------------#
+# Para  rodar este programa deixe no objeto fit.model a saída 
+# do ajuste da regressão do modelo normal linear.Deixe também
+# os dados disponíveis através do comando attach(...). Depois
+# use o comando source(...) no R ou S-plus para executar o 
+# programa. A sequência de comandos é a seguinte:
+#
+fit.model <- modelo_NE_
+attach(Temporario)
+#source("envel_norm_corrigido.txt")
+#
+# A saída será o gráfico de envelope para o resíduo
+# padronizado. Para colocar  um  título no gráfico após a
+# saída use o comando title("...").
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+si <- lm.influence(fit.model)$sigma
+r <- resid(fit.model)
+tsi <- r/(si*sqrt(1-h))
+#
+ident <- diag(n)
+epsilon <- matrix(0,n,100)
+e <- matrix(0,n,100)
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:100){
+     epsilon[,i] <- rnorm(n,0,1)
+     e[,i] <- (ident - H)%*%epsilon[,i]
+     u <- diag(ident - H)
+     e[,i] <- e[,i]/sqrt(u)
+     e[,i] <- sort(e[,i],na.last = TRUE)}
+#
+for(i in 1:n){
+     eo <- sort(e[i,])
+     e1[i] <- (eo[2]+eo[3])/2
+     e2[i] <- (eo[97]+eo[98])/2 }
+#
+med <- apply(e,1,mean)
+faixa <- range(tsi,e1,e2,na.rm = TRUE)
+#
+par(pty="s")
+qqnorm(tsi,xlab="Percentil da N(0,1)",
+ylab="Residuo Studentizado", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
+#------------------------------------------------------------#
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erro normal. Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+ fit.model <- modelo_NE_
+ attach(Temporario)
+source("diag_norm_corrigido.txt")
+#
+# A saída terá quatro gráficos: de pontos de alavanca, 
+# de pontos influentes  e  dois de resíduos. Para identificar
+# os pontos que  mais  se destacam usar o comando 
+# identify(...). Se por exemplo se destacam três pontos no 
+# plot(fitted(fit.model),h,...), após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram traçados os limites ylim=c(a-1,b+1), em que a
+# é o menor valor e b o maior valor para o resíduo.Mude esses 
+# limites  se  necessário.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+lms <- summary(fit.model)
+s <- lms$sigma
+r <- resid(lms)
+ts <- r/(s*sqrt(1-h))
+di <- (1/p)*(h/(1-h))*(ts^2)
+si <- lm.influence(fit.model)$sigma
+tsi <- r/(si*sqrt(1-h))
+fitted.model <- fitted(fit.model)
+ir = which(is.nan(tsi))
+if(length(ir) > 0){
+        tsi = tsi[-ir]
+        fitted.model = fitted.model[-ir]
+}
+
+a <- max(tsi)
+b <- min(tsi)
+par(mfrow=c(2,2))
+plot(h,xlab="Índice", ylab="Medida h", pch=16, ylim=c(0,1))
+cut <- 2*p/n
+abline(cut,0,lty=2)
+identify(h, n=1)
+#title(sub="(a)")
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+identify(di, n=2)
+#
+plot(tsi,xlab="Índice", ylab="Resíduo Padronizado",
+ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(tsi, n=1)
+#
+plot(fitted.model,tsi,xlab="Valor Ajustado", 
+ylab="Resíduo Padronizado", ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),tsi, n=1)
+par(mfrow=c(1,1))
+#---------------------------------------------------
+```
+```{r}
+#Normalidade dos residuos
+options(scipen = 999)
+
+jarque.bera.test(tsi) #Residuo Studentizado # p > 0,05 = normal
+
+```
+```{r}
+# Homocedasticidade (Breusch-Pagan)
+ols_test_breusch_pagan(modelo_NE_)
+```
+
+# MODELO 5 log
+
+```{r}
+Temporario<- Nordeste[,c(-1,-3)]
+
+Temporario2<- Temporario[c( -392, -224, -291, -177, -375, -215, -175, -261, -251,- 396),]
+Temporario3<- Temporario2[c( -229, -250,  -160, -184 ),]
+Temporario4<- Temporario3[c( -377,- 164, - 371 ),]
+Temporario5<- Temporario4[c( -355 ),]
+Temporario6 <- Temporario5[c( -356,- 338,- 344 ),]
+Temporario<- Temporario6[c( -165 ,-376, -418,- 254,- 214,- 414 ,-247),]
+
+modelo_NE_<-lm(log(FLO_M)~., Temporario) # modelo inicial
+summary(modelo_NE_)
+
+
+```
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("ALIANCA", "BRS A704",	"BRS JABURU",	"CICA 8",	"EPAGRI 108",	"EPAGRI 109"	,"MOXOTO"	,"PR268",	"SCSBRS 113 TIO TAKA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(log(FLO_M)~., Temporario) 
+summary(modelo_NE_)
+
+```
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS FORMOSO"	,"BRS GUARA",	"EMPASC 101"	,"IAC1298",	"SCS 114 ANDOSAN",	"SCS 116 SATORU",	"SCS 121 CL")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(log(FLO_M)~., Temporario) 
+summary(modelo_NE_)
+
+```
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("IAC1299","PR267")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(log(FLO_M)~., Temporario) 
+summary(modelo_NE_)
+
+```
+UR_fld_m                0.00012049  0.00128648   0.094             0.925434
+
+```{r}
+Temporario<-Temporario %>% select(-UR_fld_m)
+modelo_NE_<-lm(log(FLO_M)~., Temporario)
+summary(modelo_NE_)
+```
+Chuva_ACC_R             0.00003333  0.00009057   0.368             0.713112    
+
+```{r}
+Temporario<-Temporario %>% select(-Chuva_ACC_R)
+modelo_NE_<-lm(log(FLO_M)~., Temporario)
+summary(modelo_NE_)
+```
+Tmin_Media             -0.00761147  0.02688991  -0.283             0.777291 
+
+
+```{r}
+Temporario<-Temporario %>% select(-Tmin_Media)
+modelo_NE_<-lm(log(FLO_M)~., Temporario)
+summary(modelo_NE_)
+```
+Graus_dia_ciclo        -0.00021988  0.00026975  -0.815             0.415548 
+
+```{r}
+Temporario<-Temporario %>% select(-Graus_dia_ciclo)
+modelo_NE_<-lm(log(FLO_M)~., Temporario)
+summary(modelo_NE_)
+```
+Tmax_ACC_R             -0.00012822  0.00018618  -0.689             0.491449
+```{r}
+Temporario<-Temporario %>% select(-Tmax_ACC_R)
+modelo_NE_<-lm(log(FLO_M)~., Temporario)
+summary(modelo_NE_)
+```
+Tmax_Maxima            -0.00317543  0.00266796  -1.190             0.234730
+```{r}
+Temporario<-Temporario %>% select(-Tmax_Maxima)
+modelo_NE_<-lm(log(FLO_M)~., Temporario)
+summary(modelo_NE_)
+```
+Tmax_fld_m              0.00345097  0.00317285   1.088             0.277457 
+```{r}
+Temporario<-Temporario %>% select(-Tmax_fld_m)
+modelo_NE_<-lm(log(FLO_M)~., Temporario)
+summary(modelo_NE_)
+```
+Tmin_fld_m             -0.00279454  0.00417413  -0.669             0.503600 
+```{r}
+Temporario<-Temporario %>% select(-Tmin_fld_m)
+modelo_NE_<-lm(log(FLO_M)~., Temporario)
+summary(modelo_NE_)
+```
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("OUROMINAS")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(log(FLO_M)~., Temporario) 
+summary(modelo_NE_)
+
+```
+
+
+Rad_ACC_R              -0.00007112  0.00005262  -1.352             0.177318    
+```{r}
+Temporario<-Temporario %>% select(-Rad_ACC_R)
+modelo_NE_<-lm(log(FLO_M)~., Temporario)
+summary(modelo_NE_)
+```
+longitude               0.00125723  0.00090364   1.391             0.164965
+```{r}
+Temporario<-Temporario %>% select(-longitude)
+modelo_NE_<-lm(log(FLO_M)~., Temporario)
+summary(modelo_NE_)
+```
+
+UR_Media                0.00461981  0.00334226   1.382             0.167722
+```{r}
+Temporario<-Temporario %>% select(-UR_Media)
+modelo_NE_<-lm(log(FLO_M)~., Temporario)
+summary(modelo_NE_)
+```
+
+
+UR_V                   -0.00108021  0.00087649  -1.232             0.218563
+```{r}
+Temporario<-Temporario %>% select(-UR_V)
+modelo_NE_<-lm(log(FLO_M)~., Temporario)
+summary(modelo_NE_)
+```
+
+
+Tmax_Minima             0.00201743  0.00118776   1.699             0.090236
+```{r}
+Temporario<-Temporario %>% select(-Tmax_Minima)
+modelo_NE_<-lm(log(FLO_M)~., Temporario)
+summary(modelo_NE_)
+```
+
+
+latitude                0.00160456  0.00082060   1.955             0.051280
+```{r}
+Temporario<-Temporario %>% select(-latitude)
+modelo_NE_<-lm(log(FLO_M)~., Temporario)
+summary(modelo_NE_)
+```
+
+
+```{r}
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS CATIANA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_NE_<-lm(log(FLO_M)~., Temporario) 
+summary(modelo_NE_)
+
+```
+
+### Analise dos residos
+
+```{r}
+#------------------------------------------------------------#
+# Para  rodar este programa deixe no objeto fit.model a saída 
+# do ajuste da regressão do modelo normal linear.Deixe também
+# os dados disponíveis através do comando attach(...). Depois
+# use o comando source(...) no R ou S-plus para executar o 
+# programa. A sequência de comandos é a seguinte:
+#
+fit.model <- modelo_NE_
+attach(Temporario)
+#source("envel_norm_corrigido.txt")
+#
+# A saída será o gráfico de envelope para o resíduo
+# padronizado. Para colocar  um  título no gráfico após a
+# saída use o comando title("...").
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+si <- lm.influence(fit.model)$sigma
+r <- resid(fit.model)
+tsi <- r/(si*sqrt(1-h))
+#
+ident <- diag(n)
+epsilon <- matrix(0,n,100)
+e <- matrix(0,n,100)
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:100){
+     epsilon[,i] <- rnorm(n,0,1)
+     e[,i] <- (ident - H)%*%epsilon[,i]
+     u <- diag(ident - H)
+     e[,i] <- e[,i]/sqrt(u)
+     e[,i] <- sort(e[,i],na.last = TRUE)}
+#
+for(i in 1:n){
+     eo <- sort(e[i,])
+     e1[i] <- (eo[2]+eo[3])/2
+     e2[i] <- (eo[97]+eo[98])/2 }
+#
+med <- apply(e,1,mean)
+faixa <- range(tsi,e1,e2,na.rm = TRUE)
+#
+par(pty="s")
+qqnorm(tsi,xlab="Percentil da N(0,1)",
+ylab="Residuo Studentizado", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
+#------------------------------------------------------------#
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erro normal. Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+ fit.model <- modelo_NE_
+ attach(Temporario)
+source("diag_norm_corrigido.txt")
+#
+# A saída terá quatro gráficos: de pontos de alavanca, 
+# de pontos influentes  e  dois de resíduos. Para identificar
+# os pontos que  mais  se destacam usar o comando 
+# identify(...). Se por exemplo se destacam três pontos no 
+# plot(fitted(fit.model),h,...), após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram traçados os limites ylim=c(a-1,b+1), em que a
+# é o menor valor e b o maior valor para o resíduo.Mude esses 
+# limites  se  necessário.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+lms <- summary(fit.model)
+s <- lms$sigma
+r <- resid(lms)
+ts <- r/(s*sqrt(1-h))
+di <- (1/p)*(h/(1-h))*(ts^2)
+si <- lm.influence(fit.model)$sigma
+tsi <- r/(si*sqrt(1-h))
+fitted.model <- fitted(fit.model)
+ir = which(is.nan(tsi))
+if(length(ir) > 0){
+        tsi = tsi[-ir]
+        fitted.model = fitted.model[-ir]
+}
+
+a <- max(tsi)
+b <- min(tsi)
+par(mfrow=c(2,2))
+plot(h,xlab="Índice", ylab="Medida h", pch=16, ylim=c(0,1))
+cut <- 2*p/n
+abline(cut,0,lty=2)
+identify(h, n=1)
+#title(sub="(a)")
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+identify(di, n=2)
+#
+plot(tsi,xlab="Índice", ylab="Resíduo Padronizado",
+ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(tsi, n=1)
+#
+plot(fitted.model,tsi,xlab="Valor Ajustado", 
+ylab="Resíduo Padronizado", ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),tsi, n=1)
+par(mfrow=c(1,1))
+#---------------------------------------------------
+```
+```{r}
+#Normalidade dos residuos
+options(scipen = 999)
+
+jarque.bera.test(tsi) #Residuo Studentizado # p > 0,05 = normal
+
+```
+```{r}
+# Homocedasticidade (Breusch-Pagan)
+ols_test_breusch_pagan(modelo_NE_)
+```
+
+```{r}
+modelo_Nordeste_5<- modelo_NE_
+df_Nordeste_5<- Temporario
+```
+
+
+
+# COMPARAÇÃO DOS MODELOS
+
+# Comparação com os outros modelos Centro-oeste
+
+
+
+```{r}
+a<-summary(modelo_Nordeste_4)
+b<-summary(modelo_Nordeste_5)
+
+```
+
+```{r}
+comp1 = data.frame()
+comp1= data.frame(BIC(modelo_Nordeste_4),  AIC(modelo_Nordeste_4),a$r.squared)
+comp1[2,] = c(BIC(modelo_Nordeste_5), AIC(modelo_Nordeste_5), b$r.squared)
+
+
+colnames(comp1) = c("BIC", "AIC", "R_sq")
+row.names(comp1) = c("vs1", "vs2")
+comp1
+```
+```{r}
+Anova<- anova(modelo_Nordeste_4)
+
+C_E<-data.frame("Variaveis" = row.names(Anova), "importancia" = (Anova$`Sum Sq`/sum(Anova$`Sum Sq`)))
+C_E<- C_E %>% arrange(desc(importancia))
+C_E
+ggplot(aes(x=reorder(Variaveis,-importancia ), y = importancia ),data = C_E)+
+  geom_col(stat = "identity")+
+  labs(y = "Capacidade explicativa", x="" )+
+   scale_y_continuous(labels = percent_format()) +
+        theme_classic()+
+  theme(axis.text.x = element_text(angle=45, hjust=1, vjust = 1))
+
+Anova<- anova(modelo_Nordeste_5)
+
+C_E<-data.frame("Variaveis" = row.names(Anova), "importancia" = (Anova$`Sum Sq`/sum(Anova$`Sum Sq`)))
+C_E<- C_E %>% arrange(desc(importancia))
+C_E
+ggplot(aes(x=reorder(Variaveis,-importancia ), y = importancia ),data = C_E)+
+  geom_col(stat = "identity")+
+  labs(y = "Capacidade explicativa", x="" )+
+   scale_y_continuous(labels = percent_format()) +
+        theme_classic()+
+  theme(axis.text.x = element_text(angle=45, hjust=1, vjust = 1))
+
+
+```
+
+
+```{r}
+summary(modelo_Nordeste_5)
+```
+
+
+# MODELO SELECIONADO 
+
+## modelo final
+
+```{r}
+modelo_Nordeste<-modelo_Nordeste_4
+
+df_Nordeste<-df_Nordeste_4
+options(scipen = 999)
+
+
+summary(modelo_Nordeste)
+```
+```{r}
+exp(0.03168980)
+```
+
+
+## Analise de residuos
+
+```{r}
+#------------------------------------------------------------#
+# Para  rodar este programa deixe no objeto fit.model a saída 
+# do ajuste da regressão do modelo normal linear.Deixe também
+# os dados disponíveis através do comando attach(...). Depois
+# use o comando source(...) no R ou S-plus para executar o 
+# programa. A sequência de comandos é a seguinte:
+#
+fit.model <- modelo_Nordeste
+attach(df_Nordeste)
+#source("envel_norm_corrigido.txt")
+#
+# A saída será o gráfico de envelope para o resíduo
+# padronizado. Para colocar  um  título no gráfico após a
+# saída use o comando title("...").
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+si <- lm.influence(fit.model)$sigma
+r <- resid(fit.model)
+tsi <- r/(si*sqrt(1-h))
+#
+ident <- diag(n)
+epsilon <- matrix(0,n,100)
+e <- matrix(0,n,100)
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:100){
+     epsilon[,i] <- rnorm(n,0,1)
+     e[,i] <- (ident - H)%*%epsilon[,i]
+     u <- diag(ident - H)
+     e[,i] <- e[,i]/sqrt(u)
+     e[,i] <- sort(e[,i],na.last = TRUE)}
+#
+for(i in 1:n){
+     eo <- sort(e[i,])
+     e1[i] <- (eo[2]+eo[3])/2
+     e2[i] <- (eo[97]+eo[98])/2 }
+#
+med <- apply(e,1,mean)
+faixa <- range(tsi,e1,e2,na.rm = TRUE)
+#
+par(pty="s")
+qqnorm(tsi,xlab="Percentil da N(0,1)",
+ylab="Residuo Studentizado", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
+#------------------------------------------------------------#
+```
+
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erro normal. Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+ fit.model <- modelo_Nordeste
+ attach(df_Nordeste)
+source("diag_norm_corrigido.txt")
+#
+# A saída terá quatro gráficos: de pontos de alavanca, 
+# de pontos influentes  e  dois de resíduos. Para identificar
+# os pontos que  mais  se destacam usar o comando 
+# identify(...). Se por exemplo se destacam três pontos no 
+# plot(fitted(fit.model),h,...), após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram traçados os limites ylim=c(a-1,b+1), em que a
+# é o menor valor e b o maior valor para o resíduo.Mude esses 
+# limites  se  necessário.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+lms <- summary(fit.model)
+s <- lms$sigma
+r <- resid(lms)
+ts <- r/(s*sqrt(1-h))
+di <- (1/p)*(h/(1-h))*(ts^2)
+si <- lm.influence(fit.model)$sigma
+tsi <- r/(si*sqrt(1-h))
+fitted.model <- fitted(fit.model)
+ir = which(is.nan(tsi))
+if(length(ir) > 0){
+        tsi = tsi[-ir]
+        fitted.model = fitted.model[-ir]
+}
+
+a <- max(tsi)
+b <- min(tsi)
+par(mfrow=c(2,2))
+plot(h,xlab="Índice", ylab="Medida h", pch=16, ylim=c(0,1))
+cut <- 2*p/n
+abline(cut,0,lty=2)
+identify(h, n=1)
+#title(sub="(a)")
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+identify(di, n=2)
+#
+plot(tsi,xlab="Índice", ylab="Resíduo Padronizado",
+ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(tsi, n=1)
+#
+plot(fitted.model,tsi,xlab="Valor Ajustado", 
+ylab="Resíduo Padronizado", ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),tsi, n=1)
+par(mfrow=c(1,1))
+#------------------------------------------------------------#
+```
+
+
+```{r}
+#Normalidade dos residuos
+jarque.bera.test(tsi) #Residuo Studentizado # p > 0,05 = normal
+
+```
+```{r}
+# Homocedasticidade (Breusch-Pagan)
+ols_test_breusch_pagan(modelo_Nordeste)
+```
+
+## Grafico estimativas
+```{r}
+Estimativas<-summary(modelo_Nordeste)
+Estimativas<-data.frame(Estimativas$coefficients)
+Estimativas<-data.frame("variaveis" = rownames(Estimativas) ,"Estimativa" = Estimativas$Estimate)
+quantitativas <- Estimativas[c(36:52),]
+quantitativas$Estimativa <- ifelse(quantitativas$Estimativa > 0 , exp(quantitativas$Estimativa), exp(quantitativas$Estimativa)* -1)
+
+
+quantitativas$crescimento = as.factor(ifelse(quantitativas$Estimativa > 0, yes = 1, no = 0))
+
+aa5<-ggplot(data = quantitativas, aes(x= fct_reorder(variaveis, Estimativa, .desc = TRUE) , y = Estimativa))+
+  geom_col(aes(fill = crescimento))+
+  labs(x = "", y = "Dias pré e pós florescimento")+
+  #scale_x_discrete(guide = guide_axis(angle = 90))+
+        coord_flip()+
+        geom_hline(yintercept = 0) +
+  guides(fill = FALSE) +
+  scale_fill_manual(values = c("firebrick", "dodgerblue4"))+
+        #scale_y_continuous(breaks=c(-4,-3,-2, -1, -0.5  ,0,  0.2))+
+ theme_bw()
+  
+
+```
+
+```{r}
+
+
+
+Estimativas<-summary(modelo_Norte)
+Estimativas<-data.frame(Estimativas$coefficients)
+Estimativas<-data.frame("variaveis" = rownames(Estimativas) ,"Estimativa" = Estimativas$Estimate)
+Estimativas$variaveis<-gsub("GENOTIPO", "", Estimativas$variaveis)
+
+qualitativas <- Estimativas[c(2:35),]
+
+qualitativas$Estimativa <- ifelse(qualitativas$Estimativa > 0 , exp(qualitativas$Estimativa), exp(qualitativas$Estimativa)* -1)
+
+
+qualitativas$crescimento = as.factor(ifelse(qualitativas$Estimativa > 0, yes = 1, no = 0))
+
+        
+bb5<-ggplot(data = qualitativas, aes(x=  fct_reorder(variaveis, Estimativa, .desc = TRUE), y = Estimativa))+
+  geom_col(aes(fill = crescimento))+
+  labs(x = "", y = "Dias pré florescimento")+
+ coord_flip()+
+        geom_hline(yintercept = 0) +
+  guides(fill = FALSE) +
+  scale_fill_manual(values = c("firebrick", "dodgerblue4"))+
+        #scale_y_continuous(breaks=c(-5, -3, -1 ,0, 1, 3, 5,7,9, 11, 13,15,17,19))+
+  theme_bw()
+```
+
+```{r}
+Temporario1<- df_Nordeste
+Temporario1$`Yhat` <-exp(predict ( modelo_Nordeste, df_Nordeste ))
+Temporario1$`residual` = c(exp(resid ( modelo_Nordeste )))
+Temporario1$`Y_yhat` = c(Temporario1$FLO_M - Temporario1$Yhat)
+  boxplot(Temporario1$Y_yhat, xlab = "Y - Yhat", cex.lab = 1.5 )
+  plot(y = Temporario1$FLO_M, x = Temporario1$Yhat,   xlab = "Valores preditos", ylab = "Valores observados", pch = 20, col = "black", cex.lab = 1.5) 
+  
+
+```
+
+
+```{r}
+
+Estimativas<-summary(modelo_Nordeste)
+Estimativas<-data.frame(Estimativas$coefficients)
+Estimativas<-data.frame("variaveis" = rownames(Estimativas) ,"Estimativa" = Estimativas$Estimate)
+
+# filtrando por região
+Ano_GENOTIPO <- subset(IRR, (REGIAO == "Nordeste")) 
+
+# filtrando por ano e genótipo
+Ano_GENOTIPO<- Ano_GENOTIPO %>% group_by(ano,GENOTIPO) %>% summarise(FLO_M = mean(FLO_E))
+
+# filtrando o primeiro ano de cada genótipo
+Ano_GENOTIPO<- Ano_GENOTIPO %>%group_by(GENOTIPO) %>% filter(ano==min(ano))
+
+# Organizando os estimate do modelo_2_Cetro_oeste
+
+
+Estimativas$variaveis<-gsub("GENOTIPO", "", Estimativas$variaveis)
+Estimativas <- rename(Estimativas, "GENOTIPO" = "variaveis")
+Estimativas<- Estimativas[-c(25:29),]
+
+# Juntando ano, genótipo e estimate 
+Ano_GENOTIPO_Estimate<-Estimativas[-1,] %>% full_join(Ano_GENOTIPO)
+
+# somando o estimate do genótipo com o do intercepto
+Ano_GENOTIPO_Estimate$Estimativa<- c(Ano_GENOTIPO_Estimate$Estimativa+Estimativas[1,2])
+
+# Usando o valor do estimate do intercepto para os genótipos não significativos
+Ano_GENOTIPO_Estimate$Estimativa[which((is.na(Ano_GENOTIPO_Estimate$Estimativa)))] <- Estimativas[1,2]
+
+
+
+# Plotando
+ggplot(Ano_GENOTIPO_Estimate, aes(x= ano, y = exp(Estimativa)))+
+geom_point()+
+  geom_smooth(formula  = y ~ x, se = FALSE) +
+    labs(y = "Florescimento estimado", x="Ano de lançamento do genótipo" )+
+  #expand_limits(x=c(1980,2020), y=c(30, 60))+
+  theme_test(base_size=20)
+
+```
+
+
+```{r}
+Anova<- anova(modelo_Nordeste)
+
+C_E<-data.frame("Variaveis" = row.names(Anova), "importancia" = (Anova$`Sum Sq`/sum(Anova$`Sum Sq`)))
+C_E<- C_E %>% arrange(desc(importancia))
+C_E[5,1]<-"Residual"
+C_E[1,1]<-"Genótipo"
+
+imp5<-ggplot(aes(x=reorder(Variaveis,-importancia ), y = importancia ),data = C_E)+
+  geom_col(stat = "identity", fill = "dodgerblue4" )+
+  labs(y = "Capacidade explicativa", x="")+
+   scale_y_continuous(labels = scales::percent_format(accuracy = 5L )) +
+          theme_classic()+
+  theme(axis.text.x = element_text(angle=45, hjust=1, vjust = 1))
+```
+
+```{r}
+((imp1+imp2)/(imp3+imp4)/imp5)+plot_annotation(tag_levels = 'A', tag_prefix = '(', tag_suffix = ')')
+```
+
+
+
+
+
+
+
+
+
+
+
+

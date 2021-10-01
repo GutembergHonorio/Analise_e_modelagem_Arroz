@@ -13,18 +13,18 @@ output: html_document
 if(!require(tidyverse)) install.packages("tidyverse")
 
 # Teste de normalidade 
-#if(!require(tseries)) install.packages("tseries")
+if(!require(tseries)) install.packages("tseries")
 
 # Teste de homocesdasticidade 
-#if(!require(olsrr)) install.packages("olsrr")
+if(!require(olsrr)) install.packages("olsrr")
 
 
 
-#if(!require(scales)) install.packages("scales")
+if(!require(scales)) install.packages("scales")
 
-#if(!require(reshape2)) install.packages("reshape2")
+if(!require(reshape2)) install.packages("reshape2")
 
-#if(!require(egg)) install.packages("egg")
+if(!require(egg)) install.packages("egg")
 
 
 
@@ -74,7 +74,7 @@ IRR_Medio<- IRR %>% group_by(ID_ENSAIO, GENOTIPO, REGIAO) %>% summarise(  FLO_M=
 
 Nordeste<- subset(IRR_Medio, (REGIAO == "Nordeste")) # filtrando por região
 ```
-# link log
+#1) LINK log
 ```{r}
 Temporario <- Nordeste[,c(-1,-3)] # retirando as vaiáveis REGIAO e ID_ENSAIO
 modelo_glm_NE_<- glm(FLO_M~.,Temporario, family = Gamma(link = "log" ))
@@ -738,11 +738,106 @@ par(mfrow=c(1,1))
 
 ```
 
+## Retirando linhas
 
-## transf. log
+```{r}
+teste<-td
+teste1 <- sort(teste)
+match(teste1[1:3], teste)
+```
+
+```{r}
+Temporario<-Temporario_glm_NE_26[c(-392, -177, -175),]
+modelo_glm_NE_27<-glm(FLO_M~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_NE_27)
+```
 ```{r}
  detach("package:MASS", unload = TRUE)
 ```
+Chuva_ACC_V           -7.717e-07  4.231e-07  -1.824 0.068911
+
+```{r}
+Temporario<-Temporario %>% select(-Chuva_ACC_V)
+modelo_glm_NE_27<-glm(FLO_M~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_NE_27)
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa deixe no objeto fit.model a saída      
+# do ajuste da regressão com erros gama e ligação log.  Deixe     
+# também os dados disponíveis através do comando attach(...).    
+# Depois use o comando source(...) no R ou S-Plus para        
+# executar o programa. A sequência de comandos é a seguinte:               
+#
+       fit.model <- modelo_glm_NE_27
+       attach(Temporario)
+       source("envel_gama.txt")                                      
+#
+# A saída será o gráfico de envelope para o resíduo componente 
+# do desvio padronizado. Para colocar um título no gráfico use
+# o comando title("..."). Para  usar  outras  ligações mudar 
+# no programa abaixo o termo family=Gamma(link=log) para 
+# family=Gamma no caso de ligação  recíproca ou por 
+# family= Gamma(link=identity) no caso de ligação identidade.
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit.model,type="response")
+fi <- (n-p)/sum((ro/(fitted(fit.model)))^ 2)
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+#
+e <- matrix(0,n,100)
+#
+for(i in 1:100){
+resp <- rgamma(n,fi)
+resp <- (fitted(fit.model)/fi)*resp
+fit <- glm(resp ~ X, family=Gamma(link=log))
+w <- fit$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit,type="response")
+phi <- (n-p)/sum((ro/(fitted(fit)))^ 2)
+e[,i] <- sort(resid(fit,type="deviance")*sqrt(phi/(1-h)))}
+#
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:n){
+  eo <- sort(e[i,])
+e1[i] <- (eo[2]+eo[3])/2
+e2[i] <- (eo[97]+eo[98])/2}
+#
+med <- apply(e,1,mean)
+faixa <- range(td,e1,e2)
+par(pty="s")
+qqnorm(td, xlab="Percentil da N(0,1)",
+ylab="Componente do Desvio", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+#
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="", ylab="", type="l",ylim=faixa,lty=2, main="")
+
+#------------------------------------------------------------#          
+```
+
+
+
+
+## Transf. log
+
 
 ```{r}
 Temporario <- Nordeste[,c(-1,-3)] # retirando as vaiáveis REGIAO e ID_ENSAIO
@@ -1040,7 +1135,7 @@ Temporario_glm_Log_Log_NE_18 <- Temporario
 
 ```
 
-## Analise de residos.
+### Analise de residos.
 
 ```{r}
 #------------------------------------------------------------#
@@ -1177,12 +1272,24 @@ par(mfrow=c(1,1))
 #------------------------------------------------------------#
 
 ```
-```{r}
-modelo_glm_Log_Log_NE_18<-glm(log(FLO_M)~.,Temporario_glm_Log_Log_NE_18[c(-1,-2, -3),], family = Gamma(link = "log" ))
-summary(modelo_glm_Log_Log_NE_18)
 
+```{r}
+ detach("package:MASS", unload = TRUE)
 ```
 
+### Retirando linhas
+
+```{r}
+teste<-td
+teste1 <- sort(teste)
+match(teste1[1:3], teste)
+```
+
+```{r}
+Temporario<-Temporario_glm_Log_Log_NE_18[c(-392, -177, -175),]
+modelo_glm_Log_Log_NE_18<-glm(log(FLO_M)~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_Log_NE_18)
+```
 ```{r}
 #------------------------------------------------------------#
 # Para rodar este programa deixe no objeto fit.model a saída      
@@ -1192,7 +1299,7 @@ summary(modelo_glm_Log_Log_NE_18)
 # executar o programa. A sequência de comandos é a seguinte:               
 #
        fit.model <- modelo_glm_Log_Log_NE_18
-       attach(Temporario_glm_Log_Log_NE_18[c(-1,-2,-3),])
+       attach(Temporario)
        source("envel_gama.txt")                                      
 #
 # A saída será o gráfico de envelope para o resíduo componente 
@@ -1250,17 +1357,16 @@ par(new=TRUE)
 qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
 par(new=TRUE)
 qqnorm(med,axes=F,xlab="", ylab="", type="l",ylim=faixa,lty=2, main="")
-#identify(di, n=2)
+
 #------------------------------------------------------------#          
 ```
 
 
 
+
 ## trandf. Log Log
 
-```{r}
- detach("package:MASS", unload = TRUE)
-```
+
 
 ```{r}
 Temporario <- Nordeste[,c(-1,-3)] # retirando as vaiáveis REGIAO e ID_ENSAIO
@@ -1557,7 +1663,7 @@ Temporario_glm_Log_2Log_NE_17 <- Temporario
 ```
 
 
-## Analise de residos.
+### Analise de residos.
 
 ```{r}
 #------------------------------------------------------------#
@@ -1695,12 +1801,100 @@ par(mfrow=c(1,1))
 
 ```
 
-
-# link inverse
-
 ```{r}
  detach("package:MASS", unload = TRUE)
 ```
+
+### Retirando linhas
+
+```{r}
+teste<-td
+teste1 <- sort(teste)
+match(teste1[1:3], teste)
+```
+
+```{r}
+Temporario<-Temporario_glm_Log_2Log_NE_17[c(-392, -177, -175),]
+modelo_glm_Log_2Log_NE_18<-glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "log" ))
+summary(modelo_glm_Log_2Log_NE_18)
+```
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa deixe no objeto fit.model a saída      
+# do ajuste da regressão com erros gama e ligação log.  Deixe     
+# também os dados disponíveis através do comando attach(...).    
+# Depois use o comando source(...) no R ou S-Plus para        
+# executar o programa. A sequência de comandos é a seguinte:               
+#
+       fit.model <- modelo_glm_Log_2Log_NE_18
+       attach(Temporario)
+       source("envel_gama.txt")                                      
+#
+# A saída será o gráfico de envelope para o resíduo componente 
+# do desvio padronizado. Para colocar um título no gráfico use
+# o comando title("..."). Para  usar  outras  ligações mudar 
+# no programa abaixo o termo family=Gamma(link=log) para 
+# family=Gamma no caso de ligação  recíproca ou por 
+# family= Gamma(link=identity) no caso de ligação identidade.
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit.model,type="response")
+fi <- (n-p)/sum((ro/(fitted(fit.model)))^ 2)
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+#
+e <- matrix(0,n,100)
+#
+for(i in 1:100){
+resp <- rgamma(n,fi)
+resp <- (fitted(fit.model)/fi)*resp
+fit <- glm(resp ~ X, family=Gamma(link=log))
+w <- fit$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit,type="response")
+phi <- (n-p)/sum((ro/(fitted(fit)))^ 2)
+e[,i] <- sort(resid(fit,type="deviance")*sqrt(phi/(1-h)))}
+#
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:n){
+  eo <- sort(e[i,])
+e1[i] <- (eo[2]+eo[3])/2
+e2[i] <- (eo[97]+eo[98])/2}
+#
+med <- apply(e,1,mean)
+faixa <- range(td,e1,e2)
+par(pty="s")
+qqnorm(td, xlab="Percentil da N(0,1)",
+ylab="Componente do Desvio", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+#
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="", ylab="", type="l",ylim=faixa,lty=2, main="")
+
+#------------------------------------------------------------#          
+```
+
+
+
+
+
+
+#2) LINK inverse
 
 ```{r}
 Temporario<-Nordeste[,c(-1,-3)]
@@ -2157,9 +2351,96 @@ par(mfrow=c(1,1))
 
 ```
 
+```{r}
+ detach("package:MASS", unload = TRUE)
+```
+
+## Retirando linhas
+
+```{r}
+teste<-td
+teste1 <- sort(teste)
+match(teste1[1:3], teste)
+```
+
+```{r}
+Temporario<-Temporario_glm_inv_NE_21[c(-392, -177, -175),]
+modelo_glm_inv_NE_22<-glm(FLO_M~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_inv_NE_22)
+```
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa deixe no objeto fit.model a saída      
+# do ajuste da regressão com erros gama e ligação log.  Deixe     
+# também os dados disponíveis através do comando attach(...).    
+# Depois use o comando source(...) no R ou S-Plus para        
+# executar o programa. A sequência de comandos é a seguinte:               
+#
+       fit.model <- modelo_glm_inv_NE_22
+       attach(Temporario)
+       source("envel_gama.txt")                                      
+#
+# A saída será o gráfico de envelope para o resíduo componente 
+# do desvio padronizado. Para colocar um título no gráfico use
+# o comando title("..."). Para  usar  outras  ligações mudar 
+# no programa abaixo o termo family=Gamma(link=log) para 
+# family=Gamma no caso de ligação  recíproca ou por 
+# family= Gamma(link=identity) no caso de ligação identidade.
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit.model,type="response")
+fi <- (n-p)/sum((ro/(fitted(fit.model)))^ 2)
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+#
+e <- matrix(0,n,100)
+#
+for(i in 1:100){
+resp <- rgamma(n,fi)
+resp <- (fitted(fit.model)/fi)*resp
+fit <- glm(resp ~ X, family=Gamma(link=log))
+w <- fit$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit,type="response")
+phi <- (n-p)/sum((ro/(fitted(fit)))^ 2)
+e[,i] <- sort(resid(fit,type="deviance")*sqrt(phi/(1-h)))}
+#
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:n){
+  eo <- sort(e[i,])
+e1[i] <- (eo[2]+eo[3])/2
+e2[i] <- (eo[97]+eo[98])/2}
+#
+med <- apply(e,1,mean)
+faixa <- range(td,e1,e2)
+par(pty="s")
+qqnorm(td, xlab="Percentil da N(0,1)",
+ylab="Componente do Desvio", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+#
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="", ylab="", type="l",ylim=faixa,lty=2, main="")
+
+#------------------------------------------------------------#          
+```
 
 
-## log
+## Transf. log
 
 ```{r}
 Temporario<-Nordeste[,c(-1,-3)]
@@ -2554,11 +2835,97 @@ par(mfrow=c(1,1))
 
 ```
 
-## log log
-
 ```{r}
  detach("package:MASS", unload = TRUE)
 ```
+
+### Removendo linhas
+
+```{r}
+teste<-td
+teste1 <- sort(teste)
+match(teste1[1:3], teste)
+```
+
+```{r}
+Temporario<-Temporario_glm_Log_inv_NE_18[c(-392, -177, -175),]
+modelo_glm_Log_inv_NE_19<-glm(log(FLO_M)~.,Temporario, family = Gamma(link = "inverse" ))
+summary(modelo_glm_Log_inv_NE_19)
+```
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa deixe no objeto fit.model a saída      
+# do ajuste da regressão com erros gama e ligação log.  Deixe     
+# também os dados disponíveis através do comando attach(...).    
+# Depois use o comando source(...) no R ou S-Plus para        
+# executar o programa. A sequência de comandos é a seguinte:               
+#
+       fit.model <- modelo_glm_Log_inv_NE_19
+       attach(Temporario)
+       source("envel_gama.txt")                                      
+#
+# A saída será o gráfico de envelope para o resíduo componente 
+# do desvio padronizado. Para colocar um título no gráfico use
+# o comando title("..."). Para  usar  outras  ligações mudar 
+# no programa abaixo o termo family=Gamma(link=log) para 
+# family=Gamma no caso de ligação  recíproca ou por 
+# family= Gamma(link=identity) no caso de ligação identidade.
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit.model,type="response")
+fi <- (n-p)/sum((ro/(fitted(fit.model)))^ 2)
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+#
+e <- matrix(0,n,100)
+#
+for(i in 1:100){
+resp <- rgamma(n,fi)
+resp <- (fitted(fit.model)/fi)*resp
+fit <- glm(resp ~ X, family=Gamma(link=log))
+w <- fit$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit,type="response")
+phi <- (n-p)/sum((ro/(fitted(fit)))^ 2)
+e[,i] <- sort(resid(fit,type="deviance")*sqrt(phi/(1-h)))}
+#
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:n){
+  eo <- sort(e[i,])
+e1[i] <- (eo[2]+eo[3])/2
+e2[i] <- (eo[97]+eo[98])/2}
+#
+med <- apply(e,1,mean)
+faixa <- range(td,e1,e2)
+par(pty="s")
+qqnorm(td, xlab="Percentil da N(0,1)",
+ylab="Componente do Desvio", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+#
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="", ylab="", type="l",ylim=faixa,lty=2, main="")
+
+#------------------------------------------------------------#          
+```
+
+## Transf. log log
+
+
 
 ```{r}
 Temporario<-Nordeste[,c(-1,-3)]
@@ -2935,12 +3302,99 @@ par(mfrow=c(1,1))
 ```
 
 
+```{r}
+ detach("package:MASS", unload = TRUE)
+```
+
+### Removendo linhas
+```{r}
+teste<-td
+teste1 <- sort(teste)
+match(teste1[1:3], teste)
+```
+```{r}
+Temporario<- Temporario_glm_Log_log_inv_NE_17[c(-177 ,-175 ,-392),]
+modelo_glm_Log_log_inv_NE_18<- glm(log(log(FLO_M))~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_Log_log_inv_NE_18)
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa deixe no objeto fit.model a saída      
+# do ajuste da regressão com erros gama e ligação log.  Deixe     
+# também os dados disponíveis através do comando attach(...).    
+# Depois use o comando source(...) no R ou S-Plus para        
+# executar o programa. A sequência de comandos é a seguinte:               
+#
+       fit.model <- modelo_glm_Log_log_inv_NE_18
+       attach(Temporario)
+       source("envel_gama.txt")                                      
+#
+# A saída será o gráfico de envelope para o resíduo componente 
+# do desvio padronizado. Para colocar um título no gráfico use
+# o comando title("..."). Para  usar  outras  ligações mudar 
+# no programa abaixo o termo family=Gamma(link=log) para 
+# family=Gamma no caso de ligação  recíproca ou por 
+# family= Gamma(link=identity) no caso de ligação identidade.
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit.model,type="response")
+fi <- (n-p)/sum((ro/(fitted(fit.model)))^ 2)
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+#
+e <- matrix(0,n,100)
+#
+for(i in 1:100){
+resp <- rgamma(n,fi)
+resp <- (fitted(fit.model)/fi)*resp
+fit <- glm(resp ~ X, family=Gamma(link=log))
+w <- fit$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit,type="response")
+phi <- (n-p)/sum((ro/(fitted(fit)))^ 2)
+e[,i] <- sort(resid(fit,type="deviance")*sqrt(phi/(1-h)))}
+#
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:n){
+  eo <- sort(e[i,])
+e1[i] <- (eo[2]+eo[3])/2
+e2[i] <- (eo[97]+eo[98])/2}
+#
+med <- apply(e,1,mean)
+faixa <- range(td,e1,e2)
+par(pty="s")
+qqnorm(td, xlab="Percentil da N(0,1)",
+ylab="Componente do Desvio", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+#
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="", ylab="", type="l",ylim=faixa,lty=2, main="")
+
+#------------------------------------------------------------#          
+```
 
 
 
 
 
-# Link 1/mu^2 
+
+#3) LINK 1/mu^2 
 
 ```{r}
  detach("package:MASS", unload = TRUE)
@@ -3171,7 +3625,7 @@ testeF.CB(fit.model,m.C)
 ```
 ```{r}
 Temporario<-Temporario %>% select(-Tmin_R)
-modelo_glm_mu_NE_14<- glm(FLO_M~.,Temporario-1, family = Gamma(link = "1/mu^2" ))
+modelo_glm_mu_NE_14<- glm(FLO_M~.,Temporario, family = Gamma(link = "1/mu^2" ))
 summary(modelo_glm_mu_NE_14)
 ```
 
@@ -3181,6 +3635,71 @@ Temporario_glm_mu_NE_14 <- Temporario
 
 
 ## Analise de residos.
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erros gama.   Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+         fit.model <- modelo_glm_mu_NE_14
+         attach(Temporario_glm_mu_NE_14)
+         source("diag_gama.txt")
+#
+# A saída terá quatro gráficos: de pontos de alacanca, 
+# de pontos influentes  e  dois de resíduos. Para 
+# identificar os pontos que  mais  se destacam usar o 
+# comando identify(...). Se por exemplo se destacam
+# três pontos no plot(fitted(fit.model),h,...), 
+# após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram colocados os limites ylim=c(a-1,b+1), 
+# em que a é o menor valor e b o maior valor para o resíduo. 
+# Este programa usa a library MASS para estimar o parâmetro
+# fi da gama que  estará guardado no objeto fi.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+library(MASS)
+fi <- gamma.shape(fit.model)$alpha
+ts <- resid(fit.model,type="pearson")*sqrt(fi/(1-h))
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+di <- (h/(1-h))*(ts^2)
+par(mfrow=c(2,2))
+a <- max(td)
+b <- min(td)
+plot(fitted(fit.model),h,xlab="Valor Ajustado", ylab="Medida h", pch=16)
+#identify(fitted(fit.model), h, n=1)
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+#identify(di, n=2)
+#
+plot(fitted(fit.model),td,xlab="Valor Ajustado", ylab="Resíduo Componente do Desvio",
+ylim=c(b-1,a+1),pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),td, n=1)
+#
+w <- fit.model$weights
+eta <- predict(fit.model)
+z <- eta + resid(fit.model, type="pearson")/sqrt(w)
+plot(predict(fit.model),z,xlab="Preditor Linear", 
+ylab="Variável z", pch=16)
+par(mfrow=c(1,1))
+#------------------------------------------------------------#
+
+```
 
 ```{r}
 #------------------------------------------------------------#
@@ -3252,93 +3771,22 @@ qqnorm(med,axes=F,xlab="", ylab="", type="l",ylim=faixa,lty=2, main="")
 
 #------------------------------------------------------------#          
 ```
+
+```{r}
+ detach("package:MASS", unload = TRUE)
+```
+
+## Removendo linhas
 ```{r}
 teste<-td
 teste1 <- sort(teste)
 match(teste1[1:3], teste)
 ```
 ```{r}
-td[175]
-```
-
-```{r}
-#------------------------------------------------------------#
-# Para rodar este programa  deixe no objeto fit.model a saída 
-# do  ajuste  da  regressão com  erros gama.   Deixe  os dados 
-# disponíveis  através do comando attach(...). Depois  use  o 
-# comando source(...) no S-Plus ou R para executar o programa. 
-# A sequência de comandos é a seguinte:
-#
-         fit.model <- modelo_glm_mu_NE_14
-         attach(Temporario_glm_mu_NE_14)
-         source("diag_gama.txt")
-#
-# A saída terá quatro gráficos: de pontos de alacanca, 
-# de pontos influentes  e  dois de resíduos. Para 
-# identificar os pontos que  mais  se destacam usar o 
-# comando identify(...). Se por exemplo se destacam
-# três pontos no plot(fitted(fit.model),h,...), 
-# após esse comando coloque
-#     
-#        > identify(fitted(fit.model),h,n=3)
-#
-# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
-# resíduos foram colocados os limites ylim=c(a-1,b+1), 
-# em que a é o menor valor e b o maior valor para o resíduo. 
-# Este programa usa a library MASS para estimar o parâmetro
-# fi da gama que  estará guardado no objeto fi.
-#------------------------------------------------------------#
-X <- model.matrix(fit.model)
-n <- nrow(X)
-p <- ncol(X)
-w <- fit.model$weights
-W <- diag(w)
-H <- solve(t(X)%*%W%*%X)
-H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
-h <- diag(H)
-library(MASS)
-fi <- gamma.shape(fit.model)$alpha
-ts <- resid(fit.model,type="pearson")*sqrt(fi/(1-h))
-td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
-di <- (h/(1-h))*(ts^2)
-par(mfrow=c(2,2))
-a <- max(td)
-b <- min(td)
-plot(fitted(fit.model),h,xlab="Valor Ajustado", ylab="Medida h", pch=16)
-#identify(fitted(fit.model), h, n=1)
-#
-plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
-#identify(di, n=2)
-#
-plot(fitted(fit.model),td,xlab="Valor Ajustado", ylab="Resíduo Componente do Desvio",
-ylim=c(b-1,a+1),pch=16)
-abline(2,0,lty=2)
-abline(-2,0,lty=2)
-#identify(fitted(fit.model),td, n=1)
-#
-w <- fit.model$weights
-eta <- predict(fit.model)
-z <- eta + resid(fit.model, type="pearson")/sqrt(w)
-plot(predict(fit.model),z,xlab="Preditor Linear", 
-ylab="Variável z", pch=16)
-par(mfrow=c(1,1))
-#------------------------------------------------------------#
-
-```
-```{r}
-modelo_glm_mu_NE_15<- glm.fit(FLO_M~.,Temporario_glm_mu_NE_14 , intercept = FALSE , family = Gamma(link = "1/mu^2" ))
+Temporario<- Temporario_glm_mu_NE_14[c(-177 ,-175 ,-392),]
+modelo_glm_mu_NE_15<- glm(FLO_M~.,Temporario, family = Gamma(link = "1/mu^2" ))
 summary(modelo_glm_mu_NE_15)
 ```
-```{r}
-med
-```
-```{r}
-aux<-Temporario_glm_mu_NE_14[c(-177, -175, -392),]
-attach(aux)
-modelo_glm_mu_NE_15<- glm(FLO_M~.,aux, family = Gamma(link = "1/mu^2" ))
-summary(modelo_glm_mu_NE_15)
-```
-
 
 ```{r}
 #------------------------------------------------------------#
@@ -3349,7 +3797,7 @@ summary(modelo_glm_mu_NE_15)
 # executar o programa. A sequência de comandos é a seguinte:               
 #
        fit.model <- modelo_glm_mu_NE_15
-       attach(aux)
+       attach(Temporario)
        source("envel_gama.txt")                                      
 #
 # A saída será o gráfico de envelope para o resíduo componente 
@@ -3412,32 +3860,117 @@ qqnorm(med,axes=F,xlab="", ylab="", type="l",ylim=faixa,lty=2, main="")
 ```
 
 ```{r}
+#Normalidade dos residuos
+jarque.bera.test(td) #Residuo Studentizado # p > 0,05 = normal
+
+```
+
+
+
+### Removendo mais linhas
+
+```{r}
+teste<-td
+teste1 <- sort(teste)
+match(teste1[2:10], teste)
+```
+
+```{r}
+Temporario1<- Temporario[c( -222, -289, -373, -213, -432,  -25, -393),]
+modelo_glm_mu_NE_16<- glm(FLO_M~.,Temporario1, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_mu_NE_16)
+```
+```{r}
+fit.model<-modelo_glm_mu_NE_16
+m.C <- cbind(0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario1$GENOTIPO
+SELECAO_GEN <- c("BRS A701 CL")
+
+Temporario1$GENOTIPO <- c(ifelse(Temporario1$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_mu_NE_17<- glm(FLO_M~.,Temporario1, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_mu_NE_17)
+```
+Tmin_fld_m (p = 0.056808)
+
+```{r}
+fit.model<-modelo_glm_mu_NE_17
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario1<-Temporario1 %>% select(-Tmin_fld_m)
+modelo_glm_mu_NE_18<- glm(FLO_M~.,Temporario1, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_mu_NE_18)
+```
+Tmin_Maxima (p = 0.104800) 
+
+```{r}
+fit.model<-modelo_glm_mu_NE_18
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0
+
+)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario1<-Temporario1 %>% select(-Tmin_Maxima)
+modelo_glm_mu_NE_19<- glm(FLO_M~.,Temporario1, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_mu_NE_19)
+```
+Tmax_Maxima (p = 0.081099)
+
+```{r}
+fit.model<-modelo_glm_mu_NE_19
+m.C <- cbind(
+0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario1<-Temporario1 %>% select(-Tmax_Maxima)
+modelo_glm_mu_NE_20<- glm(FLO_M~.,Temporario1, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_mu_NE_20)
+```
+UR_V (p = 0.059305)
+
+```{r}
+fit.model<-modelo_glm_mu_NE_20
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+```{r}
+Temporario1<-Temporario1 %>% select(-UR_V)
+modelo_glm_mu_NE_21<- glm(FLO_M~.,Temporario1, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_mu_NE_21)
+```
+
+
+
+```{r}
 #------------------------------------------------------------#
-# Para rodar este programa  deixe no objeto fit.model a saída 
-# do  ajuste  da  regressão com  erros gama.   Deixe  os dados 
-# disponíveis  através do comando attach(...). Depois  use  o 
-# comando source(...) no S-Plus ou R para executar o programa. 
-# A sequência de comandos é a seguinte:
+# Para rodar este programa deixe no objeto fit.model a saída      
+# do ajuste da regressão com erros gama e ligação log.  Deixe     
+# também os dados disponíveis através do comando attach(...).    
+# Depois use o comando source(...) no R ou S-Plus para        
+# executar o programa. A sequência de comandos é a seguinte:               
 #
-         fit.model <- modelo_glm_mu_NE_15
-         attach(aux)
-         source("diag_gama.txt")
+       fit.model <- modelo_glm_mu_NE_21
+       attach(Temporario1)
+      source("envel_gama.txt")                                      
 #
-# A saída terá quatro gráficos: de pontos de alacanca, 
-# de pontos influentes  e  dois de resíduos. Para 
-# identificar os pontos que  mais  se destacam usar o 
-# comando identify(...). Se por exemplo se destacam
-# três pontos no plot(fitted(fit.model),h,...), 
-# após esse comando coloque
-#     
-#        > identify(fitted(fit.model),h,n=3)
-#
-# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
-# resíduos foram colocados os limites ylim=c(a-1,b+1), 
-# em que a é o menor valor e b o maior valor para o resíduo. 
-# Este programa usa a library MASS para estimar o parâmetro
-# fi da gama que  estará guardado no objeto fi.
+# A saída será o gráfico de envelope para o resíduo componente 
+# do desvio padronizado. Para colocar um título no gráfico use
+# o comando title("..."). Para  usar  outras  ligações mudar 
+# no programa abaixo o termo family=Gamma(link=log) para 
+# family=Gamma no caso de ligação  recíproca ou por 
+# family= Gamma(link=identity) no caso de ligação identidade.
 #------------------------------------------------------------#
+par(mfrow=c(1,1))
 X <- model.matrix(fit.model)
 n <- nrow(X)
 p <- ncol(X)
@@ -3446,42 +3979,270 @@ W <- diag(w)
 H <- solve(t(X)%*%W%*%X)
 H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
 h <- diag(H)
-library(MASS)
-fi <- gamma.shape(fit.model)$alpha
-ts <- resid(fit.model,type="pearson")*sqrt(fi/(1-h))
+ro <- resid(fit.model,type="response")
+fi <- (n-p)/sum((ro/(fitted(fit.model)))^ 2)
 td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
-di <- (h/(1-h))*(ts^2)
-par(mfrow=c(2,2))
-a <- max(td)
-b <- min(td)
-plot(fitted(fit.model),h,xlab="Valor Ajustado", ylab="Medida h", pch=16)
-#identify(fitted(fit.model), h, n=1)
 #
-plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
-#identify(di, n=2)
+e <- matrix(0,n,100)
 #
-plot(fitted(fit.model),td,xlab="Valor Ajustado", ylab="Resíduo Componente do Desvio",
-ylim=c(b-1,a+1),pch=16)
-abline(2,0,lty=2)
-abline(-2,0,lty=2)
-#identify(fitted(fit.model),td, n=1)
+for(i in 1:100){
+resp <- rgamma(n,fi)
+resp <- (fitted(fit.model)/fi)*resp
+fit <- glm(resp ~ X, family=Gamma(link=log))
+w <- fit$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit,type="response")
+phi <- (n-p)/sum((ro/(fitted(fit)))^ 2)
+e[,i] <- sort(resid(fit,type="deviance")*sqrt(phi/(1-h)))}
 #
-w <- fit.model$weights
-eta <- predict(fit.model)
-z <- eta + resid(fit.model, type="pearson")/sqrt(w)
-plot(predict(fit.model),z,xlab="Preditor Linear", 
-ylab="Variável z", pch=16)
-par(mfrow=c(1,1))
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:n){
+  eo <- sort(e[i,])
+e1[i] <- (eo[2]+eo[3])/2
+e2[i] <- (eo[97]+eo[98])/2}
+#
+med <- apply(e,1,mean)
+faixa <- range(td,e1,e2)
+par(pty="s")
+qqnorm(td, xlab="Percentil da N(0,1)",
+ylab="Componente do Desvio", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+#
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="", ylab="", type="l",ylim=faixa,lty=2, main="")
+
+#------------------------------------------------------------#          
+```
+
+
+
+### mais 3 linhas
+
+```{r}
+teste<-td
+teste1 <- sort(teste)
+match(teste1[2:3], teste)
+```
+
+```{r}
+Temporario<- Temporario1[c( -166, -256, -159),]
+modelo_glm_mu_NE_22<- glm(FLO_M~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_mu_NE_22)
+```
+```{r}
 #------------------------------------------------------------#
+# Para rodar este programa deixe no objeto fit.model a saída      
+# do ajuste da regressão com erros gama e ligação log.  Deixe     
+# também os dados disponíveis através do comando attach(...).    
+# Depois use o comando source(...) no R ou S-Plus para        
+# executar o programa. A sequência de comandos é a seguinte:               
+#
+       fit.model <- modelo_glm_mu_NE_22
+       attach(Temporario)
+      source("envel_gama.txt")                                      
+#
+# A saída será o gráfico de envelope para o resíduo componente 
+# do desvio padronizado. Para colocar um título no gráfico use
+# o comando title("..."). Para  usar  outras  ligações mudar 
+# no programa abaixo o termo family=Gamma(link=log) para 
+# family=Gamma no caso de ligação  recíproca ou por 
+# family= Gamma(link=identity) no caso de ligação identidade.
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit.model,type="response")
+fi <- (n-p)/sum((ro/(fitted(fit.model)))^ 2)
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+#
+e <- matrix(0,n,100)
+#
+for(i in 1:100){
+resp <- rgamma(n,fi)
+resp <- (fitted(fit.model)/fi)*resp
+fit <- glm(resp ~ X, family=Gamma(link=log))
+w <- fit$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit,type="response")
+phi <- (n-p)/sum((ro/(fitted(fit)))^ 2)
+e[,i] <- sort(resid(fit,type="deviance")*sqrt(phi/(1-h)))}
+#
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:n){
+  eo <- sort(e[i,])
+e1[i] <- (eo[2]+eo[3])/2
+e2[i] <- (eo[97]+eo[98])/2}
+#
+med <- apply(e,1,mean)
+faixa <- range(td,e1,e2)
+par(pty="s")
+qqnorm(td, xlab="Percentil da N(0,1)",
+ylab="Componente do Desvio", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+#
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="", ylab="", type="l",ylim=faixa,lty=2, main="")
+
+#------------------------------------------------------------#          
+```
+
+```{r}
+#Normalidade dos residuos
+jarque.bera.test(td) #Residuo Studentizado # p > 0,05 = normal
 
 ```
 
-## log
+
+
+### mais 2 pontos 
+
+```{r}
+teste<-td
+teste1 <- sort(teste)
+match(teste1[1], teste)
+```
+
+```{r}
+Temporario1<- Temporario[c( -163,-181 ),]
+modelo_glm_mu_NE_23<- glm(FLO_M~.,Temporario1, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_mu_NE_23)
+```
+```{r}
+fit.model<-modelo_glm_mu_NE_23
+m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0
+)
+testeF.CB(fit.model,m.C)
+```
+
+```{r}
+Genotipos  <- Temporario1$GENOTIPO
+SELECAO_GEN <- c("BRS FRONTEIRA")
+
+Temporario1$GENOTIPO <- c(ifelse(Temporario1$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+modelo_glm_mu_NE_23<- glm(FLO_M~.,Temporario1, family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_mu_NE_23)
+```
+
+
+
+
 
 
 ```{r}
- detach("package:MASS", unload = TRUE)
+#------------------------------------------------------------#
+# Para rodar este programa deixe no objeto fit.model a saída      
+# do ajuste da regressão com erros gama e ligação log.  Deixe     
+# também os dados disponíveis através do comando attach(...).    
+# Depois use o comando source(...) no R ou S-Plus para        
+# executar o programa. A sequência de comandos é a seguinte:               
+#
+       fit.model <- modelo_glm_mu_NE_23
+       attach(Temporario1)
+      source("envel_gama.txt")                                      
+#
+# A saída será o gráfico de envelope para o resíduo componente 
+# do desvio padronizado. Para colocar um título no gráfico use
+# o comando title("..."). Para  usar  outras  ligações mudar 
+# no programa abaixo o termo family=Gamma(link=log) para 
+# family=Gamma no caso de ligação  recíproca ou por 
+# family= Gamma(link=identity) no caso de ligação identidade.
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit.model,type="response")
+fi <- (n-p)/sum((ro/(fitted(fit.model)))^ 2)
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+#
+e <- matrix(0,n,100)
+#
+for(i in 1:100){
+resp <- rgamma(n,fi)
+resp <- (fitted(fit.model)/fi)*resp
+fit <- glm(resp ~ X, family=Gamma(link=log))
+w <- fit$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit,type="response")
+phi <- (n-p)/sum((ro/(fitted(fit)))^ 2)
+e[,i] <- sort(resid(fit,type="deviance")*sqrt(phi/(1-h)))}
+#
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:n){
+  eo <- sort(e[i,])
+e1[i] <- (eo[2]+eo[3])/2
+e2[i] <- (eo[97]+eo[98])/2}
+#
+med <- apply(e,1,mean)
+faixa <- range(td,e1,e2)
+par(pty="s")
+qqnorm(td, xlab="Percentil da N(0,1)",
+ylab="Componente do Desvio", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+#
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="", ylab="", type="l",ylim=faixa,lty=2, main="")
+
+#------------------------------------------------------------#          
 ```
+```{r}
+#Normalidade dos residuos
+jarque.bera.test(td) #Residuo Studentizado # p > 0,05 = normal
+
+```
+
+Homocedasticidade
+```{r}
+library(lmtest)
+bptest(modelo_glm_mu_NE_23)
+```
+
+
+```{r}
+df_Modelo_GLM_Nordeste <- Temporario1
+Modelo_GLM_Nordeste <- modelo_glm_mu_NE_23
+```
+
+
+
+## Transf. log
+
+
 
 ```{r}
 Temporario<-Nordeste[,c(-1,-3)]
@@ -3856,12 +4617,99 @@ par(mfrow=c(1,1))
 #------------------------------------------------------------#
 
 ```
-## log log
-
 
 ```{r}
  detach("package:MASS", unload = TRUE)
 ```
+
+### Removendo linhas
+```{r}
+teste<-td
+teste1 <- sort(teste)
+match(teste1[1:3], teste)
+```
+```{r}
+Temporario<- Temporario_glm_log_mu_NE_17[c(-177 ,-175 ,-392),]
+Temporario_glm_log_mu_NE_18<- glm(log(FLO_M)~.,Temporario, family = Gamma(link = "1/mu^2" ))
+summary(Temporario_glm_log_mu_NE_18)
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa deixe no objeto fit.model a saída      
+# do ajuste da regressão com erros gama e ligação log.  Deixe     
+# também os dados disponíveis através do comando attach(...).    
+# Depois use o comando source(...) no R ou S-Plus para        
+# executar o programa. A sequência de comandos é a seguinte:               
+#
+       fit.model <- Temporario_glm_log_mu_NE_18
+       attach(Temporario)
+       source("envel_gama.txt")                                      
+#
+# A saída será o gráfico de envelope para o resíduo componente 
+# do desvio padronizado. Para colocar um título no gráfico use
+# o comando title("..."). Para  usar  outras  ligações mudar 
+# no programa abaixo o termo family=Gamma(link=log) para 
+# family=Gamma no caso de ligação  recíproca ou por 
+# family= Gamma(link=identity) no caso de ligação identidade.
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit.model,type="response")
+fi <- (n-p)/sum((ro/(fitted(fit.model)))^ 2)
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+#
+e <- matrix(0,n,100)
+#
+for(i in 1:100){
+resp <- rgamma(n,fi)
+resp <- (fitted(fit.model)/fi)*resp
+fit <- glm(resp ~ X, family=Gamma(link=log))
+w <- fit$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit,type="response")
+phi <- (n-p)/sum((ro/(fitted(fit)))^ 2)
+e[,i] <- sort(resid(fit,type="deviance")*sqrt(phi/(1-h)))}
+#
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:n){
+  eo <- sort(e[i,])
+e1[i] <- (eo[2]+eo[3])/2
+e2[i] <- (eo[97]+eo[98])/2}
+#
+med <- apply(e,1,mean)
+faixa <- range(td,e1,e2)
+par(pty="s")
+qqnorm(td, xlab="Percentil da N(0,1)",
+ylab="Componente do Desvio", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+#
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="", ylab="", type="l",ylim=faixa,lty=2, main="")
+
+#------------------------------------------------------------#          
+```
+
+
+## Transf. log log
+
+
+
 
 ```{r}
 Temporario<-Nordeste[,c(-1,-3)]
@@ -4238,6 +5086,532 @@ plot(predict(fit.model),z,xlab="Preditor Linear",
 ylab="Variável z", pch=16)
 par(mfrow=c(1,1))
 #------------------------------------------------------------#
+
+```
+
+```{r}
+ detach("package:MASS", unload = TRUE)
+```
+
+### Removendo linhas
+```{r}
+teste<-td
+teste1 <- sort(teste)
+match(teste1[1:3], teste)
+```
+```{r}
+Temporario<- Temporario_glm_log_log_mu_NE_17[c(-177 ,-175 ,-392),]
+modelo_glm_log_log_mu_NE_18<- glm((log(log(FLO_M)))~.,Temporario , family = Gamma(link = "1/mu^2" ))
+summary(modelo_glm_log_log_mu_NE_18)
+```
+
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa deixe no objeto fit.model a saída      
+# do ajuste da regressão com erros gama e ligação log.  Deixe     
+# também os dados disponíveis através do comando attach(...).    
+# Depois use o comando source(...) no R ou S-Plus para        
+# executar o programa. A sequência de comandos é a seguinte:               
+#
+       fit.model <- modelo_glm_log_log_mu_NE_18
+       attach(Temporario)
+       source("envel_gama.txt")                                      
+#
+# A saída será o gráfico de envelope para o resíduo componente 
+# do desvio padronizado. Para colocar um título no gráfico use
+# o comando title("..."). Para  usar  outras  ligações mudar 
+# no programa abaixo o termo family=Gamma(link=log) para 
+# family=Gamma no caso de ligação  recíproca ou por 
+# family= Gamma(link=identity) no caso de ligação identidade.
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+w <- fit.model$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit.model,type="response")
+fi <- (n-p)/sum((ro/(fitted(fit.model)))^ 2)
+td <- resid(fit.model,type="deviance")*sqrt(fi/(1-h))
+#
+e <- matrix(0,n,100)
+#
+for(i in 1:100){
+resp <- rgamma(n,fi)
+resp <- (fitted(fit.model)/fi)*resp
+fit <- glm(resp ~ X, family=Gamma(link=log))
+w <- fit$weights
+W <- diag(w)
+H <- solve(t(X)%*%W%*%X)
+H <- sqrt(W)%*%X%*%H%*%t(X)%*%sqrt(W)
+h <- diag(H)
+ro <- resid(fit,type="response")
+phi <- (n-p)/sum((ro/(fitted(fit)))^ 2)
+e[,i] <- sort(resid(fit,type="deviance")*sqrt(phi/(1-h)))}
+#
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:n){
+  eo <- sort(e[i,])
+e1[i] <- (eo[2]+eo[3])/2
+e2[i] <- (eo[97]+eo[98])/2}
+#
+med <- apply(e,1,mean)
+faixa <- range(td,e1,e2)
+par(pty="s")
+qqnorm(td, xlab="Percentil da N(0,1)",
+ylab="Componente do Desvio", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+#
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="", ylab="", type="l",ylim=faixa,lty=2, main="")
+
+#------------------------------------------------------------#          
+```
+
+# 4) Modelo final LINK 1/mu^2 
+
+
+
+## Importancia dos preditores
+
+```{r}
+if(!require(stats)) install.packages("stats")
+
+Anova<- anova(Modelo_GLM_Nordeste)
+Anova
+```
+```{r}
+
+C_E<-data.frame("Variaveis" = row.names(Anova), "importancia" = (Anova$`Sum Sq`/sum(Anova$`Sum Sq`)))
+C_E<- C_E %>% arrange(desc(importancia))
+options(scipen = 999)
+C_E
+```
+```{r}
+ggplot(aes(x=reorder(Variaveis,-importancia ), y = importancia ),data = C_E)+
+  geom_col(stat = "identity")+
+  labs(y = "Capacidade explicativa", x="" )+
+   scale_y_continuous(labels = percent_format()) +
+        theme_classic()+
+  theme(axis.text.x = element_text(angle=45, hjust=1, vjust = 1))
+```
+
+## Contribuição individual dos preditores
+### Tabela coef. var
+
+```{r}
+# Calculando coeficiente de variação e médias considerando os valores relacionados aos GENOTIPOs contidos no AA
+
+# Coeficiente de variação
+coef_var = function(x) {
+  coefi<-sd(x)/mean(x)*100
+  return(coefi)
+}
+# Estimativas
+ 
+Estimativas<-summary(Modelo_GLM_Nordeste)
+Estimativas<-data.frame(Estimativas$coefficients)
+Estimativas<-data.frame("variaveis" = rownames(Estimativas) ,"Estimativa" = Estimativas$Estimate)
+
+# variáveis
+
+
+ variaveis = c("latitude", "Altitude",  "Tmax_R","Tmax_Media","Tmax_V",   "Tmax_ACC_V", "Tmin_Minima","Tmin_V", "Tmin_ACC_V", "Tmin_ACC_R","Chuva_ACC_V","Chuva_ACC_R", "Rad_ACC", "Rad_ACC_V","UR_Media","UR_R", "Graus_dia_ciclo","Graus_dia_FLO", "FLO_M" ) 
+
+
+
+coef_med<-list()
+
+
+
+genotipos = c("AA", "IRGA 424")
+
+# filtro
+for (z in 1:length(genotipos)) {
+  
+
+ Temporario1 = subset(df_Modelo_GLM_Nordeste, GENOTIPO %in% genotipos[z] )
+
+
+
+ for(variavel in variaveis){
+        # Selecionando colunas
+        indexVar = which(names(Temporario1) %in% c('GENOTIPO','FLO_M',variavel))
+        
+        # Calculando coeficiente de variação
+        coef_variacao = lapply(Temporario1[,-indexVar],coef_var)
+        coef_variacao = do.call('rbind',coef_variacao)
+        coef_variacao = as.data.frame(coef_variacao)
+        
+        # calculando a media
+        
+        media = lapply(Temporario1[,-indexVar],mean)
+        media = do.call('rbind',media)
+        media = as.data.frame(media)
+        
+        # lista 
+ }
+ coef_med[[z]]<- c("variaveis" = c(row.names(coef_variacao)),"CV" = c(coef_variacao$V1), "Medias" = c(media$V1))
+
+
+ }
+ 
+teste<-do.call(cbind.data.frame, coef_med)
+
+coef_med_AA<- data.frame("variaveis"= c(teste[c(1:18),1]), "CV" = as.numeric(c(teste[c(19:36),1])), "Medias"= as.numeric(c(teste[c(37:54),1]) ))
+  coef_med_AA[19,1]<- c("(Intercept)")
+  coef_med_AA[19,3]<- c(1)
+  coef_med_AA<-coef_med_AA %>% inner_join(Estimativas)
+  coef_med_AA$`Est_X_Med`<- c(coef_med_AA$Estimativa*coef_med_AA$Medias)
+coef_med_AA
+
+coef_med_IRGA424<- data.frame("variaveis"= c(teste[c(1:18),2]), "CV" = as.numeric(c(teste[c(19:36),2])), "Medias"= as.numeric(c(teste[c(37:54),2]) ))
+  coef_med_IRGA424[19,1]<- c("(Intercept)")
+  coef_med_IRGA424[19,3]<- c(1)
+  coef_med_IRGA424<-coef_med_IRGA424 %>% inner_join(Estimativas)
+  coef_med_IRGA424[19,4]<- c(coef_med_IRGA424[19,4]+Estimativas[17,2])# linha 21 é irga 424
+  coef_med_IRGA424$`Est_X_Med`<- c(coef_med_IRGA424$Estimativa*coef_med_IRGA424$Medias)
+coef_med_IRGA424
+
+```
+
+### Corte sem pontos reais
+
+```{r , message=F , warning= F, include=F}
+ # Intervalo observado das variáveis
+ # formula é y = B1X1+B2X2 ... + BnXn em que todas as variáveis (Xn) estão fixadas na média,  com exeção da variável que se deseja ver a relação. Bn é o Estimate no modelo_Centro_oeste
+ 
+ # Nomes variaveis
+ interVariaveis = c("latitude", "Altitude",  "Tmax_R","Tmax_Media","Tmax_V",   "Tmax_ACC_V", "Tmin_Minima","Tmin_V", "Tmin_ACC_V", "Tmin_ACC_R","Chuva_ACC_V","Chuva_ACC_R", "Rad_ACC", "Rad_ACC_V","UR_Media","UR_R", "Graus_dia_ciclo","Graus_dia_FLO")
+
+ plots = list()
+ plot  = list()
+ coef_meds = list()
+ 
+ coef_meds[1]<- list(coef_med_AA)
+  coef_meds[2]<- list(coef_med_IRGA424)
+ 
+ FLOR_previsto_temp<- list() 
+
+ for (j in 1:2) {
+ coef<- as.data.frame(coef_meds[[j]])
+ #Temporario1 = subset(df_Modelo_GLM_Nordeste, GENOTIPO %in% genotipos[j] )
+ 
+ for(i in 1:length(interVariaveis)){
+   
+   # Obtendo index
+   indexCOEF = which(coef$variaveis %in% interVariaveis[i])
+ 
+   if(length(indexCOEF) > 0){
+     
+     # Calculo
+     Est_X_med = sum(coef[-indexCOEF, 5])
+     OBS = unique(df_Modelo_GLM_Nordeste[, interVariaveis[i]])
+     
+      
+     
+     # Criando data.frame temporario
+     previsto_temp = data.frame(OBS,
+                                prev = Est_X_med + (OBS * (coef[indexCOEF, 4])))
+     # Renomeando colunas
+     nomesColunas = c(
+       paste(interVariaveis[i]),
+       paste(interVariaveis[i], "FLO", "prev", sep = "_")
+     )
+     colnames(previsto_temp) = nomesColunas
+     
+     FLOR_previsto_temp[[i]]<-previsto_temp
+            
+     #previsto_temp = previsto_temp %>%  filter(between(previsto_temp[,2], 50 , 110))
+
+
+     # Graficos
+     g = ggplot(previsto_temp, aes_string(x = nomesColunas[1], y = nomesColunas[2] )) +
+       geom_point()+ 
+       geom_smooth(formula = y ~ x)+
+        labs(x = nomesColunas[1], y = "")
+      
+
+     
+     plot[[i]] = g
+     
+   }
+   FLOR_previsto[[j]]<-FLOR_previsto_temp
+
+       plots[[j]] =  plot
+ }  
+ }
+    
+
+# Plotando graficos
+
+ figura1<- ggarrange(plots = plots[[1]])  # AA 
+  
+ figura2<- ggarrange(plots = plots[[2]])# IRGA 424
+```
+```{r}
+  ggpubr::annotate_figure(figura1, top = "Respostas relativas aos genótipos agrupados na média", left = "Florescimento médio previsto")
+
+  ggpubr::annotate_figure(figura2, top = "Respostas relativas ao genótipo IRGA 424", left = "Florescimento médio previsto")
+
+```
+
+### Corte com pontos reais 
+
+```{r , message=F , warning= F, include=F}
+ # Intervalo observado das variáveis
+ # formula é y = B1X1+B2X2 ... + BnXn em que todas as variáveis (Xn) estão fixadas na média,  com exeção da variável que se deseja ver a relação. Bn é o Estimate no modelo_Centro_oeste
+ 
+ # Nomes variaveis
+ interVariaveis = c("latitude", "Altitude",  "Tmax_R","Tmax_Media","Tmax_V",   "Tmax_ACC_V", "Tmin_Minima","Tmin_V", "Tmin_ACC_V", "Tmin_ACC_R","Chuva_ACC_V","Chuva_ACC_R", "Rad_ACC", "Rad_ACC_V","UR_Media","UR_R", "Graus_dia_ciclo","Graus_dia_FLO")
+
+ plots = list()
+ plot  = list()
+ coef_meds = list()
+ 
+ coef_meds[1]<- list(coef_med_AA)
+ coef_meds[2]<- list(coef_med_IRGA424)
+  FLO_OBS = data.frame()
+ FLOR_previsto<- list()
+ FLOR_previsto_temp<- list()
+
+ for (j in 1:2) {
+ coef<- as.data.frame(coef_meds[[j]])
+ filtro = subset(df_Modelo_GLM_Nordeste, GENOTIPO %in% genotipos[j] )
+ 
+ for(i in 1:length(interVariaveis)){
+   
+   # Obtendo index
+   indexCOEF = which(coef$variaveis %in% interVariaveis[i])
+ 
+   if(length(indexCOEF) > 0){
+     
+     # Calculo
+     Est_X_med = sum(coef[-indexCOEF, 5])
+     OBS = unique(df_Modelo_GLM_Nordeste[, interVariaveis[i]])
+     FLO_OBS = filtro %>% group_by_at(interVariaveis[i]) %>% summarise(FLO_M = mean(FLO_M))
+      colnames(FLO_OBS) <- c("X", "FLO_M")
+      
+     
+     # Criando data.frame temporario
+     previsto_temp = data.frame(OBS,
+                                prev = Est_X_med + (OBS * (coef[indexCOEF, 4])))
+     # Renomeando colunas
+     nomesColunas = c(
+       paste(interVariaveis[i]),
+       paste(interVariaveis[i], "FLO", "prev", sep = "_")
+     )
+     colnames(previsto_temp) = nomesColunas
+     
+     FLOR_previsto_temp[[i]]<-previsto_temp
+     
+
+     
+     # Graficos
+       g = ggplot() +
+       geom_point(data = FLO_OBS, aes_string(x = "X" , y = "FLO_M"  ), color = "black") +
+       geom_smooth(data = FLO_OBS, aes_string(x = "X" , y = "FLO_M"), formula = y ~ x, color = "blue"  )+
+        geom_point(data = previsto_temp, aes_string(x = nomesColunas[1], y = nomesColunas[2] ), color = "red") +
+       geom_smooth(data = previsto_temp, aes_string(x = nomesColunas[1], y = nomesColunas[2] ),formula = y ~ x, color = "red")+
+        labs(x = nomesColunas[1], y = "")
+      
+
+     
+     plot[[i]] = g
+     
+   }
+   FLOR_previsto[[j]]<-FLOR_previsto_temp
+
+       plots[[j]] =  plot
+ }  
+ }
+    
+
+# Plotando graficos
+
+ figura1<- ggarrange(plots = plots[[1]])  # AA 
+  
+ figura2<- ggarrange(plots = plots[[2]]) # IRGA 430
+```
+```{r}
+  ggpubr::annotate_figure(figura1, top = "Respostas relativas aos genótipos agrupados na média", left = "Florescimento médio")
+
+  ggpubr::annotate_figure(figura2, top = "Respostas relativas ao genótipo IRGA 430", left = "Florescimento médio")
+
+```
+### Somente quartis 
+
+```{r}
+
+interVariaveis = c("latitude", "Altitude",  "Tmax_R","Tmax_Media","Tmax_V",   "Tmax_ACC_V", "Tmin_Minima","Tmin_V", "Tmin_ACC_V", "Tmin_ACC_R","Chuva_ACC_V","Chuva_ACC_R", "Rad_ACC", "Rad_ACC_V","UR_Media","UR_R", "Graus_dia_ciclo","Graus_dia_FLO")
+
+genotipos = c("AA","IRGA 424")
+
+quart<- list()
+quartis=data.frame()
+Quartil <- list()
+Teste = list()
+# Estimativas
+ 
+ Estimativas<-summary(Modelo_GLM_Nordeste)
+Estimativas<-data.frame(Estimativas$coefficients)
+Estimativas<-data.frame("variaveis" = rownames(Estimativas) ,"Estimativa" = Estimativas$Estimate)
+ 
+for (j in 1:2) {
+ 
+        Temporario1 = subset(df_Modelo_GLM_Nordeste, GENOTIPO %in% genotipos[j] )
+
+ 
+for(i in 1:length(interVariaveis)){
+         
+variavel = data.frame(Temporario1[,interVariaveis[i]])
+quart[[interVariaveis[i]]] = quantile(variavel[,1] , c(0.25 , 0.50 , 0.75))
+ }
+
+teste<-do.call(cbind.data.frame, quart)
+teste<-as.data.frame(t(teste))
+quartis = data.frame(row.names(teste), teste$`25%`,teste$`50%`, teste$`75%` )
+colnames(quartis)<- c("variaveis", "25%","50%", "75%")
+
+
+quartis[17,1]<- c("(Intercept)")
+  quartis[17,3]<- c(1)
+  quartis<-quartis %>% inner_join(Estimativas)
+  quartis$`Est_X_Mediana`<- c(quartis$Estimativa*quartis$`50%`)
+Teste[[j]]<-do.call(cbind.data.frame, quart)  
+       
+  Quartil[[genotipos[j]]]<-quartis 
+}
+
+Quartil[["AA"]]
+Quartil[["IRGA 424"]]
+```
+
+```{r, message=F , warning= F, include=F}
+
+ # Intervalo observado das variáveis
+ # formula é y = B1X1+B2X2 ... + BnXn em que todas as variáveis (Xn) estão fixadas na média,  com exeção da variável que se deseja ver a relação. Bn é o Estimate no modelo_Centro_oeste_corrigido
+
+ interVariaveis = c("longitude", "Altitude", "Tmax_Maxima", "Tmax_R", "Tmax_ACC_R", "Tmin_V", "Tmin_ACC_V", "Tmin_fld_m", "Tmin_R",  "Tmin_ACC_R",  "Rad_ACC", "Rad_ACC_V", "UR_Media", "UR_R", "Graus_dia_ciclo", "Graus_dia_FLO")
+
+genotipos = c("AA", "IRGA 424")
+
+
+  plot  = list()
+  plots = list()
+ 
+previsto<-list()
+
+for (j in 1:2) {
+      Temporario <- Quartil[[genotipos[j]]]
+              Temporario2 = as.data.frame(Teste[[j]])
+
+ for(i in 1:length(interVariaveis)){
+   
+   # Obtendo index
+   indexCOEF = which(Temporario$variaveis %in% interVariaveis[i])
+ 
+   if(length(indexCOEF) > 0){
+     
+     # Calculo
+     Est_X_medana = sum(Temporario[-indexCOEF, 6])
+     quartil = Temporario2[,interVariaveis[i]]
+     
+      
+     
+     # Criando data.frame temporario
+     previsto_temp = data.frame(quartil,
+                                prev = Est_X_medana + (quartil * (Temporario[indexCOEF, 5])))
+     # Renomeando colunas
+     nomesColunas = c(
+       paste(interVariaveis[i]),
+       paste("Florescimento_previsto", i, sep = ".")
+     )
+         colnames(previsto_temp) = nomesColunas
+
+     # Graficos
+     g = ggplot(previsto_temp, aes_string(x = nomesColunas[1], y = nomesColunas[2] )) +
+       geom_point()+ 
+       geom_line()+
+        labs(x = nomesColunas[1], y = "")
+      
+     
+
+     
+        
+   }
+   plot[[i]] = g
+  
+  previsto[[genotipos[j]]][[i]]<-previsto_temp   
+    
+  
+ }
+  plots[[j]] = plot  
+}
+
+figura1<- ggarrange(plots = plots[[1]])  # AA 
+figura2<- ggarrange(plots = plots[[2]])  # IRGA 424  
+
+```
+```{r}
+tabela = list()
+Tabela = list()
+for (i in 1:4) {
+ 
+tabela[[i]]<- do.call(cbind.data.frame, previsto[[i]])
+
+Tabela[[i]]<- data.frame(t(tabela[[1]]))
+
+colnames(Tabela[[i]])<- c("25%", "50%", "75%")
+}
+
+Tabela[[1]] # AA
+
+Tabela[[2]] # IRGA 424
+```
+```{r}
+  ggpubr::annotate_figure(figura1, top = "Respostas relativas aos genótipos agrupados na média", left = "Florescimento médio previsto")
+
+  ggpubr::annotate_figure(figura2, top = "Respostas relativas ao genótipo IRGA 424", left = "Florescimento médio previsto")
+```
+
+
+
+## Erro de previsão
+
+```{r}
+
+Temporario1<- df_Modelo_GLM_Nordeste
+
+Temporario1$`Yhat` <-exp(predict ( Modelo_GLM_Nordeste, df_Modelo_GLM_Nordeste ))
+Temporario1$`residual` = c(exp(resid ( Modelo_GLM_Nordeste )))
+Temporario1$`Y_yhat` = c(Temporario1$FLO_M - Temporario1$Yhat)
+
+
+  
+  
+  boxplot(Temporario1$Y_yhat, main = "Todos os genótipos", xlab = "Y - Yhat" )
+  plot(y = Temporario1$FLO_M, x = Temporario1$Yhat,  main = "Todos os genótipos", xlab = "Yhat", ylab = "Y", pch = 20, 
+     col = "black") 
+
+ 
+  
+  teste = subset(Temporario1, GENOTIPO %in% "IRGA 424" )
+  boxplot(teste$Y_yhat, main = "Genótipo IRGA 424", xlab = "Y - Yhat" )
+  plot(y = teste$FLO_M, x = teste$Yhat,  main = "Genótipo IRGA 424", xlab = "Yhat", ylab = "Y", pch = 20, 
+     col = "black") 
+  
+  
+  
+ 
 
 ```
 

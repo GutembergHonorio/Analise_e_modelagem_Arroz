@@ -261,7 +261,7 @@ plot(modelo_GAM_Sul, rug = TRUE, residuals = TRUE,
      pch = 1, cex = 1)
 ```
 ```{r}
-plot.gam(modelo_GAM_Sudeste)
+plot.gam(modelo_GAM_Sudeste,  pages=1)
 ```
 
 ```{r}
@@ -279,6 +279,214 @@ Temporario$`Y_yhat` = c(Temporario$FLO_M - Temporario$Yhat)
      col = "black" , cex.lab = 1.5) 
 ```
  
+# Validação cruzada
+
+```{r}
+# Genótipos sem variabilidade removidos tanto do LM quanto do GAM
+Genotipos  <- Sudeste$GENOTIPO
+SELECAO_GEN <- c("ALIANCA","IRGA 428","BRS PAMPA","SCSBRS 113 TIO TAKA","PR498","BRS A702 CL","IRGA 425","PR67","IRGA 426","SC138","URUCUI","BRS SINUELO CL","IRGA 427","PR306")
+
+Sudeste$GENOTIPO <- c(ifelse(Sudeste$GENOTIPO %in% SELECAO_GEN, 0 , Genotipos))
+
+Sudeste <- Sudeste[Sudeste$GENOTIPO != 0,]
+```
+
+## LM
+
+```{r}
+res_Sudeste_LM<- NULL
+for(i in 1:100) {
+
+treinamento = NULL
+predicao = NULL
+
+nomesGenotipos = unique(Sudeste$GENOTIPO)
+
+for (nomeGen in nomesGenotipos) {
+  
+  # Contando quantas vezes o genotipo aparece
+  
+  indexGen = which(Sudeste$GENOTIPO %in% nomeGen)
+  
+  # Verificando quantidade
+  
+  if (length(indexGen) <= 2) {
+    
+    # Adicionando informacao genotipo ao data.frame de trainemanto
+    
+    tempData = Sudeste[Sudeste$GENOTIPO == nomeGen, ]
+    treinamento = rbind(treinamento, tempData)
+    
+    
+  } else {
+    
+    # Genotipos que aparem mais de 3
+    tempData = Sudeste[Sudeste$GENOTIPO == nomeGen, ]
+    
+    # Separando data.frame em treinamento e teste
+    porcentagem = sample.split(tempData$GENOTIPO, SplitRatio = .70)
+    
+    # Treinamento
+    treinamento = rbind(treinamento, subset(tempData, porcentagem == TRUE))
+    
+    # Predicao
+    predicao = rbind(predicao, subset(tempData, porcentagem == FALSE))
+    
+  }
+
+}
+
+Genotipos  <- treinamento$GENOTIPO
+SELECAO_GEN <- c("BR IRGA 409","BRS 7 TAIM"	,"BRS A704"	,"BRS JACANA"	,"BRS QUERENCIA"	,"IAC1289"	,"IAPAR 58"	,"IRGA 417"	,"IRGA 422 CL"	,"IRGA 424"	,"JEQUITIBA"	,"PR349"	,"PR380"	,"SCS 112"	,"SCS 121 CL", "JAVAE","SCSBRS 111")
+
+treinamento$GENOTIPO <- c(ifelse(treinamento$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+
+test = lm(FLO_M ~ GENOTIPO + Tmin_Minima + Tmin_fld_m + Rad_ACC + Rad_ACC_V + 
+    UR_fld_m, data = treinamento)
+
+Genotipos  <- predicao$GENOTIPO
+SELECAO_GEN <- c("BR IRGA 409","BRS 7 TAIM"	,"BRS A704"	,"BRS JACANA"	,"BRS QUERENCIA"	,"IAC1289"	,"IAPAR 58"	,"IRGA 417"	,"IRGA 422 CL"	,"IRGA 424"	,"JEQUITIBA"	,"PR349"	,"PR380"	,"SCS 112"	,"SCS 121 CL", "JAVAE","SCSBRS 111")
+
+predicao$GENOTIPO <- c(ifelse(predicao$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+
+aux = predict(test,predicao)
+aux
+
+res_Sudeste_LM[i] = mean(abs(predicao$FLO_M - aux) )
+print(i)
+}
+```
+## GAM
+```{r}
+res_Sudeste_GAM<- NULL
+for(i in 1:100) {
+
+treinamento = NULL
+predicao = NULL
+
+nomesGenotipos = unique(Sudeste$GENOTIPO)
+
+for (nomeGen in nomesGenotipos) {
+  
+  # Contando quantas vezes o genotipo aparece
+  
+  indexGen = which(Sudeste$GENOTIPO %in% nomeGen)
+  
+  # Verificando quantidade
+  
+  if (length(indexGen) <= 2) {
+    
+    # Adicionando informacao genotipo ao data.frame de trainemanto
+    
+    tempData = Sudeste[Sudeste$GENOTIPO == nomeGen, ]
+    treinamento = rbind(treinamento, tempData)
+    
+    
+  } else {
+    
+    # Genotipos que aparem mais de 3
+    tempData = Sudeste[Sudeste$GENOTIPO == nomeGen, ]
+    
+    # Separando data.frame em treinamento e teste
+    porcentagem = sample.split(tempData$GENOTIPO, SplitRatio = .70)
+    
+    # Treinamento
+    treinamento = rbind(treinamento, subset(tempData, porcentagem == TRUE))
+    
+    # Predicao
+    predicao = rbind(predicao, subset(tempData, porcentagem == FALSE))
+    
+  }
+
+}
+
+Genotipos  <- treinamento$GENOTIPO
+SELECAO_GEN <- c("BRS ALVORADA","OUROMINAS", "BRS BIGUA", "METICA 1", "CICA 8", "BRS JABURU", "BRS GUARA", "BRS FORMOSO","BR IRGA 409","BRS 7 TAIM",	"BRS A704",	"BRS CATIANA",	"BRS JACANA",	"BRS PAMPEIRA",	"BRS QUERENCIA",	"BRS TROPICAL",	"IAC1289",	"IAPAR 58",	"IRGA 417",	"IRGA 424",	"JEQUITIBA",	"PR349",	"PR380",	"SC173",	"SC237",	"SC240",	"SC250",	"SCS 112",	"SCS 116 SATORU",	"SCS 121 CL",	"SCSBRS PIRACEMA")
+
+treinamento$GENOTIPO <- c(ifelse(treinamento$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+
+test = gam(FLO_M ~ GENOTIPO + s(Tmax_ACC_R) + s(Tmax_Minima) + s(Tmin_ACC_V), family = gaussian, data = treinamento)
+
+Genotipos  <- predicao$GENOTIPO
+SELECAO_GEN <- c("BRS ALVORADA","OUROMINAS", "BRS BIGUA", "METICA 1", "CICA 8", "BRS JABURU", "BRS GUARA", "BRS FORMOSO","BR IRGA 409","BRS 7 TAIM",	"BRS A704",	"BRS CATIANA",	"BRS JACANA",	"BRS PAMPEIRA",	"BRS QUERENCIA",	"BRS TROPICAL",	"IAC1289",	"IAPAR 58",	"IRGA 417",	"IRGA 424",	"JEQUITIBA",	"PR349",	"PR380",	"SC173",	"SC237",	"SC240",	"SC250",	"SCS 112",	"SCS 116 SATORU",	"SCS 121 CL",	"SCSBRS PIRACEMA")
+
+predicao$GENOTIPO <- c(ifelse(predicao$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+
+aux = predict(test,predicao)
+aux
+
+res_Sudeste_GAM[i] = mean(abs(predicao$FLO_M - aux) )
+print(i)
+}
+```
+## ERRO
+```{r}
+GAM<- data.frame("Erro" = res_Sudeste_GAM, "Modelo" = "GAM")
+LM<- data.frame("Erro" = res_Sudeste_LM, "Modelo" = "LM")
+
+
+val<- data.frame()
+val<- data.frame("Erro" = c(LM$Erro,GAM$Erro), "Modelo" = c(LM$Modelo,GAM$Modelo) )
+
+v5<-ggplot(data = val, aes(y = Erro, x= Modelo, color=Modelo, fill = Modelo )) +
+   geom_boxplot(
+    width = .2, fill = "white",
+    size = 1.5, outlier.shape = NA
+  ) +
+  ggdist::stat_halfeye(
+    adjust = .60, 
+    width = .55, 
+    color = NA, 
+    position = position_nudge(x = .14)
+  ) +
+  geom_point(
+    position = position_nudge(x = -.22),
+    shape = 95, size = 12, alpha = .25
+  )+
+  labs(y= "Erro médio absoluto (dias)")+
+  guides(color=FALSE)+
+  scale_color_viridis_d()+
+   scale_fill_viridis_d()+
+   theme_classic(base_size = 12)+
+ theme(legend.position="none")
+```
+```{r}
+((v1|v2)/(v3|v5))/(v4)+plot_annotation(tag_levels = 'A', tag_prefix = '(', tag_suffix = ')')
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

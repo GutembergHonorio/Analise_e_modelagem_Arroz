@@ -11,6 +11,7 @@ library(tidyverse)
 #library(mgcv)
 library(gam)
 
+if(!require(caTools)) install.packages("caTools")
 if(!require(stats)) install.packages("stats")
 if(!require(Hmisc)) install.packages("Hmisc")
 
@@ -164,6 +165,7 @@ modelo_GAM_CENTRO_OESTE<- gam(FLO_M ~ GENOTIPO + s(Tmax_Minima) + Tmin_V + Tmin_
     Tmin_R + s(Tmin_ACC_R) +  s(Rad_ACC) + 
     s(Graus_dia_FLO), family = gaussian, data = Temporario)
 
+options(scipen = 999)
 summary(modelo_GAM_CENTRO_OESTE)
 ```
 ```{r}
@@ -176,7 +178,9 @@ plot(modelo_GAM_CENTRO_OESTE, rug = TRUE, residuals = TRUE,
      pch = 1, cex = 1)
 ```
 ```{r}
-plot.gam(modelo_GAM_CENTRO_OESTE)
+
+plot.gam(modelo_GAM_CENTRO_OESTE,  pages=1 )
+
 ```
 
 ```{r}
@@ -233,80 +237,198 @@ BIC(modelo_Centro_oeste)
 
 
 # Validação cruzada
+## LM
 ```{r}
+res_Centro_oeste_LM<- NULL
+for(i in 1:100) {
 
-#for(i in 1:100) {
+treinamento = NULL
+predicao = NULL
+
+nomesGenotipos = unique(Centro_oeste$GENOTIPO)
+
+for (nomeGen in nomesGenotipos) {
   
-  treinamento = NULL
-  predicao = NULL
+  # Contando quantas vezes o genotipo aparece
   
-  nomesGenotipos = unique(Centro_oeste$GENOTIPO)
+  indexGen = which(Centro_oeste$GENOTIPO %in% nomeGen)
   
-  for (nomeGen in nomesGenotipos) {
+  # Verificando quantidade
+  
+  if (length(indexGen) <= 2) {
     
-    # Contando quantas vezes o genotipo aparece
+    # Adicionando informacao genotipo ao data.frame de trainemanto
     
-    indexGen = which(Centro_oeste$GENOTIPO %in% nomeGen)
+    tempData = Centro_oeste[Centro_oeste$GENOTIPO == nomeGen, ]
+    treinamento = rbind(treinamento, tempData)
     
-    # Verificando quantidade
     
-    if (length(indexGen) <= 2) {
-      
-      # Adicionando informacao genotipo ao data.frame de trainemanto
-      
-      tempData = Centro_oeste[Centro_oeste$GENOTIPO == nomeGen, ]
-      treinamento = rbind(treinamento, tempData)
-      
-      
-    } else {
-      
-      # Genotipos que aparem mais de 3
-      tempData = Centro_oeste[Centro_oeste$GENOTIPO == nomeGen, ]
-      
-      # Separando data.frame em treinamento e teste
-      porcentagem = sample.split(tempData$GENOTIPO, SplitRatio = .70)
-      
-      # Treinamento
-      treinamento = rbind(treinamento, subset(tempData, porcentagem == TRUE))
-      
-      # Predicao
-      predicao = rbind(predicao, subset(tempData, porcentagem == FALSE))
-      
-    }
+  } else {
+    
+    # Genotipos que aparem mais de 3
+    tempData = Centro_oeste[Centro_oeste$GENOTIPO == nomeGen, ]
+    
+    # Separando data.frame em treinamento e teste
+    porcentagem = sample.split(tempData$GENOTIPO, SplitRatio = .70)
+    
+    # Treinamento
+    treinamento = rbind(treinamento, subset(tempData, porcentagem == TRUE))
+    
+    # Predicao
+    predicao = rbind(predicao, subset(tempData, porcentagem == FALSE))
     
   }
-  
-#}
 
-print(treinamento)
-print(predicao)
-
-```
-
-
-
-```{r}
-
-for (i in 1:100) {
-  aux_ajuste<- NULL
-  aux_pred <- NULL
-  for (j in 1: ngenotipos) {
-    aux<- nomes_genotipos[j]
-    if (n_genotipos[j]< = 2  ) {
-      todas as informaçoes desse genotipo entram no banco de dados de ajuste
-      
-    }
-  }
-set.seed(i)  # toda reamostra guarda semente para replicar 
-aux<-sample.int(n = n_total,size = n_ajuste, replace = FALSE)  
-  
 }
-table(Temporario$GENOTIPO)
 
-modelo_GAM_CENTRO_OESTE$xlevels
+Genotipos  <- treinamento$GENOTIPO
+SELECAO_GEN <- c("BR IRGA 409", "BR IRGA 410",	"BRS 7 TAIM",	"BRS A701 CL",	"BRS A702 CL",	"BRS CIRAD 302",	"BRS FRONTEIRA",	"BRS JACANA",	"BRS PAMPA",	"BRS PELOTA",	"BRS SINUELO CL",	"EMPASC 102",	"EPAGRI97-01",	"EPAGRI97-05",	"EPAGRI97-06",	"IAC1289",	"IRGA 417",	"IRGA 422 CL",	"IRGA 424",	"IRGA 424 RI",	"IRGA 425",	"IRGA 426",	"IRGA 427",	"IRGA 429",	"IRGA97-11",	"IRGA97-28",	"JEQUITIBA",	"PR306",	"PR349",	"PR498",	"PR631",	"SC240",	"SC250", "PR67","SCSBRS 111", "IAPAR 58", "SC237", "URUCUI" )
 
-modelo_Centro_oeste$xlevels
+treinamento$GENOTIPO <- c(ifelse(treinamento$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+
+test = lm(FLO_M~ GENOTIPO + longitude + Tmax_Maxima + Tmax_fld_m + Tmax_R + 
+    Tmax_ACC_R + Tmax_Minima + Tmax_V + Tmax_ACC_V + Tmin_Maxima + 
+    Tmin_Minima + Tmin_Media + Tmin_ACC_V + Tmin_fld_m + Tmin_R + 
+    Tmin_ACC_R + Chuva_ACC_V , data = treinamento)
+
+Genotipos  <- predicao$GENOTIPO
+SELECAO_GEN <- c("BR IRGA 409", "BR IRGA 410",	"BRS 7 TAIM",	"BRS A701 CL",	"BRS A702 CL",	"BRS CIRAD 302",	"BRS FRONTEIRA",	"BRS JACANA",	"BRS PAMPA",	"BRS PELOTA",	"BRS SINUELO CL",	"EMPASC 102",	"EPAGRI97-01",	"EPAGRI97-05",	"EPAGRI97-06",	"IAC1289",	"IRGA 417",	"IRGA 422 CL",	"IRGA 424",	"IRGA 424 RI",	"IRGA 425",	"IRGA 426",	"IRGA 427",	"IRGA 429",	"IRGA97-11",	"IRGA97-28",	"JEQUITIBA",	"PR306",	"PR349",	"PR498",	"PR631",	"SC240",	"SC250", "PR67","SCSBRS 111", "IAPAR 58", "SC237", "URUCUI" )
+
+predicao$GENOTIPO <- c(ifelse(predicao$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+
+aux = predict(test,predicao)
 aux
+
+res_Centro_oeste_LM[i] = mean(abs(predicao$FLO_M - aux) )
+#print(i)
+}
 ```
 
+##GAM
+
+```{r}
+res_Centro_oeste_GAM<- NULL
+for(i in 1:100) {
+
+treinamento = NULL
+predicao = NULL
+
+nomesGenotipos = unique(Centro_oeste$GENOTIPO)
+
+for (nomeGen in nomesGenotipos) {
+  
+  # Contando quantas vezes o genotipo aparece
+  
+  indexGen = which(Centro_oeste$GENOTIPO %in% nomeGen)
+  
+  # Verificando quantidade
+  
+  if (length(indexGen) <= 2) {
+    
+    # Adicionando informacao genotipo ao data.frame de trainemanto
+    
+    tempData = Centro_oeste[Centro_oeste$GENOTIPO == nomeGen, ]
+    treinamento = rbind(treinamento, tempData)
+    
+    
+  } else {
+    
+    # Genotipos que aparem mais de 3
+    tempData = Centro_oeste[Centro_oeste$GENOTIPO == nomeGen, ]
+    
+    # Separando data.frame em treinamento e teste
+    porcentagem = sample.split(tempData$GENOTIPO, SplitRatio = .70)
+    
+    # Treinamento
+    treinamento = rbind(treinamento, subset(tempData, porcentagem == TRUE))
+    
+    # Predicao
+    predicao = rbind(predicao, subset(tempData, porcentagem == FALSE))
+    
+  }
+
+}
+Genotipos  <- treinamento$GENOTIPO
+SELECAO_GEN <- c("BR IRGA 409" ,"BR IRGA 410"	,"BRS 7 TAIM"	,"BRS A701 CL"	,"BRS A702 CL"	,"BRS CIRAD 302"	,"BRS FRONTEIRA"	,"BRS JACANA"	,"BRS PELOTA"	,"BRS SINUELO CL"	,"EMPASC 102"	,"EPAGRI97-01"	,"EPAGRI97-05"	,"EPAGRI97-06"	,"IRGA 422 CL"	,"IRGA 424"	,"IRGA 424 RI"	,"IRGA 425"	,"IRGA 426"	,"IRGA97-11"	,"IRGA97-28"	,"JEQUITIBA"	,"PR306"	,"PR349"	,"PR498"	,"PR631"	,"SC240"	,"SC250", "IRGA 427","SCSBRS 111", "BRS PAMPA", "IAC1289", "PR67"
+)
+
+treinamento$GENOTIPO <- c(ifelse(treinamento$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+
+test = gam(FLO_M~GENOTIPO + s(Tmax_Minima) + Tmin_V + Tmin_ACC_V + 
+    Tmin_R + s(Tmin_ACC_R) +  s(Rad_ACC) + 
+    s(Graus_dia_FLO), family = gaussian, data = treinamento)
+
+Genotipos  <- predicao$GENOTIPO
+SELECAO_GEN <- c("BR IRGA 409" ,"BR IRGA 410"	,"BRS 7 TAIM"	,"BRS A701 CL"	,"BRS A702 CL"	,"BRS CIRAD 302"	,"BRS FRONTEIRA"	,"BRS JACANA"	,"BRS PELOTA"	,"BRS SINUELO CL"	,"EMPASC 102"	,"EPAGRI97-01"	,"EPAGRI97-05"	,"EPAGRI97-06"	,"IRGA 422 CL"	,"IRGA 424"	,"IRGA 424 RI"	,"IRGA 425"	,"IRGA 426"	,"IRGA97-11"	,"IRGA97-28"	,"JEQUITIBA"	,"PR306"	,"PR349"	,"PR498"	,"PR631"	,"SC240"	,"SC250", "IRGA 427","SCSBRS 111", "BRS PAMPA", "IAC1289", "PR67"
+)
+
+predicao$GENOTIPO <- c(ifelse(predicao$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+
+aux = predict(test,predicao)
+aux
+
+res_Centro_oeste_GAM[i] = mean(abs(predicao$FLO_M - aux) )
+print(i)
+}
+```
+## Erro
+```{r}
+GAM<- data.frame("Erro" = res_Centro_oeste_GAM, "Modelo" = "GAM")
+LM<- data.frame("Erro" = res_Centro_oeste_LM, "Modelo" = "LM")
+
+
+val<- data.frame()
+val<- data.frame("Erro" = c(LM$Erro,GAM$Erro), "Modelo" = c(LM$Modelo,GAM$Modelo) )
+
+v1<- ggplot(data = val, aes(y = Erro, x= Modelo, color=Modelo, fill = Modelo )) +
+   geom_boxplot(
+    width = .2, fill = "white",
+    size = 1.5, outlier.shape = NA
+  ) +
+  ggdist::stat_halfeye(
+    adjust = .60, 
+    width = .55, 
+    color = NA, 
+    position = position_nudge(x = .14)
+  ) +
+  geom_point(
+    position = position_nudge(x = -.22),
+    shape = 95, size = 12, alpha = .25
+  )+
+  labs(y= "Erro médio absoluto (dias)")+
+  guides(color=FALSE)+
+  scale_color_viridis_d()+
+   scale_fill_viridis_d()+
+   theme_classic(base_size = 12)+
+ theme(legend.position="none")
+
+```
+
+```{r}
+Predito<- data.frame("FLO" = aux, "Dado" = "Predição")
+Obs<- data.frame("FLO" = predicao$FLO_M, "Dado" = "Observado")
+
+
+Pred_obs<- data.frame()
+Pred_obs<- data.frame("Predito" = aux, "Obs" = predicao$FLO_M )
+Pred_obs$cont <- c(seq(1:nrow(Pred_obs)))
+
+Pred_obs
+
+ggplot(Pred_obs)+
+  geom_line(aes(y=Predito, x=cont), color= "red")+
+  geom_line(aes(y=Obs,x=cont), color= "blue")
+```
+
+
+```{r}
+vis.gam ( modelo_GAM_CENTRO_OESTE, view = c ("Tmin_ACC_R", "Graus_dia_FLO" ) , theta = 50 , n.grid = 400 , border = NA ) 
+
+vis.gam(modelo_GAM_CENTRO_OESTE,view = c ("Tmin_ACC_R", "Graus_dia_FLO" ) ,  n.grid =30, theta = 40, border = NA, phi = 32, zlab = "FLorescimento (DAE)", ticktype = "detailed", color = "heat")
+```
+
+
+```{r}
+summary(modelo_GAM_CENTRO_OESTE)
+```
 

@@ -1086,6 +1086,7 @@ coef_med_CATIANA
  
  # Nomes variaveis
  interVariaveis = c("longitude","Tmax_Maxima", "Tmax_fld_m","Tmax_R","Tmax_ACC_R","Tmax_Minima","Tmax_Media",            "Tmin_Maxima","Tmin_ACC_V","Tmin_R","Tmin_ACC_R")              
+plots <- list()
  plot  = list()
  coef_meds = list()
  coef_meds[1]<- list(coef_med_AA)
@@ -5902,11 +5903,17 @@ m.C <- cbind(0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0
 
 testeF.CB(fit.model,m.C)
 ```
+```{r}
+Temporario<- Temporario %>% select(-Altitude)
+modelo_CO_21<-glm(FLO_M~., data = Temporario, family = poisson ) 
+summary(modelo_CO_21)
+```
 
 ```{r}
 Temporario<- Temporario %>% select(-Altitude)
 modelo_CO_20<-lm(FLO_M~., Temporario) 
 summary(modelo_CO_20)
+
 ```
 ## modelo final 
 
@@ -6121,6 +6128,9 @@ Temporario1$`Y_yhat` = c(Temporario1$FLO_M - Temporario1$Yhat)
 ```
 
 
+```{r}
+erro
+```
 
 # 7º tentativa
 
@@ -6912,15 +6922,158 @@ comp2
 anova(modelo_2_Cetro_oeste, modelo_4_Centro_oeste)
 ```
 
-# modelo final
+# MODELO SELECIONADO
 
 ```{r}
 modelo_Centro_oeste<-modelo_6_Cetro_oeste
 
 df_Centro_Oeste<- df_6_Centro_oeste
+
+summary(modelo_Centro_oeste)
 ```
 
+```{r}
+options(scipen = 999)
+summary(modelo_Centro_oeste)
+```
+## Analise de residuos
+```{r}
+#------------------------------------------------------------#
+# Para  rodar este programa deixe no objeto fit.model a saída 
+# do ajuste da regressão do modelo normal linear.Deixe também
+# os dados disponíveis através do comando attach(...). Depois
+# use o comando source(...) no R ou S-plus para executar o 
+# programa. A sequência de comandos é a seguinte:
+fit.model <- modelo_Centro_oeste
+attach(df_Centro_Oeste)
+#source("envel_norm_corrigido.txt")
+#
+# A saída será o gráfico de envelope para o resíduo
+# padronizado. Para colocar  um  título no gráfico após a
+# saída use o comando title("...").
+#------------------------------------------------------------#
+par(mfrow=c(1,1))
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+si <- lm.influence(fit.model)$sigma
+r <- resid(fit.model)
+tsi <- r/(si*sqrt(1-h))
+#
+ident <- diag(n)
+epsilon <- matrix(0,n,100)
+e <- matrix(0,n,100)
+e1 <- numeric(n)
+e2 <- numeric(n)
+#
+for(i in 1:100){
+     epsilon[,i] <- rnorm(n,0,1)
+     e[,i] <- (ident - H)%*%epsilon[,i]
+     u <- diag(ident - H)
+     e[,i] <- e[,i]/sqrt(u)
+     e[,i] <- sort(e[,i],na.last = TRUE)}
+#
+for(i in 1:n){
+     eo <- sort(e[i,])
+     e1[i] <- (eo[2]+eo[3])/2
+     e2[i] <- (eo[97]+eo[98])/2 }
+#
+med <- apply(e,1,mean)
+faixa <- range(tsi,e1,e2,na.rm = TRUE)
+#
+par(pty="s")
+qqnorm(tsi,xlab="Percentil da N(0,1)",
+ylab="Residuo Studentizado", ylim=faixa, pch=16, main="")
+par(new=TRUE)
+qqnorm(e1,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(e2,axes=F,xlab="",ylab="", type="l",ylim=faixa,lty=1, main="")
+par(new=TRUE)
+qqnorm(med,axes=F,xlab="",ylab="",type="l",ylim=faixa,lty=2, main="")
 
+#------------------------------------------------------------#
+```
+```{r}
+#------------------------------------------------------------#
+# Para rodar este programa  deixe no objeto fit.model a saída 
+# do  ajuste  da  regressão com  erro normal. Deixe  os dados 
+# disponíveis  através do comando attach(...). Depois  use  o 
+# comando source(...) no S-Plus ou R para executar o programa. 
+# A sequência de comandos é a seguinte:
+#
+ fit.model <- modelo_Centro_oeste
+attach(df_Centro_Oeste)
+ source("diag_norm_corrigido.txt")
+#
+# A saída terá quatro gráficos: de pontos de alavanca, 
+# de pontos influentes  e  dois de resíduos. Para identificar
+# os pontos que  mais  se destacam usar o comando 
+# identify(...). Se por exemplo se destacam três pontos no 
+# plot(fitted(fit.model),h,...), após esse comando coloque
+#     
+#        > identify(fitted(fit.model),h,n=3)
+#
+# O mesmo pode ser feito nos demais gráficos. Nos gráficos de 
+# resíduos foram traçados os limites ylim=c(a-1,b+1), em que a
+# é o menor valor e b o maior valor para o resíduo.Mude esses 
+# limites  se  necessário.
+#------------------------------------------------------------#
+X <- model.matrix(fit.model)
+n <- nrow(X)
+p <- ncol(X)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
+h <- diag(H)
+lms <- summary(fit.model)
+s <- lms$sigma
+r <- resid(lms)
+ts <- r/(s*sqrt(1-h))
+di <- (1/p)*(h/(1-h))*(ts^2)
+si <- lm.influence(fit.model)$sigma
+tsi <- r/(si*sqrt(1-h))
+fitted.model <- fitted(fit.model)
+ir = which(is.nan(tsi))
+if(length(ir) > 0){
+        tsi = tsi[-ir]
+        fitted.model = fitted.model[-ir]
+}
+
+a <- max(tsi)
+b <- min(tsi)
+par(mfrow=c(2,2))
+plot(h,xlab="Índice", ylab="Medida h", pch=16, ylim=c(0,1))
+cut <- 2*p/n
+abline(cut,0,lty=2)
+identify(h, n=1)
+#title(sub="(A)")
+#
+plot(di,xlab="Índice", ylab="Distância de Cook", pch=16)
+identify(di, n=2)
+#
+plot(tsi,xlab="Índice", ylab="Resíduo Padronizado",
+ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(tsi, n=1)
+#
+plot(fitted.model,tsi,xlab="Valor Ajustado", 
+ylab="Resíduo Padronizado", ylim=c(b-1,a+1), pch=16)
+abline(2,0,lty=2)
+abline(-2,0,lty=2)
+#identify(fitted(fit.model),tsi, n=1)
+par(mfrow=c(1,1))
+#------------------------------------------------------------#
+```
+```{r}
+#Normalidade dos residuos
+jarque.bera.test(tsi) #Residuo Studentizado # p > 0,05 = normal
+
+```
+```{r}
+# Homocedasticidade (Breusch-Pagan)
+ols_test_breusch_pagan(modelo_Centro_oeste) # Prob > Chi2   =  ou > 0,05 = Homocedastico
+```
 ## Grafico estimativas
 ```{r}
 Estimativas<-summary(modelo_Centro_oeste)
@@ -6931,17 +7084,17 @@ quantitativas <- Estimativas[c(33:48),]
 
 quantitativas$crescimento = as.factor(ifelse(quantitativas$Estimativa > 0, yes = 1, no = 0))
 
-ggplot(data = quantitativas, aes(x= fct_reorder(variaveis, Estimativa, .desc = TRUE) , y = Estimativa))+
+aa1<-ggplot(data = quantitativas, aes(x= fct_reorder(variaveis, Estimativa, .desc = TRUE) , y = Estimativa))+
   geom_col(aes(fill = crescimento))+
-  labs(x = "Variáveis independentes", y = "Dias", title = "Ganho médio para data de florescimento com o aumento de uma unidade da variável independentes")+
+  labs(x = "", y = "Dias pré e pós florescimento")+
   #scale_x_discrete(guide = guide_axis(angle = 90))+
         coord_flip()+
         geom_hline(yintercept = 0) +
   guides(fill = FALSE) +
   scale_fill_manual(values = c("firebrick", "dodgerblue4"))+
-        scale_y_continuous(breaks=c(-6,-5.50,-5, -4.50,-4.00 ,-3.50,- 3 , -2.50, -2,-1.50, -1, -0.50, -0.25 ,0, 0.25 , 0.50, 1, 1.50,2,2.50))+
-  theme_bw()
-  
+        scale_y_continuous(breaks=c(-6,-5.50,-5, -4.50,-4.00 ,-3.50,- 3 , -2.50, -2,-1.50, -1, -0.50 ,0, 0.50, 1, 1.50,2,2.50))+
+ theme_bw()+
+  theme(legend.position='bottom')
   
 
 ```
@@ -6960,44 +7113,124 @@ qualitativas <- Estimativas[c(2:32),]
 qualitativas$crescimento = as.factor(ifelse(qualitativas$Estimativa > 0, yes = 1, no = 0))
 
         
-ggplot(data = qualitativas, aes(x=  fct_reorder(variaveis, Estimativa, .desc = TRUE), y = Estimativa))+
+bb1<-ggplot(data = qualitativas, aes(x=  fct_reorder(variaveis, Estimativa, .desc = TRUE), y = Estimativa))+
   geom_col(aes(fill = crescimento))+
-  labs(x = "Genótipo", y = "Dias", title = "Ganho médio por genótipo para data de florescimento em relação aos genótipos agrupados na média")+
+  labs(x = "", y = "Dias pré e pós florescimento")+
  coord_flip()+
         geom_hline(yintercept = 0) +
   guides(fill = FALSE) +
   scale_fill_manual(values = c("firebrick", "dodgerblue4"))+
-        scale_y_continuous(breaks=c(-13,-11,- 9, -7,-5, -3, -1 ,0, 1, 3, 5,7,9, 11))+
+        scale_y_continuous(breaks=c(-13.0,-11.0,- 9.0, -7.0,-5.0, -3.0, -1.0 ,0.0, 1.0, 3.0, 5.0,7.0,9.0, 11.0))+
   theme_bw()
+```
+```{r}
+(aa2/aa1)+plot_annotation(tag_levels = 'A', tag_prefix = '(', tag_suffix = ')')
 ```
 
 ```{r}
 
+Temporario<- df_Centro_Oeste
+
+Temporario$`Yhat` <-predict ( modelo_Centro_oeste, Temporario)
+Temporario$`Y_yhat` = c(Temporario$FLO_M - Temporario$Yhat)
 
 
+par(mfrow=c(1,2))  
+  
+  boxplot(Temporario$Y_yhat, main = "", xlab = "Y - Yhat" , ylab = "Dias pré e pós florescimento", cex.lab = 1)
+  p6<-recordPlot()
+  plot(y = Temporario$FLO_M, x = Temporario$Yhat,  main = "", xlab = "Valores preditos", ylab = "Valores observados", pch = 20, 
+     col = "black" , cex.lab = 1) 
+p7<-recordPlot()
+  teste = subset(Temporario, GENOTIPO %in% "AA" )
+  boxplot(teste$Y_yhat, main = "Genótipos agrupados", xlab = "Y - Yhat" )
+  plot(y = teste$FLO_M, x = teste$Yhat,  main = "Genótipos agrupados", xlab = "Yhat", ylab = "Y", pch = 20, 
+     col = "black") 
+  
+ 
+  teste = subset(Temporario, GENOTIPO %in% "BRS CATIANA" )
+  boxplot(teste$Y_yhat, main = "Genótipo BRS CATIANA", xlab = "Y - Yhat" )
+  plot(y = teste$FLO_M, x = teste$Yhat,  main = "Genótipo BRS CATIANA", xlab = "Yhat", ylab = "Y", pch = 20, 
+     col = "black") 
+
+  teste = subset(Temporario, GENOTIPO %in% "BRS PAMPEIRA" )
+  boxplot(teste$Y_yhat, main = "Genótipo BRS PAMPEIRA", xlab = "Y - Yhat" )
+  plot(y = teste$FLO_M, x = teste$Yhat,  main = "Genótipo BRS PAMPEIRA", xlab = "Yhat", ylab = "Y", pch = 20, 
+     col = "black") 
+  
+    teste = subset(Temporario, GENOTIPO %in% "MARAJO" )
+  boxplot(teste$Y_yhat, main = "Genótipo MARAJO", xlab = "Y - Yhat" )
+  plot(y = teste$FLO_M, x = teste$Yhat,  main = "Genótipo MARAJO", xlab = "Yhat", ylab = "Y", pch = 20, 
+     col = "black") 
+  
+ (plot_grid(p6)|plot_grid(p7)) + plot_annotation(tag_levels = 'A', tag_prefix = '(', tag_suffix = ')')
+
+```
+
+
+```{r}
 Estimativas<-summary(modelo_Centro_oeste)
 Estimativas<-data.frame(Estimativas$coefficients)
 Estimativas<-data.frame("variaveis" = rownames(Estimativas) ,"Estimativa" = Estimativas$Estimate)
+
+# filtrando por região
+Ano_GENOTIPO <- subset(IRR, (REGIAO == "Centro_Oeste")) 
+
+# filtrando por ano e genótipo
+Ano_GENOTIPO<- Ano_GENOTIPO %>% group_by(ano,GENOTIPO) %>% summarise(FLO_M = mean(FLO_E))
+
+# filtrando o primeiro ano de cada genótipo
+Ano_GENOTIPO<- Ano_GENOTIPO %>%group_by(GENOTIPO) %>% filter(ano==min(ano))
+
+# Organizando os estimate do modelo_2_Cetro_oeste
+
+
 Estimativas$variaveis<-gsub("GENOTIPO", "", Estimativas$variaveis)
+Estimativas <- rename(Estimativas, "GENOTIPO" = "variaveis")
+Estimativas<- Estimativas[-c(33:49),]
 
-qualitativas <- Estimativas[c(2:32),]
+# Juntando ano, genótipo e estimate 
+Ano_GENOTIPO_Estimate<-Estimativas[-1,] %>% full_join(Ano_GENOTIPO)
 
-qualitativas$Estimativa<- c(qualitativas$Estimativa+Estimativas[1,2])
+# somando o estimate do genótipo com o do intercepto
+Ano_GENOTIPO_Estimate$Estimativa<- c(Ano_GENOTIPO_Estimate$Estimativa+Estimativas[1,2])
 
-qualitativas$crescimento = as.factor(ifelse(qualitativas$Estimativa > Estimativas[1,2], yes = 1, no = 0))
+# Usando o valor do estimate do intercepto para os genótipos não significativos
+Ano_GENOTIPO_Estimate$Estimativa[which((is.na(Ano_GENOTIPO_Estimate$Estimativa)))] <- Estimativas[1,2]
 
-        
-ggplot(data = qualitativas, aes(x=  fct_reorder(variaveis, Estimativa, .desc = TRUE), y = Estimativa))+
-  geom_col(aes(fill = crescimento))+
-  labs(x = "Genótipo", y = "Dias", title = "Ganho médio por genótipo para data de florescimento em relação aos genótipos agrupados na média")+
- coord_flip()+
-        geom_hline(yintercept = 46) +
-  guides(fill = FALSE) +
-  scale_fill_manual(values = c("firebrick", "dodgerblue4"))+
-        scale_y_continuous(breaks=c(20,30,35,40, 46, 50,55,60,65))+
-  theme_bw()
+
+
+# Plotando
+ggplot(Ano_GENOTIPO_Estimate, aes(x= ano, y = Estimativa))+
+geom_point()+
+  geom_smooth(formula  = y ~ x, se = FALSE) +
+    labs(y = "Florescimento estimado", x="Ano de lançamento do genótipo" )+
+  expand_limits(x=c(1980,2015), y=c(30, 60))+
+  theme_test(base_size=20)
+
 ```
+```{r}
+options(scipen = 999)
+Anova<- anova(modelo_Centro_oeste)
 
+C_E<-data.frame("Variaveis" = row.names(Anova), "importancia" = (Anova$`Sum Sq`/sum(Anova$`Sum Sq`)))
+C_E<- C_E %>% arrange(desc(importancia))
+C_E[3,1]<-"Residual"
+C_E[2,1]<-"Genótipo"
+
+imp1<-ggplot(aes(x=reorder(Variaveis,-importancia ), y = importancia ),data = C_E)+
+  geom_col(stat = "identity", fill = "dodgerblue4" )+
+  labs(y = "Capacidade explicativa", x="")+
+   scale_y_continuous(labels = scales::percent_format(accuracy = 5L )) +
+          theme_classic()+
+  theme(axis.text.x = element_text(angle=45, hjust=1, vjust = 1))
+
+```
+```{r}
+a<- Centro_oeste %>% group_by(longitude) %>% summarise(latitude)
+ggplot(a, aes(y=latitude, x=longitude))+
+  geom_smooth(method = 'lm' )
+```
 
 ## Contribuição individual dos preditores 
 
@@ -7422,78 +7655,7 @@ Tabela[[4]] # MARAJO
 
 
 
-```{r}
 
-Temporario<- df_Centro_Oeste
-
-Temporario$`Yhat` <-predict ( modelo_3_Cetro_oeste, Temporario)
-Temporario$`Y_yhat` = c(Temporario$FLO_M - Temporario$Yhat)
-
-
-  
-  
-  boxplot(Temporario$Y_yhat, main = "Todos os genótipos", xlab = "Y - Yhat" )
-  plot(y = Temporario$FLO_M, x = Temporario$Yhat,  main = "Todos os genótipos", xlab = "Yhat", ylab = "Y", pch = 20, 
-     col = "black") 
-
-  teste = subset(Temporario, GENOTIPO %in% "AA" )
-  boxplot(teste$Y_yhat, main = "Genótipos agrupados", xlab = "Y - Yhat" )
-  plot(y = teste$FLO_M, x = teste$Yhat,  main = "Genótipos agrupados", xlab = "Yhat", ylab = "Y", pch = 20, 
-     col = "black") 
-  
- 
-  teste = subset(Temporario, GENOTIPO %in% "BRS CATIANA" )
-  boxplot(teste$Y_yhat, main = "Genótipo BRS CATIANA", xlab = "Y - Yhat" )
-  plot(y = teste$FLO_M, x = teste$Yhat,  main = "Genótipo BRS CATIANA", xlab = "Yhat", ylab = "Y", pch = 20, 
-     col = "black") 
-
-  teste = subset(Temporario, GENOTIPO %in% "BRS PAMPEIRA" )
-  boxplot(teste$Y_yhat, main = "Genótipo BRS PAMPEIRA", xlab = "Y - Yhat" )
-  plot(y = teste$FLO_M, x = teste$Yhat,  main = "Genótipo BRS PAMPEIRA", xlab = "Yhat", ylab = "Y", pch = 20, 
-     col = "black") 
-  
-    teste = subset(Temporario, GENOTIPO %in% "MARAJO" )
-  boxplot(teste$Y_yhat, main = "Genótipo MARAJO", xlab = "Y - Yhat" )
-  plot(y = teste$FLO_M, x = teste$Yhat,  main = "Genótipo MARAJO", xlab = "Yhat", ylab = "Y", pch = 20, 
-     col = "black") 
-  
- 
-
-```
-
-
-```{r}
-# filtrando por região
-Ano_GENOTIPO <- subset(IRR, (REGIAO == "Centro_Oeste")) 
-
-# filtrando por ano e genótipo
-Ano_GENOTIPO<- Ano_GENOTIPO %>% group_by(ano,GENOTIPO) %>% summarise(FLO_M = mean(FLO_E))
-
-# filtrando o primeiro ano de cada genótipo
-Ano_GENOTIPO<- Ano_GENOTIPO %>%group_by(GENOTIPO) %>% filter(ano==min(ano))
-
-# Organizando os estimate do modelo_2_Cetro_oeste
-Estimativas$variaveis<-gsub("GENOTIPO", "", Estimativas$variaveis)
-Estimativas <- rename(Estimativas, "GENOTIPO" = "variaveis")
-Estimativas<- Estimativas[-c(33:35),]
-
-# Juntando ano, genótipo e estimate 
-Ano_GENOTIPO_Estimate<-Estimativas[-1,] %>% full_join(Ano_GENOTIPO)
-
-# somando o estimate do genótipo com o do intercepto
-Ano_GENOTIPO_Estimate$Estimativa<- c(Ano_GENOTIPO_Estimate$Estimativa+Estimativas[1,2])
-
-# Usando o valor do estimate do intercepto para os genótipos não significativos
-Ano_GENOTIPO_Estimate$Estimativa[which((is.na(Ano_GENOTIPO_Estimate$Estimativa)))] <- Estimativas[1,2]
-
-# Plotando
-ggplot(Ano_GENOTIPO_Estimate, aes(x= ano, y = Estimativa))+
-geom_point()+
-  geom_smooth(formula  = y ~ x) +
-    labs(y = "Florescimento estimado", x="Ano de lançamento do genótipo" )+
-theme_bw()
-
-```
 
 
 
