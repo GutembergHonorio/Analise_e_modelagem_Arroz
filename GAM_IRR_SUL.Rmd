@@ -463,7 +463,7 @@ v3<-ggplot(data = val, aes(y = Erro, x= Modelo, color=Modelo, fill = Modelo )) +
     position = position_nudge(x = -.22),
     shape = 95, size = 12, alpha = .25
   )+
-  labs(y= "Erro médio absoluto (dias)")+
+  labs(y= "Average absolute error (days)", x="")+
   guides(color=FALSE)+
   scale_color_viridis_d()+
    scale_fill_viridis_d()+
@@ -476,16 +476,81 @@ v3<-ggplot(data = val, aes(y = Erro, x= Modelo, color=Modelo, fill = Modelo )) +
 
 
 
+```{r}
+#install.packages('mgcViz')
+
+#library(mgcViz)
+viz <- getViz(modelo_GAM_Sul)
+trt<-plot(viz, allTerms = F) +
+  l_ciPoly()+
+    l_fitLine(colour = "blue") + l_rug(mapping = aes(x=x, y=y)) +
+    geom_hline(yintercept = 0, linetype = 2, alpha=0.4)+
+     theme_classic()
+
+
+trt[["plots"]][[1]][["ggObj"]][["labels"]][["x"]]<-c("Tmax_M (ºC)")
+trt[["plots"]][[1]][["ggObj"]][["labels"]][["title"]]<-c("(A)")
+
+trt[["plots"]][[2]][["ggObj"]][["labels"]][["x"]]<-c("Tmin_V (ºC)")
+trt[["plots"]][[2]][["ggObj"]][["labels"]][["title"]]<-c("(B)")
+
+trt[["plots"]][[3]][["ggObj"]][["labels"]][["x"]]<-c("Tmin_ACC_V (ºC)")
+trt[["plots"]][[3]][["ggObj"]][["labels"]][["title"]]<-c("(C)")
+
+trt[["plots"]][[4]][["ggObj"]][["labels"]][["x"]]<-c("Tmin_ACC_R (ºC)")
+trt[["plots"]][[4]][["ggObj"]][["labels"]][["title"]]<-c("(D)")
+
+trt[["plots"]][[5]][["ggObj"]][["labels"]][["x"]]<-c("HU_R (%)")
+trt[["plots"]][[5]][["ggObj"]][["labels"]][["title"]]<-c("(E)")
+
+print(trt, pages = 1)
+
+```
+
+```{r}
+library(forcats)
+((p_Centro_oeste2+p_Norte2+p_Sul2)/(p_sudeste2+p_nordeste2))+plot_annotation(tag_levels = 'A', tag_prefix = '(', tag_suffix = ')')
+```
+
+
+```{r}
+
+Temporario<- Sul[,c(-1,-3)]
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("AVAXI CL", "BRS A701 CL", "BRS PAMPA", "BRS PELOTA","BRS PELOTA", "H7 CL", "IRGA 417","JAVAE","PUITA INTA CL","JEQUITIBA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+
+Temporario1<- summary(modelo_GAM_Sul)
+Temporario1<-data.frame(Temporario1[["p.coeff"]])
+Temporario1<- data.frame("variaveis" = row.names(Temporario1), "estimativas" = Temporario1$Temporario1...p.coeff...)
+Temporario1<- Temporario1[c(-1),]
+
+Temporario1$variaveis<-gsub("GENOTIPO", "", Temporario1$variaveis)
+
+Temporario1$crescimento = as.factor(ifelse(Temporario1$estimativas > 0, yes = 1, no = 0))
+
+p_Sul2<-ggplot(data = Temporario1, aes(x=  fct_reorder(variaveis, estimativas, .desc = TRUE), y = estimativas))+
+  geom_col(aes(fill = crescimento))+
+  labs(x = "", y = "Pre and post flowering days")+
+ coord_flip()+
+        geom_hline(yintercept = 0) +
+  guides(fill = FALSE) +
+  scale_fill_manual(values = c("firebrick", "dodgerblue4"))+
+  theme_bw()
+
+
+```
 
 
 
+```{r}
+(bb1|bb2|bb3|bb4|bb5)/(p_Centro_oeste2|p_Norte2|p_Sul2|p_sudeste2|p_nordeste2)
+```
 
 
-
-
-
-
-
+(bb1|bb2|bb3|bb4|bb5)/(p_Centro_oeste2|p_Norte2|p_Sul2|p_sudeste2|p_nordeste2)
 
 
 

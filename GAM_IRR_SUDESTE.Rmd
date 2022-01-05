@@ -4,11 +4,12 @@ author: "Gutemberg Resende Honorio Filho"
 date: "26/07/2021"
 output: html_document
 ---
-
+# Pacotes
 ```{r}
 library(tidyverse)
-
+library(caTools)
 #library(mgcv)
+if(!require(patchwork)) install.packages("patchwork")
 
 if(!require(stats)) install.packages("stats")
 if(!require(Hmisc)) install.packages("Hmisc")
@@ -428,7 +429,7 @@ LM<- data.frame("Erro" = res_Sudeste_LM, "Modelo" = "LM")
 val<- data.frame()
 val<- data.frame("Erro" = c(LM$Erro,GAM$Erro), "Modelo" = c(LM$Modelo,GAM$Modelo) )
 
-v5<-ggplot(data = val, aes(y = Erro, x= Modelo, color=Modelo, fill = Modelo )) +
+v4<-ggplot(data = val, aes(y = Erro, x= Modelo, color=Modelo, fill = Modelo )) +
    geom_boxplot(
     width = .2, fill = "white",
     size = 1.5, outlier.shape = NA
@@ -443,7 +444,7 @@ v5<-ggplot(data = val, aes(y = Erro, x= Modelo, color=Modelo, fill = Modelo )) +
     position = position_nudge(x = -.22),
     shape = 95, size = 12, alpha = .25
   )+
-  labs(y= "Erro médio absoluto (dias)")+
+  labs(y= "Average absolute error (days)", x="")+
   guides(color=FALSE)+
   scale_color_viridis_d()+
    scale_fill_viridis_d()+
@@ -451,7 +452,674 @@ v5<-ggplot(data = val, aes(y = Erro, x= Modelo, color=Modelo, fill = Modelo )) +
  theme(legend.position="none")
 ```
 ```{r}
-((v1|v2)/(v3|v5))/(v4)+plot_annotation(tag_levels = 'A', tag_prefix = '(', tag_suffix = ')')
+((v1|v2|v3)/(v5|v4))+plot_annotation(tag_levels = 'A', tag_prefix = '(', tag_suffix = ')')
+```
+# graficos 
+
+```{r}
+summary(modelo_GAM_Sudeste)
+
+```
+
+
+
+David Matta13:57
+dhmatta@ufg.br
+David Matta14:07
+predict
+modelo1<>-gammm
+
+
+```{r}
+
+Temporario<- Sudeste[,c(-1,-3)]
+Temporario = Temporario[Temporario$GENOTIPO %in% c("BRS ALVORADA","OUROMINAS", "BRS BIGUA", "METICA 1", "CICA 8", "BRS JABURU", "BRS GUARA", "BRS FORMOSO","BR IRGA 409","BRS 7 TAIM",	"BRS A704",	"BRS CATIANA",	"BRS JACANA",	"BRS PAMPEIRA",	"BRS QUERENCIA",	"BRS TROPICAL",	"IAC1289",	"IAPAR 58",	"IRGA 417",	"IRGA 424",	"JEQUITIBA",	"PR349",	"PR380",	"SC173",	"SC237",	"SC240",	"SC250",	"SCS 112",	"SCS 116 SATORU",	"SCS 121 CL",	"SCSBRS PIRACEMA","BRS PELOTA", "JAVAE", "IRGA 422 CL"),]
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS ALVORADA","OUROMINAS", "BRS BIGUA", "METICA 1", "CICA 8", "BRS JABURU", "BRS GUARA", "BRS FORMOSO","BR IRGA 409","BRS 7 TAIM",	"BRS A704",	"BRS CATIANA",	"BRS JACANA",	"BRS PAMPEIRA",	"BRS QUERENCIA",	"BRS TROPICAL",	"IAC1289",	"IAPAR 58",	"IRGA 417",	"IRGA 424",	"JEQUITIBA",	"PR349",	"PR380",	"SC173",	"SC237",	"SC240",	"SC250",	"SCS 112",	"SCS 116 SATORU",	"SCS 121 CL",	"SCSBRS PIRACEMA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+
+Temporario1<- Temporario[Temporario$GENOTIPO %in% c("AA"),]
+  media_Temporario1<- Temporario1 %>% group_by(GENOTIPO) %>% summarise(Tmax_ACC_R = mean(Tmax_ACC_R), Tmax_Minima = mean(Tmax_Minima), Tmin_ACC_V  = mean(Tmin_ACC_V))
+aux<-data.frame()
+aux[1,1]<- media_Temporario1[1,1]
+
+name<-colnames(media_Temporario1)
+for (i in 2:4) {
+  predicao<-media_Temporario1
+  predicao<-predicao %>% mutate(predicao[i], predicao[i]+1)
+  aux[1,i] = predict(modelo_GAM_Sudeste,predicao)
+
+}
+  colnames(aux)<- c(name[1:4])
+  
+    
+Temporario2<- Temporario[Temporario$GENOTIPO %in% c("BRS PELOTA"),]
+media_Temporario2<- Temporario2 %>% group_by(GENOTIPO) %>% summarise(Tmax_ACC_R = mean(Tmax_ACC_R), Tmax_Minima = mean(Tmax_Minima), Tmin_ACC_V  = mean(Tmin_ACC_V))
+
+aux[2,1]<- media_Temporario2[1,1]
+
+for (i in 2:4) {
+  predicao<-media_Temporario2
+  predicao<-predicao %>% mutate(predicao[i], predicao[i]+1)
+  aux[2,i] = predict(modelo_GAM_Sudeste,predicao)
+
+}
+
+Temporario3<- Temporario[Temporario$GENOTIPO %in% c("JAVAE"),]
+media_Temporario3<- Temporario3 %>% group_by(GENOTIPO) %>% summarise(Tmax_ACC_R = mean(Tmax_ACC_R), Tmax_Minima = mean(Tmax_Minima), Tmin_ACC_V  = mean(Tmin_ACC_V))
+
+aux[3,1]<- media_Temporario3[1,1]
+
+for (i in 2:4) {
+  predicao<-media_Temporario3
+  predicao<-predicao %>% mutate(predicao[i], predicao[i]+1)
+  aux[3,i] = predict(modelo_GAM_Sudeste,predicao)
+
+}
+
+Temporario4<- Temporario[Temporario$GENOTIPO %in% c("IRGA 422 CL"),]
+media_Temporario4<- Temporario4 %>% group_by(GENOTIPO) %>% summarise(Tmax_ACC_R = mean(Tmax_ACC_R), Tmax_Minima = mean(Tmax_Minima), Tmin_ACC_V  = mean(Tmin_ACC_V))
+
+aux[4,1]<- media_Temporario4[1,1]
+
+for (i in 2:4) {
+  predicao<-media_Temporario4
+  predicao<-predicao %>% mutate(predicao[i], predicao[i]+1)
+  aux[4,i] = predict(modelo_GAM_Sudeste,predicao)
+
+}
+
+aux[1,1]<-"Genótipos agrupados"
+
+ganho_medio_sudeste<-aux
+ganho_medio_sudeste
+```
+
+```{r}
+aux<- aux %>% gather( "variaveis", "FLO", 2:4)
+intercepto <- modelo_GAM_Sudeste$coefficients[1]
+aux$FLO<- aux$FLO - intercepto
+ggplot(data = aux, aes(x= fct_reorder(GENOTIPO, FLO, .desc = TRUE) , y = FLO))+
+  geom_col(aes(fill = variaveis), position = "dodge")+
+  labs(x = "", y = "Dias pré e pós florescimento")+
+  #scale_x_discrete(guide = guide_axis(angle = 90))+
+        coord_flip()+
+        geom_hline(yintercept = 0) +
+  scale_fill_viridis_d()+
+ theme_bw()+
+  theme(legend.position='bottom')
+```
+
+```{r}
+
+Temporario<- Sudeste[,c(-1,-3)]
+Temporario = Temporario[Temporario$GENOTIPO %in% c("BRS ALVORADA","OUROMINAS", "BRS BIGUA", "METICA 1", "CICA 8", "BRS JABURU", "BRS GUARA", "BRS FORMOSO","BR IRGA 409","BRS 7 TAIM",	"BRS A704",	"BRS CATIANA",	"BRS JACANA",	"BRS PAMPEIRA",	"BRS QUERENCIA",	"BRS TROPICAL",	"IAC1289",	"IAPAR 58",	"IRGA 417",	"IRGA 424",	"JEQUITIBA",	"PR349",	"PR380",	"SC173",	"SC237",	"SC240",	"SC250",	"SCS 112",	"SCS 116 SATORU",	"SCS 121 CL",	"SCSBRS PIRACEMA","BRS PELOTA", "JAVAE", "IRGA 422 CL"),]
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS ALVORADA","OUROMINAS", "BRS BIGUA", "METICA 1", "CICA 8", "BRS JABURU", "BRS GUARA", "BRS FORMOSO","BR IRGA 409","BRS 7 TAIM",	"BRS A704",	"BRS CATIANA",	"BRS JACANA",	"BRS PAMPEIRA",	"BRS QUERENCIA",	"BRS TROPICAL",	"IAC1289",	"IAPAR 58",	"IRGA 417",	"IRGA 424",	"JEQUITIBA",	"PR349",	"PR380",	"SC173",	"SC237",	"SC240",	"SC250",	"SCS 112",	"SCS 116 SATORU",	"SCS 121 CL",	"SCSBRS PIRACEMA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+
+Temporario1<- Temporario[Temporario$GENOTIPO %in% c("AA"),]
+  media_Temporario1<- Temporario1 %>% group_by(GENOTIPO) %>% summarise(Tmax_ACC_R = mean(Tmax_ACC_R), Tmax_Minima = mean(Tmax_Minima), Tmin_ACC_V  = mean(Tmin_ACC_V))
+aux<-data.frame()
+aux[1,1]<- media_Temporario1[1,1]
+
+name<-colnames(media_Temporario1)
+for (i in 2:4) {
+  predicao<-media_Temporario1
+  predicao<-predicao %>% mutate(predicao[i], predicao[i]+(predicao[i]*0.10))
+  aux[1,i] = predict(modelo_GAM_Sudeste,predicao)
+
+}
+  colnames(aux)<- c(name[1:4])
+  
+aux<- aux %>% gather( "variaveis", "FLO", 2:4)
+
+intercepto <- modelo_GAM_Sudeste$coefficients[1]
+aux$FLO<- aux$FLO - intercepto
+aux$crescimento = as.factor(ifelse(aux$FLO > 0, yes = 1, no = 0))
+
+p_sudeste1<- ggplot(data = aux, aes(x=  fct_reorder(variaveis, FLO, .desc = TRUE), y = FLO))+
+  geom_col(aes(fill = crescimento))+
+  labs(x = "", y = "Dias pós florescimento")+
+ coord_flip()+
+        geom_hline(yintercept = 0) +
+  guides(fill = FALSE) +
+  scale_fill_manual(values = c( "dodgerblue4"))+
+  theme_bw()
+
+
+
+```
+
+```{r}
+
+Temporario1<- summary(modelo_GAM_Sudeste)
+Temporario1<-data.frame(Temporario1[["p.coeff"]])
+Temporario1<- data.frame("variaveis" = row.names(Temporario1), "estimativas" = Temporario1$Temporario1...p.coeff...)
+
+Temporario1$variaveis<-gsub("GENOTIPO", "", Temporario1$variaveis)
+
+Temporario1$crescimento = as.factor(ifelse(Temporario1$estimativas > 0, yes = 1, no = 0))
+Temporario1 <- Temporario1[-1,]
+
+p_sudeste2<-ggplot(data = Temporario1, aes(x=  fct_reorder(variaveis, estimativas, .desc = TRUE), y = estimativas))+
+  geom_col(aes(fill = crescimento))+
+  labs(x = "", y = "Pre and post flowering days")+
+ coord_flip()+
+        geom_hline(yintercept = 0) +
+  guides(fill = FALSE) +
+  scale_fill_manual(values = c("firebrick", "dodgerblue4"))+
+  theme_bw()
+
+
+```
+
+
+
+```{r}
+#AA
+Temporario1<- Temporario[Temporario$GENOTIPO %in% c("AA"),]
+  media_Temporario1<- Temporario1 %>% group_by(GENOTIPO) %>% summarise(Tmax_ACC_R = mean(Tmax_ACC_R), Tmax_Minima = mean(Tmax_Minima), Tmin_ACC_V  = mean(Tmin_ACC_V))
+Tmax_ACC_R<-data.frame()
+Tmax_ACC_R<- Temporario[Temporario$GENOTIPO %in% c("AA"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmax_ACC_R["Tmax_Minima"]<- c(media_Temporario1$Tmax_Minima)
+Tmax_ACC_R["Tmin_ACC_V"]<- c(media_Temporario1$Tmin_ACC_V)
+Tmax_ACC_R["FLO"] = predict(modelo_GAM_Sudeste,Tmax_ACC_R)
+
+Tmin_ACC_V<-data.frame()
+Tmin_ACC_V<- Temporario[Temporario$GENOTIPO %in% c("AA"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmin_ACC_V["Tmax_Minima"]<- c(media_Temporario1$Tmax_Minima)
+Tmin_ACC_V["Tmax_ACC_R"]<- c(media_Temporario1$Tmax_ACC_R)
+Tmin_ACC_V["FLO"] = predict(modelo_GAM_Sudeste,Tmin_ACC_V)
+
+Tmax_Minima<-data.frame()
+Tmax_Minima<- Temporario[Temporario$GENOTIPO %in% c("AA"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmax_Minima["Tmin_ACC_V"]<- c(media_Temporario1$Tmin_ACC_V)
+Tmax_Minima["Tmax_ACC_R"]<- c(media_Temporario1$Tmax_ACC_R)
+Tmax_Minima["FLO"] = predict(modelo_GAM_Sudeste,Tmax_Minima)
+
+a=Tmax_ACC_R
+b=Tmin_ACC_V
+c=Tmax_Minima
+a$GENOTIPO<-"Genótipos agrupados"
+b$GENOTIPO<-"Genótipos agrupados"
+c$GENOTIPO<-"Genótipos agrupados"
+intercepto <- modelo_GAM_Sudeste$coefficients[1]
+a$crescimento = as.factor(ifelse(a$FLO > intercepto, yes = 1, no = 0))
+b$crescimento = as.factor(ifelse(b$FLO > intercepto, yes = 1, no = 0))
+c$crescimento = as.factor(ifelse(c$FLO > intercepto, yes = 1, no = 0))
+
+
+
+test1<-ggplot(a, mapping = aes(x=Tmax_ACC_R, y=FLO))+
+  geom_point( mapping =aes(color = crescimento))+
+  geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
+  labs(x= "Temperatura máxima acumulada no reprodutivo (ºC)" , y="Florescimento (DAE)")+
+  guides(fill = FALSE) +
+  scale_color_manual(values = c("firebrick", "dodgerblue4"))+
+  theme_classic()+
+    theme(legend.position = "none")
+
+test2<-ggplot(b, mapping = aes(x=Tmin_ACC_V, y=FLO))+
+  geom_point( mapping =aes(color = crescimento))+
+  geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
+  labs(x= "Temperatura mínima acumulada no vegetativo (ºC)" , y="Florescimento (DAE)")+
+  guides(fill = FALSE) +
+  scale_color_manual(values = c("firebrick", "dodgerblue4"))+
+  theme_classic()+
+    theme(legend.position = "none")
+
+test3<-ggplot(c, mapping = aes(x=Tmax_Minima, y=FLO))+
+  geom_point( mapping =aes(color = crescimento))+
+  geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
+  labs(x= "Temperatura máxima mínima (ºC)" , y="Florescimento (DAE)")+
+  guides(fill = FALSE) +
+  scale_color_manual(values = c("firebrick", "dodgerblue4"))+
+  theme_classic()+
+    theme(legend.position = "none")
+
+
+((p_sudeste1)|(test1/test3/test2))+plot_annotation(tag_levels = 'A', tag_prefix = '(', tag_suffix = ')') 
+
+```
+
+
+```{r}
+#"BRS PELOTA"
+
+Temporario1<- Temporario[Temporario$GENOTIPO %in% c("BRS PELOTA"),]
+  media_Temporario1<- Temporario1 %>% group_by(GENOTIPO) %>% summarise(Tmax_ACC_R = mean(Tmax_ACC_R), Tmax_Minima = mean(Tmax_Minima), Tmin_ACC_V  = mean(Tmin_ACC_V))
+Tmax_ACC_R<-data.frame()
+Tmax_ACC_R<- Temporario[Temporario$GENOTIPO %in% c("BRS PELOTA"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmax_ACC_R["Tmax_Minima"]<- c(media_Temporario1$Tmax_Minima)
+Tmax_ACC_R["Tmin_ACC_V"]<- c(media_Temporario1$Tmin_ACC_V)
+Tmax_ACC_R["FLO"] = predict(modelo_GAM_Sudeste,Tmax_ACC_R)
+
+Tmin_ACC_V<-data.frame()
+Tmin_ACC_V<- Temporario[Temporario$GENOTIPO %in% c("BRS PELOTA"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmin_ACC_V["Tmax_Minima"]<- c(media_Temporario1$Tmax_Minima)
+Tmin_ACC_V["Tmax_ACC_R"]<- c(media_Temporario1$Tmax_ACC_R)
+Tmin_ACC_V["FLO"] = predict(modelo_GAM_Sudeste,Tmin_ACC_V)
+
+Tmax_Minima<-data.frame()
+Tmax_Minima<- Temporario[Temporario$GENOTIPO %in% c("BRS PELOTA"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmax_Minima["Tmin_ACC_V"]<- c(media_Temporario1$Tmin_ACC_V)
+Tmax_Minima["Tmax_ACC_R"]<- c(media_Temporario1$Tmax_ACC_R)
+Tmax_Minima["FLO"] = predict(modelo_GAM_Sudeste,Tmax_Minima)
+
+a= bind_rows(a,Tmax_ACC_R)
+b= bind_rows(b,Tmin_ACC_V)
+c= bind_rows(c,Tmax_Minima)
+
+#"IRGA 422 CL"
+
+Temporario1<- Temporario[Temporario$GENOTIPO %in% c("IRGA 422 CL"),]
+  media_Temporario1<- Temporario1 %>% group_by(GENOTIPO) %>% summarise(Tmax_ACC_R = mean(Tmax_ACC_R), Tmax_Minima = mean(Tmax_Minima), Tmin_ACC_V  = mean(Tmin_ACC_V))
+Tmax_ACC_R<-data.frame()
+Tmax_ACC_R<- Temporario[Temporario$GENOTIPO %in% c("IRGA 422 CL"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmax_ACC_R["Tmax_Minima"]<- c(media_Temporario1$Tmax_Minima)
+Tmax_ACC_R["Tmin_ACC_V"]<- c(media_Temporario1$Tmin_ACC_V)
+Tmax_ACC_R["FLO"] = predict(modelo_GAM_Sudeste,Tmax_ACC_R)
+
+Tmin_ACC_V<-data.frame()
+Tmin_ACC_V<- Temporario[Temporario$GENOTIPO %in% c("IRGA 422 CL"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmin_ACC_V["Tmax_Minima"]<- c(media_Temporario1$Tmax_Minima)
+Tmin_ACC_V["Tmax_ACC_R"]<- c(media_Temporario1$Tmax_ACC_R)
+Tmin_ACC_V["FLO"] = predict(modelo_GAM_Sudeste,Tmin_ACC_V)
+
+Tmax_Minima<-data.frame()
+Tmax_Minima<- Temporario[Temporario$GENOTIPO %in% c("IRGA 422 CL"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmax_Minima["Tmin_ACC_V"]<- c(media_Temporario1$Tmin_ACC_V)
+Tmax_Minima["Tmax_ACC_R"]<- c(media_Temporario1$Tmax_ACC_R)
+Tmax_Minima["FLO"] = predict(modelo_GAM_Sudeste,Tmax_Minima)
+
+a= bind_rows(a,Tmax_ACC_R)
+b= bind_rows(b,Tmin_ACC_V)
+c= bind_rows(c,Tmax_Minima)
+
+#JAVAE"
+
+Temporario1<- Temporario[Temporario$GENOTIPO %in% c("JAVAE"),]
+  media_Temporario1<- Temporario1 %>% group_by(GENOTIPO) %>% summarise(Tmax_ACC_R = mean(Tmax_ACC_R), Tmax_Minima = mean(Tmax_Minima), Tmin_ACC_V  = mean(Tmin_ACC_V))
+Tmax_ACC_R<-data.frame()
+Tmax_ACC_R<- Temporario[Temporario$GENOTIPO %in% c("JAVAE"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmax_ACC_R["Tmax_Minima"]<- c(media_Temporario1$Tmax_Minima)
+Tmax_ACC_R["Tmin_ACC_V"]<- c(media_Temporario1$Tmin_ACC_V)
+Tmax_ACC_R["FLO"] = predict(modelo_GAM_Sudeste,Tmax_ACC_R)
+
+Tmin_ACC_V<-data.frame()
+Tmin_ACC_V<- Temporario[Temporario$GENOTIPO %in% c("JAVAE"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmin_ACC_V["Tmax_Minima"]<- c(media_Temporario1$Tmax_Minima)
+Tmin_ACC_V["Tmax_ACC_R"]<- c(media_Temporario1$Tmax_ACC_R)
+Tmin_ACC_V["FLO"] = predict(modelo_GAM_Sudeste,Tmin_ACC_V)
+
+Tmax_Minima<-data.frame()
+Tmax_Minima<- Temporario[Temporario$GENOTIPO %in% c("JAVAE"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmax_Minima["Tmin_ACC_V"]<- c(media_Temporario1$Tmin_ACC_V)
+Tmax_Minima["Tmax_ACC_R"]<- c(media_Temporario1$Tmax_ACC_R)
+Tmax_Minima["FLO"] = predict(modelo_GAM_Sudeste,Tmax_Minima)
+
+a= bind_rows(a,Tmax_ACC_R)
+b= bind_rows(b,Tmin_ACC_V)
+c= bind_rows(c,Tmax_Minima)
+
+colnames(c)<- c("Genótipos", "Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V","FLO")
+colnames(b)<- c("Genótipos", "Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V","FLO")
+colnames(a)<- c("Genótipos", "Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V","FLO")
+
+  
+  
+
+```
+
+
+```{r}
+#AA
+Temporario1<- Temporario[Temporario$GENOTIPO %in% c("AA"),]
+  media_Temporario1<- Temporario1 %>% group_by(GENOTIPO) %>% summarise(Tmax_ACC_R = mean(Tmax_ACC_R), Tmax_Minima = mean(Tmax_Minima), Tmin_ACC_V  = mean(Tmin_ACC_V))
+Tmax_ACC_R<-data.frame()
+Tmax_ACC_R<- Temporario[Temporario$GENOTIPO %in% c("AA"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmax_ACC_R["Tmax_Minima"]<- c(media_Temporario1$Tmax_Minima)
+Tmax_ACC_R["Tmin_ACC_V"]<- c(media_Temporario1$Tmin_ACC_V)
+Tmax_ACC_R["FLO"] = predict(modelo_GAM_Sudeste,Tmax_ACC_R)
+
+Tmin_ACC_V<-data.frame()
+Tmin_ACC_V<- Temporario[Temporario$GENOTIPO %in% c("AA"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmin_ACC_V["Tmax_Minima"]<- c(media_Temporario1$Tmax_Minima)
+Tmin_ACC_V["Tmax_ACC_R"]<- c(media_Temporario1$Tmax_ACC_R)
+Tmin_ACC_V["FLO"] = predict(modelo_GAM_Sudeste,Tmin_ACC_V)
+
+Tmax_Minima<-data.frame()
+Tmax_Minima<- Temporario[Temporario$GENOTIPO %in% c("AA"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmax_Minima["Tmin_ACC_V"]<- c(media_Temporario1$Tmin_ACC_V)
+Tmax_Minima["Tmax_ACC_R"]<- c(media_Temporario1$Tmax_ACC_R)
+Tmax_Minima["FLO"] = predict(modelo_GAM_Sudeste,Tmax_Minima)
+
+a=Tmax_ACC_R
+b=Tmin_ACC_V
+c=Tmax_Minima
+a$GENOTIPO<-"Genótipos agrupados"
+b$GENOTIPO<-"Genótipos agrupados"
+c$GENOTIPO<-"Genótipos agrupados"
+
+#"BRS PELOTA"
+
+Temporario1<- Temporario[Temporario$GENOTIPO %in% c("BRS PELOTA"),]
+  media_Temporario1<- Temporario1 %>% group_by(GENOTIPO) %>% summarise(Tmax_ACC_R = mean(Tmax_ACC_R), Tmax_Minima = mean(Tmax_Minima), Tmin_ACC_V  = mean(Tmin_ACC_V))
+Tmax_ACC_R<-data.frame()
+Tmax_ACC_R<- Temporario[Temporario$GENOTIPO %in% c("BRS PELOTA"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmax_ACC_R["Tmax_Minima"]<- c(media_Temporario1$Tmax_Minima)
+Tmax_ACC_R["Tmin_ACC_V"]<- c(media_Temporario1$Tmin_ACC_V)
+Tmax_ACC_R["FLO"] = predict(modelo_GAM_Sudeste,Tmax_ACC_R)
+
+Tmin_ACC_V<-data.frame()
+Tmin_ACC_V<- Temporario[Temporario$GENOTIPO %in% c("BRS PELOTA"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmin_ACC_V["Tmax_Minima"]<- c(media_Temporario1$Tmax_Minima)
+Tmin_ACC_V["Tmax_ACC_R"]<- c(media_Temporario1$Tmax_ACC_R)
+Tmin_ACC_V["FLO"] = predict(modelo_GAM_Sudeste,Tmin_ACC_V)
+
+Tmax_Minima<-data.frame()
+Tmax_Minima<- Temporario[Temporario$GENOTIPO %in% c("BRS PELOTA"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmax_Minima["Tmin_ACC_V"]<- c(media_Temporario1$Tmin_ACC_V)
+Tmax_Minima["Tmax_ACC_R"]<- c(media_Temporario1$Tmax_ACC_R)
+Tmax_Minima["FLO"] = predict(modelo_GAM_Sudeste,Tmax_Minima)
+
+a= bind_rows(a,Tmax_ACC_R)
+b= bind_rows(b,Tmin_ACC_V)
+c= bind_rows(c,Tmax_Minima)
+
+#"IRGA 422 CL"
+
+Temporario1<- Temporario[Temporario$GENOTIPO %in% c("IRGA 422 CL"),]
+  media_Temporario1<- Temporario1 %>% group_by(GENOTIPO) %>% summarise(Tmax_ACC_R = mean(Tmax_ACC_R), Tmax_Minima = mean(Tmax_Minima), Tmin_ACC_V  = mean(Tmin_ACC_V))
+Tmax_ACC_R<-data.frame()
+Tmax_ACC_R<- Temporario[Temporario$GENOTIPO %in% c("IRGA 422 CL"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmax_ACC_R["Tmax_Minima"]<- c(media_Temporario1$Tmax_Minima)
+Tmax_ACC_R["Tmin_ACC_V"]<- c(media_Temporario1$Tmin_ACC_V)
+Tmax_ACC_R["FLO"] = predict(modelo_GAM_Sudeste,Tmax_ACC_R)
+
+Tmin_ACC_V<-data.frame()
+Tmin_ACC_V<- Temporario[Temporario$GENOTIPO %in% c("IRGA 422 CL"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmin_ACC_V["Tmax_Minima"]<- c(media_Temporario1$Tmax_Minima)
+Tmin_ACC_V["Tmax_ACC_R"]<- c(media_Temporario1$Tmax_ACC_R)
+Tmin_ACC_V["FLO"] = predict(modelo_GAM_Sudeste,Tmin_ACC_V)
+
+Tmax_Minima<-data.frame()
+Tmax_Minima<- Temporario[Temporario$GENOTIPO %in% c("IRGA 422 CL"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmax_Minima["Tmin_ACC_V"]<- c(media_Temporario1$Tmin_ACC_V)
+Tmax_Minima["Tmax_ACC_R"]<- c(media_Temporario1$Tmax_ACC_R)
+Tmax_Minima["FLO"] = predict(modelo_GAM_Sudeste,Tmax_Minima)
+
+a= bind_rows(a,Tmax_ACC_R)
+b= bind_rows(b,Tmin_ACC_V)
+c= bind_rows(c,Tmax_Minima)
+
+#JAVAE"
+
+Temporario1<- Temporario[Temporario$GENOTIPO %in% c("JAVAE"),]
+  media_Temporario1<- Temporario1 %>% group_by(GENOTIPO) %>% summarise(Tmax_ACC_R = mean(Tmax_ACC_R), Tmax_Minima = mean(Tmax_Minima), Tmin_ACC_V  = mean(Tmin_ACC_V))
+Tmax_ACC_R<-data.frame()
+Tmax_ACC_R<- Temporario[Temporario$GENOTIPO %in% c("JAVAE"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmax_ACC_R["Tmax_Minima"]<- c(media_Temporario1$Tmax_Minima)
+Tmax_ACC_R["Tmin_ACC_V"]<- c(media_Temporario1$Tmin_ACC_V)
+Tmax_ACC_R["FLO"] = predict(modelo_GAM_Sudeste,Tmax_ACC_R)
+
+Tmin_ACC_V<-data.frame()
+Tmin_ACC_V<- Temporario[Temporario$GENOTIPO %in% c("JAVAE"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmin_ACC_V["Tmax_Minima"]<- c(media_Temporario1$Tmax_Minima)
+Tmin_ACC_V["Tmax_ACC_R"]<- c(media_Temporario1$Tmax_ACC_R)
+Tmin_ACC_V["FLO"] = predict(modelo_GAM_Sudeste,Tmin_ACC_V)
+
+Tmax_Minima<-data.frame()
+Tmax_Minima<- Temporario[Temporario$GENOTIPO %in% c("JAVAE"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmax_Minima["Tmin_ACC_V"]<- c(media_Temporario1$Tmin_ACC_V)
+Tmax_Minima["Tmax_ACC_R"]<- c(media_Temporario1$Tmax_ACC_R)
+Tmax_Minima["FLO"] = predict(modelo_GAM_Sudeste,Tmax_Minima)
+
+a= bind_rows(a,Tmax_ACC_R)
+b= bind_rows(b,Tmin_ACC_V)
+c= bind_rows(c,Tmax_Minima)
+
+colnames(c)<- c("Genótipos", "Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V","FLO")
+colnames(b)<- c("Genótipos", "Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V","FLO")
+colnames(a)<- c("Genótipos", "Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V","FLO")
+
+  
+  
+test1<-ggplot()+
+  geom_point(a, aes(x=Tmax_ACC_R, y=FLO, color=Genótipos), size=1)+
+  scale_color_viridis_d()+
+  labs(x= "Temperatura máxima acumulada no reprodutivo (ºC)" , y="Florescimento (DAE)")+
+  theme_classic()+
+    theme(legend.position = "none")
+
+test2<-ggplot()+
+  geom_point(b, aes(x=Tmin_ACC_V, y=FLO, color=Genótipos), size=1)+
+  scale_color_viridis_d()+
+  labs(x= "Temperatura mínima acumulada no reprodutivo (ºC)" , y="Florescimento (DAE)")+
+  theme_classic()+
+    theme(legend.position = "none")
+
+test3<-ggplot()+
+  geom_point(c, mapping = aes(x=Tmax_Minima, y=FLO, color=Genótipos), size=1)+
+  scale_color_viridis_d()+
+  labs(x= "Temperatura máxima mínima (ºC)" , y="Florescimento (DAE)")+
+  theme_classic()+
+    theme(legend.position = "bottom")
+
+(test1/test2/test3)+plot_annotation(tag_levels = 'A', tag_prefix = '(', tag_suffix = ')') 
+```
+
+
+```{r}
+#install.packages('mgcViz')
+
+
+
+#library(mgcViz)
+viz <- getViz(modelo_GAM_Sudeste)
+trt<-plot(viz, allTerms = F) +
+  l_ciPoly()+
+    l_fitLine(colour = "blue") + l_rug(mapping = aes(x=x, y=y)) +
+    geom_hline(yintercept = 0, linetype = 2, alpha=0.4)+
+    theme_classic()
+trt[["plots"]][[1]][["ggObj"]][["labels"]][["x"]]<-c("Tmax_ACC_R (ºC)")
+trt[["plots"]][[1]][["ggObj"]][["labels"]][["title"]]<-c("(A)")
+
+trt[["plots"]][[2]][["ggObj"]][["labels"]][["x"]]<-c("Tmax_min (ºC)")
+trt[["plots"]][[2]][["ggObj"]][["labels"]][["title"]]<-c("(B)")
+
+trt[["plots"]][[3]][["ggObj"]][["labels"]][["x"]]<-c("Tmin_ACC_V (ºC)")
+trt[["plots"]][[3]][["ggObj"]][["labels"]][["title"]]<-c("(C)")
+
+print(trt, pages = 1)
+
+
+```
+
+
+```{r}
+library(patchwork)
+library(forcats)
+library(tidyverse)
+
+((bb1|bb2|bb3|bb4|bb5)/(p_Centro_oeste2|p_Norte2|p_Sul2|p_sudeste2|p_nordeste2))+ plot_annotation(tag_levels = 'A', tag_prefix = '(', tag_suffix = ')')
+
+
+```
+# predição 
+
+```{r}
+Temporario<- Sudeste[,c(-1,-3)]
+Temporario = Temporario[Temporario$GENOTIPO %in% c("BRS ALVORADA","OUROMINAS", "BRS BIGUA", "METICA 1", "CICA 8", "BRS JABURU", "BRS GUARA", "BRS FORMOSO","BR IRGA 409","BRS 7 TAIM",	"BRS A704",	"BRS CATIANA",	"BRS JACANA",	"BRS PAMPEIRA",	"BRS QUERENCIA",	"BRS TROPICAL",	"IAC1289",	"IAPAR 58",	"IRGA 417",	"IRGA 424",	"JEQUITIBA",	"PR349",	"PR380",	"SC173",	"SC237",	"SC240",	"SC250",	"SCS 112",	"SCS 116 SATORU",	"SCS 121 CL",	"SCSBRS PIRACEMA","BRS PELOTA", "JAVAE", "IRGA 422 CL"),]
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS ALVORADA","OUROMINAS", "BRS BIGUA", "METICA 1", "CICA 8", "BRS JABURU", "BRS GUARA", "BRS FORMOSO","BR IRGA 409","BRS 7 TAIM",	"BRS A704",	"BRS CATIANA",	"BRS JACANA",	"BRS PAMPEIRA",	"BRS QUERENCIA",	"BRS TROPICAL",	"IAC1289",	"IAPAR 58",	"IRGA 417",	"IRGA 424",	"JEQUITIBA",	"PR349",	"PR380",	"SC173",	"SC237",	"SC240",	"SC250",	"SCS 112",	"SCS 116 SATORU",	"SCS 121 CL",	"SCSBRS PIRACEMA")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+
+Temporario1<- Temporario[Temporario$GENOTIPO %in% c("AA"),]
+Temporario1<- Temporario1 %>%  select(GENOTIPO,Tmax_ACC_R ,Tmax_Minima , Tmin_ACC_V)
+  media_Temporario1<- Temporario1 %>% group_by(GENOTIPO) %>% summarise(Tmax_ACC_R = mean(Tmax_ACC_R), Tmax_Minima = mean(Tmax_Minima), Tmin_ACC_V  = mean(Tmin_ACC_V))
+  
+  aux<-data.frame()
+aux[1,1]<- media_Temporario1[1,1]
+  for (i in 2:4) {  
+Temporario2<- vector()
+Temporario2[1]<- c(media_Temporario1[i]+(media_Temporario1[i]*0.10))
+Temporario2[2]<- c(media_Temporario1[i]-(media_Temporario1[i]*0.10))
+
+  Temporario3<-  Temporario1[Temporario1[i]<=Temporario2[1],]
+  Temporario3<-  Temporario3[Temporario3[i]>=Temporario2[2],]
+  predicao<- c(apply(Temporario3[,-1],2,mean))
+
+  predicao<- data.frame(t(predicao))
+  
+  predicao[i-1] <- media_Temporario1[i]
+  predicao["GENOTIPO"]<- c("AA")
+   aux[1,i] = predict(modelo_GAM_Sudeste,predicao)
+ 
+}
+
+name<-colnames(media_Temporario1)
+colnames(aux)<- c(name[1:4])
+  
+aux<- aux %>% gather( "variaveis", "FLO", 2:4)
+
+
+intercepto <- modelo_GAM_Sudeste$coefficients[1]
+aux$FLO<- aux$FLO - intercepto
+aux$crescimento = as.factor(ifelse(aux$FLO > 0, yes = 1, no = 0))
+
+library(forcats)
+
+p_sudeste1<- ggplot(data = aux, aes(x=  fct_reorder(variaveis, FLO, .desc = TRUE), y = FLO))+
+  geom_col(aes(fill = crescimento))+
+  labs(x = "", y = "Dias pré e pós florescimento")+
+ coord_flip()+
+        geom_hline(yintercept = 0) +
+  guides(fill = FALSE) +
+  scale_fill_manual(values = c( "firebrick", "dodgerblue4"))+
+  theme_bw()
+
+
+
+```
+
+
+```{r}
+#AA
+Temporario1<- Temporario[Temporario$GENOTIPO %in% c("AA"),]
+  media_Temporario1<- Temporario1 %>% group_by(GENOTIPO) %>% summarise(Tmax_ACC_R = mean(Tmax_ACC_R), Tmax_Minima = mean(Tmax_Minima), Tmin_ACC_V  = mean(Tmin_ACC_V))
+
+Temporario1<- Temporario1 %>%  select(GENOTIPO,Tmax_ACC_R ,Tmax_Minima , Tmin_ACC_V)
+
+
+Temporario2<- vector()
+Temporario2[1]<- c(media_Temporario1$Tmax_ACC_R+(media_Temporario1$Tmax_ACC_R*0.10))
+Temporario2[2]<- c(media_Temporario1$Tmax_ACC_R-(media_Temporario1$Tmax_ACC_R*0.10))
+
+  Temporario3<-  Temporario1[Temporario1$Tmax_ACC_R<=Temporario2[1],]
+  Temporario3<-  Temporario3[Temporario3$Tmax_ACC_R>=Temporario2[2],]
+  predicao<- c(apply(Temporario3[,-1],2,mean))
+
+  predicao<- data.frame(t(predicao))
+  
+  predicao$Tmax_ACC_R <- media_Temporario1$Tmax_ACC_R
+  predicao["GENOTIPO"]<- c("AA")
+  
+
+  Tmax_ACC_R<-data.frame()
+Tmax_ACC_R<- Temporario[Temporario$GENOTIPO %in% c("AA"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmax_ACC_R["Tmax_Minima"]<- c(predicao$Tmax_Minima)
+Tmax_ACC_R["Tmin_ACC_V"]<- c(predicao$Tmin_ACC_V)
+Tmax_ACC_R["FLO"] = predict(modelo_GAM_Sudeste,Tmax_ACC_R)
+  
+  
+Temporario2<- vector()
+Temporario2[1]<- c(media_Temporario1$Tmin_ACC_V+(media_Temporario1$Tmin_ACC_V*0.10))
+Temporario2[2]<- c(media_Temporario1$Tmin_ACC_V-(media_Temporario1$Tmin_ACC_V*0.10))
+
+  Temporario3<-  Temporario1[Temporario1$Tmin_ACC_V<=Temporario2[1],]
+  Temporario3<-  Temporario3[Temporario3$Tmin_ACC_V>=Temporario2[2],]
+  predicao<- c(apply(Temporario3[,-1],2,mean))
+
+  predicao<- data.frame(t(predicao))
+  
+  predicao$Tmin_ACC_V <- media_Temporario1$Tmin_ACC_V
+  predicao["GENOTIPO"]<- c("AA")
+  
+  
+Tmin_ACC_V<-data.frame()
+Tmin_ACC_V<- Temporario[Temporario$GENOTIPO %in% c("AA"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmin_ACC_V["Tmax_Minima"]<- c(predicao$Tmax_Minima)
+Tmin_ACC_V["Tmax_ACC_R"]<- c(predicao$Tmax_ACC_R)
+Tmin_ACC_V["FLO"] = predict(modelo_GAM_Sudeste,Tmin_ACC_V)
+
+Temporario2<- vector()
+Temporario2[1]<- c(media_Temporario1$Tmax_Minima+(media_Temporario1$Tmax_Minima*0.10))
+Temporario2[2]<- c(media_Temporario1$Tmax_Minima-(media_Temporario1$Tmax_Minima*0.10))
+
+  Temporario3<-  Temporario1[Temporario1$Tmax_Minima<=Temporario2[1],]
+  Temporario3<-  Temporario3[Temporario3$Tmax_Minima>=Temporario2[2],]
+  predicao<- c(apply(Temporario3[,-1],2,mean))
+
+  predicao<- data.frame(t(predicao))
+  
+  predicao$Tmax_Minima <- media_Temporario1$Tmax_Minima
+  predicao["GENOTIPO"]<- c("AA")
+
+Tmax_Minima<-data.frame()
+Tmax_Minima<- Temporario[Temporario$GENOTIPO %in% c("AA"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmax_Minima["Tmin_ACC_V"]<- c(predicao$Tmin_ACC_V)
+Tmax_Minima["Tmax_ACC_R"]<- c(predicao$Tmax_ACC_R)
+Tmax_Minima["FLO"] = predict(modelo_GAM_Sudeste,Tmax_Minima)
+
+a=Tmax_ACC_R
+b=Tmin_ACC_V
+c=Tmax_Minima
+a$GENOTIPO<-"Genótipos agrupados"
+b$GENOTIPO<-"Genótipos agrupados"
+c$GENOTIPO<-"Genótipos agrupados"
+intercepto <- modelo_GAM_Sudeste$coefficients[1]
+a$crescimento = as.factor(ifelse(a$FLO > intercepto, yes = 1, no = 0))
+b$crescimento = as.factor(ifelse(b$FLO > intercepto, yes = 1, no = 0))
+c$crescimento = as.factor(ifelse(c$FLO > intercepto, yes = 1, no = 0))
+
+
+
+test1<-ggplot(a, mapping = aes(x=Tmax_ACC_R, y=FLO))+
+  geom_point( mapping =aes(color = crescimento))+
+  geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
+  labs(x= "Temperatura máxima acumulada no reprodutivo (ºC)" , y="Florescimento (DAE)")+
+  guides(fill = FALSE) +
+  scale_color_manual(values = c("firebrick", "dodgerblue4"))+
+  theme_classic()+
+    theme(legend.position = "none")
+
+test2<-ggplot(b, mapping = aes(x=Tmin_ACC_V, y=FLO))+
+  geom_point( mapping =aes(color = crescimento))+
+  geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
+  labs(x= "Temperatura mínima acumulada no vegetativo (ºC)" , y="Florescimento (DAE)")+
+  guides(fill = FALSE) +
+  scale_color_manual(values = c("firebrick", "dodgerblue4"))+
+  theme_classic()+
+    theme(legend.position = "none")
+
+test3<-ggplot(c, mapping = aes(x=Tmax_Minima, y=FLO))+
+  geom_point( mapping =aes(color = crescimento))+
+  geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
+  labs(x= "Temperatura máxima mínima (ºC)" , y="Florescimento (DAE)")+
+  guides(fill = FALSE) +
+  scale_color_manual(values = c("firebrick", "dodgerblue4"))+
+  theme_classic()+
+    theme(legend.position = "none")
+
+((test1|test3|test2))+plot_annotation(tag_levels = 'A', tag_prefix = '(', tag_suffix = ')') +  plot_annotation (  caption =  '--- Flowering average' )
 ```
 
 
@@ -459,39 +1127,154 @@ v5<-ggplot(data = val, aes(y = Erro, x= Modelo, color=Modelo, fill = Modelo )) +
 
 
 
+# predicao 2
+
+
+
+```{r}
+
+Temporario<- Sudeste[,c(-1,-3)]
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("BRS ALVORADA","OUROMINAS", "BRS BIGUA", "METICA 1", "CICA 8", "BRS JABURU", "BRS GUARA", "BRS FORMOSO","BR IRGA 409","BRS 7 TAIM",	"BRS A704",	"BRS CATIANA",	"BRS JACANA",	"BRS PAMPEIRA",	"BRS QUERENCIA",	"BRS TROPICAL",	"IAC1289",	"IAPAR 58",	"IRGA 417",	"IRGA 424",	"JEQUITIBA",	"PR349",	"PR380",	"SC173",	"SC237",	"SC240",	"SC250",	"SCS 112",	"SCS 116 SATORU",	"SCS 121 CL",	"SCSBRS PIRACEMA") 
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+
+media_FLO<- mean(Temporario$FLO_M)
+
+teste <-Temporario$FLO_M[Temporario$FLO_M >= 85.5 & Temporario$FLO_M <= 94.5]
+
+dados_teste <- Temporario[Temporario$FLO_M %in% teste,]
+
+Temporario1<- dados_teste[dados_teste$GENOTIPO %in% c("AA"),]
+  media_Temporario1<- Temporario1 %>% group_by(GENOTIPO) %>% summarise(Tmax_ACC_R = mean(Tmax_ACC_R), Tmax_Minima = mean(Tmax_Minima), Tmin_ACC_V  = mean(Tmin_ACC_V))
+aux<-data.frame()
+aux[1,1]<- media_Temporario1[1,1]
+
+name<-colnames(media_Temporario1)
+for (i in 2:ncol(media_Temporario1)) {
+  predicao<-media_Temporario1
+  predicao<-predicao %>% mutate(predicao[i], predicao[i]+(predicao[i]*0.10))
+  aux[1,i] = predict(modelo_GAM_Sudeste,predicao) 
+
+}
+  colnames(aux)<- c(colnames(media_Temporario1))
+  
+  
+aux<- aux %>% gather( "variaveis", "FLO", 2:ncol(media_Temporario1))
+
+aux$FLO<- aux$FLO - media_FLO
+aux$crescimento = as.factor(ifelse(aux$FLO > 0, yes = 1, no = 0))
+
+aux2<-data.frame()
+aux2[1,1]<- media_Temporario1[1,1]
+
+name<-colnames(media_Temporario1)
+for (i in 2:ncol(media_Temporario1)) {
+  predicao<-media_Temporario1
+  predicao<-predicao %>% mutate(predicao[i], predicao[i]-(predicao[i]*0.10))
+  aux2[1,i] = predict(modelo_GAM_Sudeste,predicao) 
+
+}
+
+  colnames(aux2)<- c(colnames(media_Temporario1))
+  
+aux2<- aux2 %>% gather( "variaveis", "FLO", 2:ncol(media_Temporario1))
+
+aux2$FLO<- aux2$FLO - media_FLO
+aux2$crescimento = as.factor(ifelse(aux2$FLO > 0, yes = 1, no = 0))
+
+aux2$tipo<- c("Menos")
+aux$tipo<- c("Mais")
+
+
+
+p_sudeste1<- ggplot()+ 
+  geom_col_pattern(data = aux2, aes(x=  fct_reorder(variaveis, aux$FLO, .desc = TRUE), y = FLO, fill = crescimento, pattern =tipo), alpha=0.5, linetype = 2,
+           color = "black", 
+                   pattern_fill = "black",
+                   pattern_angle = 45,
+                   pattern_density = 0.1,
+                   pattern_spacing = 0.025,
+                   pattern_key_scale_factor = 0.6)+
+  geom_col(data = aux, aes(x=  fct_reorder(variaveis, FLO, .desc = TRUE), y = FLO, fill = crescimento , pattern =tipo))+
+   coord_flip()+
+        geom_hline(yintercept = 0) +
+  scale_pattern_manual(values = c(Menos = "stripe", Mais = "none"), labels=c("+10%", "-10%"))+
+  labs(x = "",y = "Dias pré e pós florescimento", pattern = "Média modificada em:") + 
+  guides(pattern = guide_legend(override.aes = list(fill = "white")), fill = "none")+
+  scale_fill_manual(values = c("firebrick", "dodgerblue4"))+
+    theme_bw()+
+   theme(legend.position="bottom")
+
+```
+
+```{r}
+#AA
+Temporario1<- Temporario[Temporario$GENOTIPO %in% c("AA"),]
+  media_Temporario1<- Temporario1 %>% group_by(GENOTIPO) %>% summarise(Tmax_ACC_R = mean(Tmax_ACC_R), Tmax_Minima = mean(Tmax_Minima), Tmin_ACC_V  = mean(Tmin_ACC_V))
+Tmax_ACC_R<-data.frame()
+Tmax_ACC_R<- Temporario[Temporario$GENOTIPO %in% c("AA"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmax_ACC_R["Tmax_Minima"]<- c(media_Temporario1$Tmax_Minima)
+Tmax_ACC_R["Tmin_ACC_V"]<- c(media_Temporario1$Tmin_ACC_V)
+Tmax_ACC_R["FLO"] = predict(modelo_GAM_Sudeste,Tmax_ACC_R)
+
+Tmin_ACC_V<-data.frame()
+Tmin_ACC_V<- Temporario[Temporario$GENOTIPO %in% c("AA"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmin_ACC_V["Tmax_Minima"]<- c(media_Temporario1$Tmax_Minima)
+Tmin_ACC_V["Tmax_ACC_R"]<- c(media_Temporario1$Tmax_ACC_R)
+Tmin_ACC_V["FLO"] = predict(modelo_GAM_Sudeste,Tmin_ACC_V)
+
+Tmax_Minima<-data.frame()
+Tmax_Minima<- Temporario[Temporario$GENOTIPO %in% c("AA"),c("GENOTIPO","Tmax_ACC_R","Tmax_Minima","Tmin_ACC_V")]
+Tmax_Minima["Tmin_ACC_V"]<- c(media_Temporario1$Tmin_ACC_V)
+Tmax_Minima["Tmax_ACC_R"]<- c(media_Temporario1$Tmax_ACC_R)
+Tmax_Minima["FLO"] = predict(modelo_GAM_Sudeste,Tmax_Minima)
+
+a=Tmax_ACC_R
+b=Tmin_ACC_V
+c=Tmax_Minima
+a$GENOTIPO<-"Genótipos agrupados"
+b$GENOTIPO<-"Genótipos agrupados"
+c$GENOTIPO<-"Genótipos agrupados"
+intercepto <- media_FLO
+a$crescimento = as.factor(ifelse(a$FLO > intercepto, yes = 1, no = 0))
+b$crescimento = as.factor(ifelse(b$FLO > intercepto, yes = 1, no = 0))
+c$crescimento = as.factor(ifelse(c$FLO > intercepto, yes = 1, no = 0))
+
+
+
+test1<-ggplot(a, mapping = aes(x=Tmax_ACC_R, y=FLO))+
+  geom_point( mapping =aes(color = crescimento))+
+  geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
+  labs(x= "Tmax_ACC_R (ºC)" , y="Flowering (DAE)")+
+  guides(fill = FALSE) +
+  scale_color_manual(values = c("firebrick", "dodgerblue4"))+
+  theme_classic()+
+    theme(legend.position = "none")
+
+test2<-ggplot(b, mapping = aes(x=Tmin_ACC_V, y=FLO))+
+  geom_point( mapping =aes(color = crescimento))+
+  geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
+  labs(x= "Tmin_ACC_V (ºC)" , y="Flowering (DAE)")+
+  guides(fill = FALSE) +
+  scale_color_manual(values = c("firebrick", "dodgerblue4"))+
+  theme_classic()+
+    theme(legend.position = "none")
+
+test3<-ggplot(c, mapping = aes(x=Tmax_Minima, y=FLO))+
+  geom_point( mapping =aes(color = crescimento))+
+  geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
+  labs(x= "Tmax_Min (ºC)" , y="Flowering (DAE)")+
+  guides(fill = FALSE) +
+  scale_color_manual(values = c("firebrick", "dodgerblue4"))+
+  theme_classic()+
+    theme(legend.position = "none")
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+```
 
 
 
