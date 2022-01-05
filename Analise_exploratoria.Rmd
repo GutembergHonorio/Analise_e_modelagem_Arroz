@@ -27,7 +27,7 @@ if(!require(correlationfunnel)) install.packages("correlationfunnel")
 
 # para  Predictive Power Score (PPS)
 
-# install.packages('devtools')
+ #install.packages('devtools')
 #devtools :: install_github ('https://github.com/paulvanderlaken/ppsr.git')
 library(ppsr)
 
@@ -50,7 +50,7 @@ Tabelabruta<- read.csv("d:/Users/Cristiane Resende/Desktop/Gutemberg Honorio/Mes
 
 # criando coluna com macrorregiões
 
-Tabelabruta<- mutate(Tabelabruta,REGIAO = case_when(UF == 'GO'| UF == 'DF' |UF == 'MS' | UF == 'MT' ~ 'Centro-oeste',
+Tabelabruta<- mutate(Tabelabruta,REGIAO = case_when(UF == 'GO'| UF == 'DF' |UF == 'MS' | UF == 'MT' ~ 'Centro-Oeste',
                               UF == 'AL'| UF == 'BA' |UF == 'CE' | UF == 'MA' | UF == 'PB' | UF == 'PE' | UF == 'PI' | UF == 'RN' | UF == 'SE' ~ 'Nordeste',
                               UF == 'AC' | UF == 'AM' | UF == 'AP' | UF == 'PA' | UF == 'RO' | UF == 'RR' | UF == 'TO' ~ 'Norte',
                               UF == 'ES' | UF == 'MG' | UF == 'SP' | UF == 'RJ' ~ 'Sudeste',
@@ -84,7 +84,7 @@ IRR_Medio<- IRR %>% group_by(ID_ENSAIO, GENOTIPO, REGIAO) %>% summarise(  FLO_M=
 
 # separando por macrorregião
 
-Centro_oeste<- subset(IRR_Medio, (REGIAO == "Centro-oeste")) # filtrando por região
+Centro_oeste<- subset(IRR_Medio, (REGIAO == "Centro-Oeste")) # filtrando por região
 Norte<- subset(IRR_Medio, (REGIAO == "Norte")) # filtrando por região
 Nordeste<- subset(IRR_Medio, (REGIAO == "Nordeste")) # filtrando por região
 Sul<- subset(IRR_Medio, (REGIAO == "Sul")) # filtrando por região
@@ -99,15 +99,23 @@ Sudeste<- subset(IRR_Medio, (REGIAO == "Sudeste")) # filtrando por região
 Brasil<- read_state(code_state="all",year=2010)
 
 latIRR<- IRR %>%
-  group_by(latitude, longitude) %>% 
-  count()
+  group_by(ID_ENSAIO) %>% summarise(latitude = unique(latitude) , longitude= unique(longitude)) 
+latIRR$geo = c(paste(latIRR$latitude, latIRR$longitude, sep="_"))
+
+a<- latIRR %>%
+  group_by(geo) %>% count()
+
+latIRR<- separate(a, col=geo, into=c('latitude', 'longitude'), sep='_')
+latIRR$latitude<- as.numeric(latIRR$latitude)
+latIRR$longitude<- as.numeric(latIRR$longitude)
+
+
 names(latIRR) <- c("latitude", "longitude", "Nº_de_ensaios")
   
-Mapa<-ggplot(Brasil) +
+Mapa<-ggplot() +
   geom_sf(aes(group = code_state), data = Brasil, size = 0.1 , fill = "#FFF7C2") +
-  geom_point(aes(x = longitude, y = latitude, size = Nº_de_ensaios, colour = "Irrigado"), data = latIRR)+
-  scale_colour_manual(values = c("blue"))+
-  labs(x = "Longitude", y = "Latitude", title = "   Distribuição geográfica dos ensaios", color = "Legenda") +
+  geom_point(aes(x = longitude, y = latitude, size = Nº_de_ensaios), colour = "blue", data = latIRR)+
+  labs(x = "Longitude", y = "Latitude", title = "   Distribuição geográfica dos ensaios", size = "Test numbers") +
   annotation_north_arrow(style=north_arrow_fancy_orienteering)+
   annotation_scale(location="br", height = unit(0.15,"cm"))+
   theme_minimal()+
@@ -156,14 +164,14 @@ barplot(Ano_ensaio, cex.names =  0.8, main = "Número de ensaios por ano", cex.a
 
 ```{r}
 teste<- IRR %>% group_by(ano) %>% summarise(FLO_E = FLO_E)
-teste<- Teste[Teste$ano >= 1995,]
+teste<- teste[teste$ano >= 1995,]
 
 graf_ano_flo = ggplot(teste)+
   geom_smooth(aes(y=FLO_E , x = ano), se = FALSE,method = 'loess', span = 0.9)+
-    labs(x = "Ano", y = "Florescimento (DAE)", title = "(A)")+
+    labs(x = "Year", y = "Flowering (DAE)")+
   scale_x_continuous(breaks=c(seq(1995,2018,5)))+
   scale_y_continuous(breaks=c(seq(80,95,2)))+
-  theme_classic(base_size= 17)
+  theme_classic()
 
   
 ```
@@ -186,15 +194,12 @@ Ano_GENOTIPO<- Ano_GENOTIPO[Ano_GENOTIPO$ano >= 1995,]
 
 graf_ano_genotipo = ggplot(Ano_GENOTIPO)+
   geom_smooth(aes(y=FLO_M , x = ano), se = FALSE, span = 0.99)+
-    labs(x = "Ano", y = "", title = "(B)")+
+    labs(x = "Year", y = "Flowering (DAE)")+
   scale_x_continuous(breaks=c(seq(1995,2018,5)))+
   scale_y_continuous(breaks=c(seq(80,95,2)))+
-  theme_classic(base_size= 17)
+  theme_classic()
 ```
-```{r}
-an_geno(graf_ano_flo | graf_ano_genotipo)
 
-```
 ### N. genot. lan. ano
 
 ```{r}
@@ -221,17 +226,17 @@ TOTAL de 91 genótipos testados
 
 ```{r}
 
-d<- data.frame("Regioes" = names(macrorregiao_Ensaios),"quant" = macrorregiao_Ensaios, "Legenda" = "Nº de ensaios realizados")
-e<- data.frame("Regioes" = names(macrorregiao_Genotipo),"quant" = macrorregiao_Genotipo, "Legenda" = "Nº de genótipos testados")
+d<- data.frame("Regioes" = names(macrorregiao_Ensaios),"quant" = macrorregiao_Ensaios, "Legenda" = "Tests performed")
+e<- data.frame("Regioes" = names(macrorregiao_Genotipo),"quant" = macrorregiao_Genotipo, "Legenda" = "Tested genotypes")
 aa<- bind_rows(d,e)
 
 graf_ens_reg<-
   ggplot()+
   geom_col(data= aa, aes(y=Regioes , x = quant, fill = Legenda ) ,position = "dodge")+
-    theme_classic(base_size = 15)+
-  labs(y = "Macrorregiões", x= "", fill = NULL, title = "(A)")+
+    theme_classic()+
+  labs(y = "Region", x= "", fill = NULL, title = "")+
   scale_fill_viridis_d()+
-   theme(legend.position='bottom')
+   theme(legend.position='none')
 graf_ens_reg
 ```
 
@@ -249,22 +254,21 @@ barplot(Estados_Genotipo, cex.names =  0.8, main = "Número de genótipos testad
 ```
 ```{r}
 
-d<- data.frame("Estados" = names(Estados_Ensaios),"quant" = Estados_Ensaios, "Legenda" = "Nº de ensaios realizados")
-e<- data.frame("Estados" = names(Estados_Genotipo),"quant" = Estados_Genotipo, "Legenda" = "Nº de genótipos testados")
+d<- data.frame("Estados" = names(Estados_Ensaios),"quant" = Estados_Ensaios, "Legenda" = "Tests performed")
+e<- data.frame("Estados" = names(Estados_Genotipo),"quant" = Estados_Genotipo, "Legenda" = "Tested genotypes")
 aa<- bind_rows(d,e)
 
 graf_ens_est<-
   ggplot()+
   geom_col(data= aa, aes(y=Estados , x = quant, fill = Legenda ) ,position = "dodge")+
-    theme_classic(base_size = 15)+
-  labs(y = "Estados", x= "", fill = NULL, title = "(B)")+
-  scale_fill_viridis_d()+
-   theme(legend.position="none")
+    theme_classic()+
+  labs(y = "States", x= "", fill = NULL, title = "")+
+  scale_fill_viridis_d(guide = "none")
 graf_ens_est
 ```
 
 ```{r}
-(graf_ens_reg | graf_ens_est)+plot_layout(guides = 'collect') & theme(legend.position='bottom', text = element_text(size=20))
+((graf_ens_reg | graf_ens_est)+ plot_layout(guides = 'collect') & theme(legend.position='bottom')) + plot_annotation(tag_levels = 'A', tag_prefix = '(', tag_suffix = ')')
 ```
 
 ```{r}
@@ -301,6 +305,26 @@ ncol(TabelabrutaIRR)
 Ano_GEN<-apply(with(IRR,table(ano,GENOTIPO))>0,1:1,sum)
 Ano_GEN
 ```
+```{r}
+GEN_Ano<- data.frame(with(IRR,table(GENOTIPO,ano)),  stringsAsFactors = F)
+GEN_Ano = GEN_Ano[GEN_Ano$Freq!=0,]
+GEN_Ano<- GEN_Ano %>% select(GENOTIPO) %>% mutate(ano = as.Date(GEN_Ano$ano,format = "%Y"))
+GEN_Ano$ano<- format(GEN_Ano$ano, format = "%Y")
+
+GEN_Ano<- GEN_Ano %>% group_by(GENOTIPO) %>% summarise(ano = min(ano))
+GEN_Ano<- GEN_Ano %>% group_by(GENOTIPO) %>% summarise(ano = min(ano))
+```
+
+```{r}
+GEN_Ano<- GEN_Ano %>% select(GENOTIPO) %>% mutate(FLO = mean())  
+```
+
+```{r}
+install.packages("xlsx")
+library(xlsx)
+write.xlsx(GEN_Ano,file="GEN_Ano.xlsx")
+
+```
 
 ```{r}
 
@@ -313,11 +337,11 @@ unique(IRR$GENOTIPO) %in% unique(IRR$ano)
 ```
 ```{r}
 
-aa <- data.frame("Ano" = names(Ano_ensaio), "Nº" = Ano_ensaio, "Legenda" = "Nº de ensaios no ano")
+aa <- data.frame("Ano" = names(Ano_ensaio), "Nº" = Ano_ensaio, "Legenda" = "Tests in the year")
 
-bb <- data.frame("Ano" = names(Ano_GEN), "Nº" = Ano_GEN, "Legenda" = "Nº de genótipos testados no ano")
+bb <- data.frame("Ano" = names(Ano_GEN), "Nº" = Ano_GEN, "Legenda" = "Genotypes tested in the year")
 
-cc <- data.frame("Ano" = names(Ano_GENOTIPO), "Nº" = Ano_GENOTIPO, "Legenda" = "Nº de genótipos lançados no ano")
+cc <- data.frame("Ano" = names(Ano_GENOTIPO), "Nº" = Ano_GENOTIPO, "Legenda" = "Genotypes released in the year")
 
 a<- bind_rows(aa,bb,cc)
 
@@ -325,13 +349,18 @@ a<- a[a$Ano >= 1995,]
 
 ano_geno<-ggplot()+
   geom_col(data= a, aes(x=Ano, y = Nº, fill= Legenda),position = "dodge")+
-    theme_classic(base_size = 15)+
-  labs(y = "", fill = NULL)+
+    theme_classic()+
+  labs(y = "", x="Year", fill = NULL)+
   scale_fill_viridis_d()+
   coord_flip()+
   theme(legend.position='bottom')
   
 
+
+```
+
+```{r}
+(ano_geno|(graf_ano_flo / graf_ano_genotipo) )+plot_annotation(tag_levels = 'A', tag_prefix = '(', tag_suffix = ')')
 
 ```
 
@@ -447,7 +476,7 @@ summary(modelo)
 
 ## Variáveis 
 ```{r}
-ad_variaveis<- IRR %>% group_by(GENOTIPO,REGIAO) %>% summarise(T_Media = (Tmin_Media+Tmax_Media)/2 ,Tmin_Media, Tmax_Media, Tmax_Maxima, Tmin_Minima, UR_Media, Chuva_ACC, Rad_ACC, Graus_dia_ciclo,Graus_dia_FLO)
+ad_variaveis<- IRR %>% group_by(Genotype,REGIAO) %>% summarise(T_Media = (Tmin_Media+Tmax_Media)/2 ,Tmin_Media, Tmax_Media, Tmax_Maxima, Tmin_Minima, UR_Media, Chuva_ACC, Rad_ACC, Graus_dia_FLO,Graus_dia_ciclo)
 ```
 
 ```{r}
@@ -469,11 +498,11 @@ a<-ggplot(IRR, aes(x = REGIAO, y = FLO_E, color = REGIAO, fill = REGIAO)) +
     size = 5
   )+
   theme_classic()+
-  labs(x="", y="Florescimento observado (DAE)")
+  labs(x="", y="Flowering (DAE)")
 
 ```
 ```{r}
-CV1<- IRR %>% group_by(GENOTIPO,REGIAO) %>% summarise(FLO_M = mean(FLO_E), Coef_var = cv(FLO_E))
+CV1<- IRR %>% group_by(Genotype,REGIAO) %>% summarise(FLO_M = mean(FLO_E), Coef_var = cv(FLO_E))
 
 b<-ggplot(CV1, aes(x = REGIAO, y = Coef_var, color = REGIAO, fill = REGIAO)) +
   scale_color_viridis_d( guide = "none") +
@@ -491,9 +520,15 @@ b<-ggplot(CV1, aes(x = REGIAO, y = Coef_var, color = REGIAO, fill = REGIAO)) +
 ```
 
 ```{r}
-a2<- data.frame("Temperatura" = ad_variaveis$Tmax_Maxima, "REGIAO" = ad_variaveis$REGIAO, "Tipo" = "Máxima máxima")
-b2<- data.frame("Temperatura" = ad_variaveis$T_Media, "REGIAO" = ad_variaveis$REGIAO, "Tipo" = "Média")
-c2<- data.frame("Temperatura" = ad_variaveis$Tmin_Minima, "REGIAO" = ad_variaveis$REGIAO, "Tipo" = "Mínima mínima")
+sd(Centro_oeste$Degree_days_FLO)
+```
+
+
+
+```{r}
+a2<- data.frame("Temperatura" = ad_variaveis$Tmax_Maxima, "REGIAO" = ad_variaveis$REGIAO, "Tipo" = "Tmax_Max")
+b2<- data.frame("Temperatura" = ad_variaveis$T_Media, "REGIAO" = ad_variaveis$REGIAO, "Tipo" = "Average temperature")
+c2<- data.frame("Temperatura" = ad_variaveis$Tmin_Minima, "REGIAO" = ad_variaveis$REGIAO, "Tipo" = "Tmin_Min")
 
 
 
@@ -513,8 +548,7 @@ geom_boxplot(
   scale_fill_viridis_d( guide = "none") +
   theme_classic()+
         theme(legend.position="none")+
-       labs(y = "ºC",x= "", )+
-  facet_wrap(~Tipo, strip.position = "left")
+       labs(y = "Tmax_Max (ºC)",x= "", )
 
 b2<-ggplot(b2, aes(y=Temperatura, x= REGIAO, color = REGIAO, fill = REGIAO))+
 geom_boxplot(
@@ -531,8 +565,7 @@ geom_boxplot(
   scale_fill_viridis_d( guide = "none") +
   theme_classic()+
         theme(legend.position="none")+
-       labs(y = "ºC",x= "")+
-  facet_wrap(~Tipo, strip.position = "left")
+       labs(y = "Average temperature (ºC)",x= "")
 
 
 c2<-ggplot(c2, aes(y=Temperatura, x= REGIAO, color = REGIAO, fill = REGIAO))+
@@ -550,10 +583,9 @@ geom_boxplot(
   scale_fill_viridis_d( guide = "none") +
   theme_classic()+
         theme(legend.position="none")+
-       labs(y = "ºC",x= "")+
+       labs(y = "Tmin_Min (ºC)",x= "")+
     scale_y_continuous(labels= scales::number_format(accuracy = 0.1,
-                                 decimal.mark = '.'))+
-  facet_wrap(~Tipo, strip.position = "left")
+                                 decimal.mark = '.'))
 
 (a2/b2/c2)+plot_annotation(tag_levels = 'A', tag_prefix = '(', tag_suffix = ')')
 ```
@@ -575,7 +607,7 @@ geom_boxplot(
   scale_fill_viridis_d( guide = "none") +
   theme_classic()+
         theme(legend.position="none")+
-       labs(y = "Umidade relativa do ar (%)",x= "")
+       labs(y = "HU_M (%)",x= "")
 ```
 ```{r}
 
@@ -594,7 +626,7 @@ geom_boxplot(
   scale_fill_viridis_d( guide = "none") +
   theme_classic()+
         theme(legend.position="none")+
-       labs(y = "Precipitação acumulada (mm)",x= "")
+       labs(y = "Rainfall_ACC (mm)",x= "")
 ```
 ```{r}
 
@@ -614,23 +646,26 @@ geom_boxplot(
   scale_fill_viridis_d( guide = "none") +
   theme_classic()+
         theme(legend.position="none")+
-       labs(y = "Radiação solar acumulada (MJ/m²)",x= "")
+       labs(y = "Rad_ACC (MJ/m²)",x= "")
 
 ```
 ```{r}
 (d/e/f)+plot_annotation(tag_levels = 'A', tag_prefix = '(', tag_suffix = ')')
 ```
+```{r}
+summary(Sul$UR_Media)
+```
 
 
 ```{r}
-a3<- data.frame("graus" = ad_variaveis$Graus_dia_ciclo, "REGIAO" = ad_variaveis$REGIAO, "Tipo" = "Graus_dia_ciclo")
-b3<- data.frame("graus" = ad_variaveis$Graus_dia_FLO, "REGIAO" = ad_variaveis$REGIAO, "Tipo" = "Graus_dia_FLO")
+a3<- data.frame("graus" = ad_variaveis$Graus_dia_ciclo, "REGIAO" = ad_variaveis$REGIAO, "Tipo" = "Degree_days_cycle")
+b3<- data.frame("graus" = ad_variaveis$Graus_dia_FLO, "REGIAO" = ad_variaveis$REGIAO, "Tipo" = "Degree_days_FLO")
 temp<- data.frame()
 temp<- bind_rows(a3,b3)
 
 g<-  ggplot(temp)+
   geom_boxplot(aes(y=graus, color = Tipo))+
-      labs(y = "Graus-dia (ºC)", color = NULL)+
+      labs(y = "Degree days (ºC)", color = NULL)+
 scale_color_manual(values = c( "red","blue" 
  )) +
   theme_bw()+
@@ -651,11 +686,11 @@ geom_boxplot(
     color = NA, ## remove slab interval
     position = position_nudge(x = .15), alpha = .5
   ) +
-  scale_color_viridis_d() +
-  scale_fill_viridis_d( guide = "none") +
-  theme_classic()+
+  scale_color_viridis_d(labels = c("Degree_days_cycle", "Degree_days_FLO")) +
+    scale_fill_viridis_d( guide = "none") +
+    theme_classic()+
         theme(legend.position="bottom")+
-       labs(y = "Graus-dia (ºC)",x= "", color = NULL, fill = NULL)
+       labs(y = "Degree days (ºC)",x= "", color = NULL, fill = NULL)
 
 
 
@@ -840,7 +875,7 @@ Temporario<-IRR_Medio[,c(-1,-2,-3)]
 chart.Correlation(Temporario, histogram = T)
 title("Matrix de correlação", line = 1)
 
-Temporario<- subset(IRR_Medio, (REGIAO == "Centro_Oeste"))
+Temporario<- subset(IRR_Medio, (REGIAO == "Centro-oeste"))
 Temporario<- Temporario[,c(-1,-2,-3)]
 chart.Correlation(Temporario, histogram = T)
 title("Matrix de correlação Centro-oeste", line = 1)
@@ -873,40 +908,41 @@ title("Matrix de correlação Sudeste", line = 1)
 
 Temporario<-IRR_Medio[,c(-1,-2,-3)]
 pps1<- ppsr :: visualize_pps ( df = Temporario, y  = "FLO_M" ) + 
-ggplot2 :: labs ( title  =  'PPS com dados não regionalizados' )
+ggplot2 :: labs ( title  =  'Brazil',y = "" )+
+  theme(legend.position = "none")
 
 
-Temporario<- subset(IRR_Medio, (REGIAO == "Centro_Oeste"))
+Temporario<- subset(IRR_Medio, (REGIAO == "Centro-Oeste"))
 Temporario<- Temporario[,c(-1,-2,-3)]
 pps2<-ppsr :: visualize_pps ( df = Temporario, y  = "FLO_M" ) + 
- ggplot2 :: labs ( title  =  'PPS Centro-Oeste' )
+ ggplot2 :: labs ( title  =  'Midwest',y = ""  )+
+  theme(legend.position = "none")
 
 Temporario<- subset(IRR_Medio, (REGIAO == "Norte"))
 Temporario<- Temporario[,c(-1,-2,-3)]
 pps3<-ppsr :: visualize_pps ( df = Temporario, y  = "FLO_M"  ) + 
- ggplot2 :: labs ( title  =  'PPS Norte' )
+ ggplot2 :: labs ( title  =  'North',y = ""  )+
+  theme(legend.position = "none")
 
 Temporario<- subset(IRR_Medio, (REGIAO == "Nordeste"))
 Temporario<- Temporario[,c(-1,-2,-3)]
 pps4<-ppsr :: visualize_pps ( df = Temporario, y  = "FLO_M" ) + 
- ggplot2 :: labs ( title  =  'PPS Nordeste' )
+ ggplot2 :: labs ( title  =  'Northeast',y = ""  )+
+  theme(legend.position = "none")
 
 Temporario<- subset(IRR_Medio, (REGIAO == "Sul"))
 Temporario<- Temporario[,c(-1,-2,-3)]
 pps5<-ppsr :: visualize_pps ( df = Temporario, y  = "FLO_M" ) + 
- ggplot2 :: labs ( title  =  'PPS Sul' )
+ ggplot2 :: labs ( title  =  'South' ,y = "" )+
+  theme(legend.position = "none")
 
 Temporario<- subset(IRR_Medio, (REGIAO == "Sudeste"))
 Temporario<- Temporario[,c(-1,-2,-3)]
 pps6<-ppsr :: visualize_pps ( df = Temporario, y  = "FLO_M") + 
- ggplot2 :: labs ( title  =  'PPS Sudeste' )
+ ggplot2 :: labs ( title  =  'Southeast',y = ""  )+
+  theme(legend.position = "none")
 
-pps1
-pps2
-pps3
-pps4
-pps5
-pps6
+(pps1+pps2+pps3)/(pps5+pps4+pps6)+plot_annotation(tag_levels = 'A', tag_prefix = '(', tag_suffix = ')')
 
 ```
 
@@ -1007,5 +1043,272 @@ pca6_6<-fviz_pca_biplot(res_pca,geom.ind = "point") +
 pca5
 pca5_5
 ```
+
+
+```{r}
+summary(Sul$Tmax_V)
+boxplot(Sul$)
+
+sd(Sul$Tmax_V)
+```
+```{r}
+a<- ggplot(IRR, aes(x = REGIAO, y = Tmax_V, color = REGIAO, fill = REGIAO)) +
+    scale_y_continuous() +
+  scale_color_viridis_d( guide = "none") +
+  scale_fill_viridis_d( guide = "none")+
+ geom_violin(
+    aes(fill = REGIAO, fill = after_scale(colorspace::lighten(fill, .5))),
+    size = 1.2, color = NA
+  ) +
+  geom_boxplot(
+    width = .1, size = 1.2
+  ) +
+  stat_summary(
+    geom = "point",
+    fun = median,
+    color = "white",
+    size = 5
+  )+
+  theme_classic()+
+  labs(x="", y="Florescimento observado (DAE)")
+
+```
+
+# box2
+
+```{r}
+a<- ggplot(IRR, aes(y=Tmax_fld_m, x= REGIAO, color = REGIAO, fill = REGIAO))+
+geom_boxplot(
+    width = .2, fill = "white",
+    size = 1
+  ) +
+  ggdist::stat_halfeye(
+    #adjust = .33, ## bandwidth
+    width = .67, 
+    color = NA, ## remove slab interval
+    position = position_nudge(x = .15)
+  ) +
+  scale_color_viridis_d() +
+  scale_fill_viridis_d( guide = "none") +
+  theme_classic()+
+        theme(legend.position="none")+
+       labs(y = "Tmax_FLO (ºC)",x= "")
+
+b<- ggplot(IRR, aes(y=UR_V, x= REGIAO, color = REGIAO, fill = REGIAO))+
+geom_boxplot(
+    width = .2, fill = "white",
+    size = 1
+  ) +
+  ggdist::stat_halfeye(
+    #adjust = .33, ## bandwidth
+    width = .67, 
+    color = NA, ## remove slab interval
+    position = position_nudge(x = .15)
+  ) +
+  scale_color_viridis_d() +
+  scale_fill_viridis_d( guide = "none") +
+  theme_classic()+
+        theme(legend.position="none")+
+       labs(y = "HU_V (%)",x= "")
+
+c<- ggplot(IRR, aes(y=Tmax_V, x= REGIAO, color = REGIAO, fill = REGIAO))+
+geom_boxplot(
+    width = .2, fill = "white",
+    size = 1
+  ) +
+  ggdist::stat_halfeye(
+    #adjust = .33, ## bandwidth
+    width = .67, 
+    color = NA, ## remove slab interval
+    position = position_nudge(x = .15)
+  ) +
+  scale_color_viridis_d() +
+  scale_fill_viridis_d( guide = "none") +
+  theme_classic()+
+        theme(legend.position="none")+
+       labs(y = "Tmax_V (ºC)",x= "")
+
+e<- ggplot(IRR, aes(y=Tmin_V, x= REGIAO, color = REGIAO, fill = REGIAO))+
+geom_boxplot(
+    width = .2, fill = "white",
+    size = 1
+  ) +
+  ggdist::stat_halfeye(
+    #adjust = .33, ## bandwidth
+    width = .67, 
+    color = NA, ## remove slab interval
+    position = position_nudge(x = .15)
+  ) +
+  scale_color_viridis_d() +
+  scale_fill_viridis_d( guide = "none") +
+  theme_classic()+
+        theme(legend.position="none")+
+       labs(y = "Tmin_V (ºC)",x= "")
+
+d<- ggplot(IRR, aes(y=Tmax_V, x= REGIAO, color = REGIAO, fill = REGIAO))+
+geom_boxplot(
+    width = .2, fill = "white",
+    size = 1
+  ) +
+  ggdist::stat_halfeye(
+    #adjust = .33, ## bandwidth
+    width = .67, 
+    color = NA, ## remove slab interval
+    position = position_nudge(x = .15)
+  ) +
+  scale_color_viridis_d() +
+  scale_fill_viridis_d( guide = "none") +
+  theme_classic()+
+        theme(legend.position="none")+
+       labs(y = "Tmax_V (ºC)",x= "")
+
+f<- ggplot(IRR, aes(y=Tmin_Maxima, x= REGIAO, color = REGIAO, fill = REGIAO))+
+geom_boxplot(
+    width = .2, fill = "white",
+    size = 1
+  ) +
+  ggdist::stat_halfeye(
+    #adjust = .33, ## bandwidth
+    width = .67, 
+    color = NA, ## remove slab interval
+    position = position_nudge(x = .15)
+  ) +
+  scale_color_viridis_d() +
+  scale_fill_viridis_d( guide = "none") +
+  theme_classic()+
+        theme(legend.position="none")+
+       labs(y = "Tmin_Max (ºC)",x= "")
+
+g<- ggplot(IRR, aes(y=Tmin_ACC_R, x= REGIAO, color = REGIAO, fill = REGIAO))+
+geom_boxplot(
+    width = .2, fill = "white",
+    size = 1
+  ) +
+  ggdist::stat_halfeye(
+    #adjust = .33, ## bandwidth
+    width = .67, 
+    color = NA, ## remove slab interval
+    position = position_nudge(x = .15)
+  ) +
+  scale_color_viridis_d() +
+  scale_fill_viridis_d( guide = "none") +
+  theme_classic()+
+        theme(legend.position="none")+
+       labs(y = "Tmin_ACC_R (ºC)",x= "")
+
+h<- ggplot(IRR, aes(y=Tmin_ACC_V, x= REGIAO, color = REGIAO, fill = REGIAO))+
+geom_boxplot(
+    width = .2, fill = "white",
+    size = 1
+  ) +
+  ggdist::stat_halfeye(
+    #adjust = .33, ## bandwidth
+    width = .67, 
+    color = NA, ## remove slab interval
+    position = position_nudge(x = .15)
+  ) +
+  scale_color_viridis_d() +
+  scale_fill_viridis_d( guide = "none") +
+  theme_classic()+
+        theme(legend.position="none")+
+       labs(y = "Tmin_ACC_V (ºC)",x= "")
+
+i<- ggplot(IRR, aes(y=Tmax_V , x= REGIAO, color = REGIAO, fill = REGIAO))+
+geom_boxplot(
+    width = .2, fill = "white",
+    size = 1
+  ) +
+  ggdist::stat_halfeye(
+    #adjust = .33, ## bandwidth
+    width = .67, 
+    color = NA, ## remove slab interval
+    position = position_nudge(x = .15)
+  ) +
+  scale_color_viridis_d() +
+  scale_fill_viridis_d( guide = "none") +
+  theme_classic()+
+        theme(legend.position="none")+
+       labs(y = "Tmax_V (ºC)",x= "")
+
+i<- ggplot(IRR, aes(y=Tmax_R , x= REGIAO, color = REGIAO, fill = REGIAO))+
+geom_boxplot(
+    width = .2, fill = "white",
+    size = 1
+  ) +
+  ggdist::stat_halfeye(
+    #adjust = .33, ## bandwidth
+    width = .67, 
+    color = NA, ## remove slab interval
+    position = position_nudge(x = .15)
+  ) +
+  scale_color_viridis_d() +
+  scale_fill_viridis_d( guide = "none") +
+  theme_classic()+
+        theme(legend.position="none")+
+       labs(y = "Tmax_R (ºC)",x= "")
+
+j<- ggplot(IRR, aes(y=Tmax_Minima , x= REGIAO, color = REGIAO, fill = REGIAO))+
+geom_boxplot(
+    width = .2, fill = "white",
+    size = 1
+  ) +
+  ggdist::stat_halfeye(
+    #adjust = .33, ## bandwidth
+    width = .67, 
+    color = NA, ## remove slab interval
+    position = position_nudge(x = .15)
+  ) +
+  scale_color_viridis_d() +
+  scale_fill_viridis_d( guide = "none") +
+  theme_classic()+
+        theme(legend.position="none")+
+       labs(y = "Tmax_Min (ºC)",x= "")
+
+k<- ggplot(IRR, aes(y=Tmax_ACC_R , x= REGIAO, color = REGIAO, fill = REGIAO))+
+geom_boxplot(
+    width = .2, fill = "white",
+    size = 1
+  ) +
+  ggdist::stat_halfeye(
+    #adjust = .33, ## bandwidth
+    width = .67, 
+    color = NA, ## remove slab interval
+    position = position_nudge(x = .15)
+  ) +
+  scale_color_viridis_d() +
+  scale_fill_viridis_d( guide = "none") +
+  theme_classic()+
+        theme(legend.position="none")+
+       labs(y = "Tmax_ACC_R (ºC)",x= "")
+
+
+l<- ggplot(IRR, aes(y=Tmax_ACC_V , x= REGIAO, color = REGIAO, fill = REGIAO))+
+geom_boxplot(
+    width = .2, fill = "white",
+    size = 1
+  ) +
+  ggdist::stat_halfeye(
+    #adjust = .33, ## bandwidth
+    width = .67, 
+    color = NA, ## remove slab interval
+    position = position_nudge(x = .15)
+  ) +
+  scale_color_viridis_d() +
+  scale_fill_viridis_d( guide = "none") +
+  theme_classic()+
+        theme(legend.position="none")+
+       labs(y = "Tmax_ACC_V (ºC)",x= "")
+
+
+
+a/c/b/d/e/f/g/h/i/j/k/l
+
+e/d/b
+```
+```{r}
+1335/37
+```
+
+
 
 
