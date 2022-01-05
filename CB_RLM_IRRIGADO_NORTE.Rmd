@@ -7939,11 +7939,11 @@ qualitativas$Estimativa <- ifelse(qualitativas$Estimativa > 0 , exp(qualitativas
 
 
 qualitativas$crescimento = as.factor(ifelse(qualitativas$Estimativa > 0, yes = 1, no = 0))
-
+summary(qualitativas)
         
 bb2<-ggplot(data = qualitativas, aes(x=  fct_reorder(variaveis, Estimativa, .desc = TRUE), y = Estimativa))+
   geom_col(aes(fill = crescimento))+
-  labs(x = "", y = "Dias pré e pós florescimento")+
+  labs(x = "", y = "Pre and post flowering days")+
  coord_flip()+
         geom_hline(yintercept = 0) +
   guides(fill = FALSE) +
@@ -8029,6 +8029,10 @@ imp2<-ggplot(aes(x=reorder(Variaveis,-importancia ), y = importancia ),data = C_
 colnames(IRR_Medio)
 ```
 
+```{r}
+((p_Centro_oeste1|p_norte1|p_sul1)|(p_sudeste1|p_nordeste1))+plot_annotation(tag_levels = 'A', tag_prefix = '(', tag_suffix = ')')
+
+```
 
 
 
