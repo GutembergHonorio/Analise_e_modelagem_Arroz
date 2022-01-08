@@ -77,6 +77,25 @@ Sudeste<- subset(IRR_Medio, (REGIAO == "Southeast")) # filtrando por região
 
 # Entrada 
 
+
+```{r}
+
+Temporario <- Centro_oeste[,c(-1,-3)] # retirando as vaiáveis REGIAO e ID_ENSAIO
+Temporario<- Temporario[c(-57, -60,-70,-116),]
+
+Genotipos  <- Temporario$Genotype
+SELECAO_GEN <- c("BR IRGA 409" ,"BR IRGA 410"	,"BRS 7 TAIM"	,"BRS A701 CL"	,"BRS A702 CL"	,"BRS CIRAD 302"	,"BRS FRONTEIRA"	,"BRS JACANA"	,"BRS PELOTA"	,"BRS SINUELO CL"	,"EMPASC 102"	,"EPAGRI97-01"	,"EPAGRI97-05"	,"EPAGRI97-06"	,"IRGA 422 CL"	,"IRGA 424"	,"IRGA 424 RI"	,"IRGA 425"	,"IRGA 426"	,"IRGA97-11"	,"IRGA97-28"	,"JEQUITIBA"	,"PR306"	,"PR349"	,"PR498"	,"PR631"	,"SC240"	,"SC250", "IRGA 427","SCSBRS 111", "BRS PAMPA", "IAC1289", "PR67"
+)
+
+Temporario$Genotype <- c(ifelse(Temporario$Genotype %in% SELECAO_GEN, "AA" , Genotipos))
+
+modelo_GAM_Centro_oeste = gam(FLO_M~Genotype + s(Tmax_Min) + Tmin_V + Tmin_ACC_V + 
+    Tmin_R + s(Tmin_ACC_R) +  s(Rad_ACC) + 
+    s(Degree_days_FLO), family = gaussian, data = Temporario)
+summary(modelo_GAM_Centro_oeste)
+```
+
+
 # Figura 
 
 ```{r}
@@ -95,7 +114,7 @@ trt[["plots"]][[2]][["ggObj"]][["labels"]][["title"]]<-c("(E)")
 trt[["plots"]][[3]][["ggObj"]][["labels"]][["x"]]<-c("Rad_ACC (MJ/m²)")
 trt[["plots"]][[3]][["ggObj"]][["labels"]][["title"]]<-c("(F)")
 
-trt[["plots"]][[4]][["ggObj"]][["labels"]][["x"]]<-c("Gegree_day_FLO (ºC)")
+trt[["plots"]][[4]][["ggObj"]][["labels"]][["x"]]<-c("Degree_days_FLO (ºC)")
 trt[["plots"]][[4]][["ggObj"]][["labels"]][["title"]]<-c("(G)")
 
 
@@ -112,21 +131,21 @@ mydf <- ggpredict(modelo_GAM_Centro_oeste, terms = "Tmin_R")
 a<-ggplot(mydf, aes(x, predicted)) +
   geom_line(color = "blue") +
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .1)+
-  labs(y = "Florescimento (DAE)",  x ="Tmin_R (ºC)", title = "(A)")+
+  labs(y = "Flowering (DAE)",  x ="Tmin_R (ºC)", title = "(A)")+
   theme_classic()
 
 mydf <- ggpredict(modelo_GAM_Centro_oeste, terms = "Tmin_V")
 b<-ggplot(mydf, aes(x, predicted)) +
   geom_line(color = "blue") +
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .1)+
-  labs(y = "Florescimento (DAE)",  x ="Tmin_V (ºC)", title = "(B)")+
+  labs(y = "Flowering (DAE)",  x ="Tmin_V (ºC)", title = "(B)")+
   theme_classic()
 
 mydf <- ggpredict(modelo_GAM_Centro_oeste, terms = "Tmin_ACC_V")
 c<-ggplot(mydf, aes(x, predicted)) +
   geom_line(color = "blue") +
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .1)+
-  labs(y = "Florescimento (DAE)",  x ="Tmin_ACC_V (ºC)", title = "(C)")+
+  labs(y = "Flowering (DAE)",  x ="Tmin_ACC_V (ºC)", title = "(C)")+
   theme_classic()
 
 
