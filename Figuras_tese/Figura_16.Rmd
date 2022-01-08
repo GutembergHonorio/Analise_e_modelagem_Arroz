@@ -1,0 +1,201 @@
+---
+title: "Figura 16"
+author: "Gutemberg Resende Honorio Filho"
+date: "08/01/2022"
+output: html_document
+---
+# Pacotes
+
+```{r}
+
+if(!require(tidyverse)) install.packages("tidyverse")
+if(!require(patchwork)) install.packages("patchwork")
+
+#gam
+if(!require(mgcv)) install.packages("mgcv")
+```
+
+
+# Dados
+
+
+```{r Diretório} 
+
+
+# DIRETÓRIO DOS DADOS 
+
+Tabelabruta<- read.csv("d:/Users/Cristiane Resende/Desktop/Gutemberg Honorio/Mestrado/Repositorio_4/Analise_e_modelagem_Arroz/Merge_1980_2018.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE) # tabela com os dados originais
+
+# criando coluna com macrorregiões
+
+Tabelabruta<- mutate(Tabelabruta,REGIAO = case_when(UF == 'GO'| UF == 'DF' |UF == 'MS' | UF == 'MT' ~ 'Centro-Oeste',
+                              UF == 'AL'| UF == 'BA' |UF == 'CE' | UF == 'MA' | UF == 'PB' | UF == 'PE' | UF == 'PI' | UF == 'RN' | UF == 'SE' ~ 'Nordeste',
+                              UF == 'AC' | UF == 'AM' | UF == 'AP' | UF == 'PA' | UF == 'RO' | UF == 'RR' | UF == 'TO' ~ 'Norte',
+                              UF == 'ES' | UF == 'MG' | UF == 'SP' | UF == 'RJ' ~ 'Sudeste',
+                              UF == 'RS' | UF == 'SC' | UF == 'PR' ~ 'Sul'))
+
+# Tabelas acessório
+
+TabelabrutaIRR = subset(Tabelabruta, SIST_CULT == "IRRIGATED") # Somente Irrigado
+TabelabrutaTA = subset(Tabelabruta, SIST_CULT == "UPLAND") # Somente Terras altas
+
+# Filtrando os dados
+
+
+IRR<-TabelabrutaIRR %>% mutate(UR_Media=(umidade_Media),UR_V=	(umidade_V), UR_fld_m=	(umidade_fld_m),	UR_R=	(umidade_R), Graus_dia_ciclo=(graus_dia_ciclo), Graus_dia_FLO=(graus_dia_FLO+graus_dia_IP))
+
+IRR <- select(IRR,latitude, longitude, GENOTIPO, ID_ENSAIO,ano, Altitude, REGIAO, UF, FLO_E, Tmax_Maxima ,Tmax_fld_m ,	Tmax_R,	Tmax_ACC_R, Tmax_Minima,	Tmax_Media,Tmax_V ,Tmax_ACC_V,	Tmin_Maxima,Tmin_Minima ,	Tmin_Media ,	Tmin_V ,	Tmin_ACC_V , Tmin_fld_m ,	Tmin_R,	Tmin_ACC_R , Chuva_ACC ,	Chuva_ACC_V, Chuva_ACC_R, Rad_ACC_R ,	Rad_ACC ,	Rad_ACC_V, UR_Media, UR_V, UR_fld_m,	UR_R, Graus_dia_ciclo, Graus_dia_FLO, ano)
+
+
+#rm(TabelabrutaIRR,TabelabrutaTA,Tabelabruta)
+
+# Removendo os genótipos que não serão estudados
+
+IRR = IRR[IRR$GENOTIPO %in% c("ALIANCA",	"AVAXI CL",	"BR IRGA 409",	"BR IRGA 410",	"BR IRGA 412",	"BR IRGA 414",	"BRS 7 TAIM",	"BRS A701 CL",	"BRS A702 CL",	"BRS A704",	"BRS ALVORADA",	"BRS BIGUA",	"BRS CATIANA",	"BRS CIRAD 302",	"BRS FORMOSO",	"BRS FRONTEIRA",	"BRS GUARA",	"BRS JABURU",	"BRS JACANA",	"BRS PAMPA",	"BRS PAMPEIRA",	"BRS PELOTA",	"BRS QUERENCIA",	"BRS SINUELO CL",	"BRS TROPICAL",	"BRSMG RUBELITA",	"CICA 8",	"CT8452",	"DIAMANTE",	"EEA34",	"EMPASC 101",	"EMPASC 102",	"EPAGRI 108",	"EPAGRI 109",	"EPAGRI97-01",	"EPAGRI97-05",	"EPAGRI97-06",	"H6",	"H7 CL",	"IAC1289",	"IAC1298",	"IAC1299",	"IAC1307",	"IAC1311",	"IAPAR 58",	"IRGA 417",	"IRGA 422 CL",	"IRGA 424",	"IRGA 424 RI",	"IRGA 425",	"IRGA 426",	"IRGA 427",	"IRGA 428",	"IRGA 429",	"IRGA 430",	"IRGA97-05",	"IRGA97-10",	"IRGA97-11",	"IRGA97-28",	"JAVAE",	"JEQUITIBA",	"MARAJO",	"METICA 1",	"MOXOTO",	"OUROMINAS",	"PR267",	"PR268",	"PR306",	"PR331",	"PR349",	"PR380",	"PR498",	"PR631",	"PR67",	"PUITA INTA CL",	"RORAIMA",	"SAO FRANCISCO",	"SC138",	"SC173",	"SC237",	"SC240",	"SC250",	"SCS 112",	"SCS 114 ANDOSAN",	"SCS 116 SATORU",	"SCS 121 CL",	"SCSBRS 111",	"SCSBRS 113 TIO TAKA",	"SCSBRS PIRACEMA",	"SG11551",	"URUCUI"),]
+IRR = IRR[IRR$UF!="MT",]
+
+# Filtrando e gerando médias
+
+IRR_Medio<- IRR %>% group_by(ID_ENSAIO, GENOTIPO, REGIAO) %>% summarise(  FLO_M= mean(FLO_E),  latitude= mean(latitude), longitude = mean(longitude), Altitude = mean(Altitude), Tmax_Maxima = mean(Tmax_Maxima) ,Tmax_fld_m = mean(Tmax_fld_m ),	Tmax_R= mean( Tmax_R),	Tmax_ACC_R= mean(Tmax_ACC_R ), Tmax_Minima= mean(Tmax_Minima ),	Tmax_Media= mean( Tmax_Media),Tmax_V = mean(Tmax_V ),Tmax_ACC_V= mean(Tmax_ACC_V ),	Tmin_Maxima= mean(Tmin_Maxima ),Tmin_Minima = mean(Tmin_Minima ),	Tmin_Media = mean(Tmin_Media ),	Tmin_V = mean(Tmin_V ),	Tmin_ACC_V = mean(Tmin_ACC_V ), Tmin_fld_m = mean( Tmin_fld_m),	Tmin_R= mean(Tmin_R ),	Tmin_ACC_R = mean(Tmin_ACC_R ), Chuva_ACC = mean(Chuva_ACC ),	Chuva_ACC_V= mean(Chuva_ACC_V ), Chuva_ACC_R= mean(Chuva_ACC_R ), Rad_ACC_R = mean(Rad_ACC_R ),	Rad_ACC = mean(Rad_ACC ),	Rad_ACC_V= mean(Rad_ACC_V ), UR_Media= mean( UR_Media), UR_V= mean( UR_V), UR_fld_m= mean(UR_fld_m ),	UR_R= mean(UR_R ), Graus_dia_ciclo= mean(Graus_dia_ciclo ), Graus_dia_FLO= mean(Graus_dia_FLO ))
+
+
+
+# separando por macrorregião
+
+Centro_oeste<- subset(IRR_Medio, (REGIAO == "Centro-Oeste")) # filtrando por região
+Norte<- subset(IRR_Medio, (REGIAO == "Norte")) # filtrando por região
+Nordeste<- subset(IRR_Medio, (REGIAO == "Nordeste")) # filtrando por região
+Sul<- subset(IRR_Medio, (REGIAO == "Sul")) # filtrando por região
+Sudeste<- subset(IRR_Medio, (REGIAO == "Sudeste")) # filtrando por região
+
+```
+
+
+# Entrada
+
+```{r}
+Temporario<- Nordeste[,c(-1,-3)]
+
+Genotipos  <- Temporario$GENOTIPO
+SELECAO_GEN <- c("ALIANCA","BRS A704" , "BRS FORMOSO"   ,"CICA 8",   "EMPASC 101",   "EPAGRI 108",   "EPAGRI 109",   "MOXOTO",   "PR268",   "SCS 114 ANDOSAN", "BRS GUARA", "BRS JABURU", "BRSMG RUBELITA","SCS 116 SATORU","SCS 121 CL","SCSBRS 113 TIO TAKA", "BRS ALVORADA","BRS CATIANA","IAC1298","PR267", "IAC1299", "OUROMINAS")
+
+Temporario$GENOTIPO <- c(ifelse(Temporario$GENOTIPO %in% SELECAO_GEN, "AA" , Genotipos))
+
+
+modelo_GAM_Nordeste = gam(FLO_M ~ GENOTIPO + Tmax_R + s(Tmax_ACC_R) + Tmax_V + Tmax_ACC_V + 
+    s(Chuva_ACC_V), family = gaussian, data = Temporario)
+
+summary(modelo_GAM_Nordeste)
+```
+
+```{r}
+#AA
+Temporario1<- Temporario[Temporario$GENOTIPO %in% c("AA"),]
+  media_Temporario1<- Temporario1 %>% group_by(GENOTIPO) %>% summarise(Tmax_ACC_R = mean(Tmax_ACC_R), Chuva_ACC_V = mean(Chuva_ACC_V),      Tmax_R  = mean(Tmax_R),    Tmax_V  = mean(Tmax_V),  Tmax_ACC_V = mean(Tmax_ACC_V))
+  
+Tmax_ACC_R<-data.frame()
+Tmax_ACC_R<- Temporario[Temporario$GENOTIPO %in% c("AA"),c("GENOTIPO","Tmax_ACC_R", "Chuva_ACC_V" ,      "Tmax_R" , "Tmax_V"  ,  "Tmax_ACC_V" )]
+Tmax_ACC_R["Chuva_ACC_V"]<- c(media_Temporario1$Chuva_ACC_V)
+Tmax_ACC_R["Tmax_R"]<- c(media_Temporario1$Tmax_R)
+Tmax_ACC_R["Tmax_V"]<- c(media_Temporario1$Tmax_V)
+Tmax_ACC_R["Tmax_ACC_V"]<- c(media_Temporario1$Tmax_ACC_V)
+Tmax_ACC_R["FLO"] = predict(modelo_GAM_Nordeste,Tmax_ACC_R)
+
+Chuva_ACC_V<-data.frame()
+Chuva_ACC_V<- Temporario[Temporario$GENOTIPO %in% c("AA"),c("GENOTIPO","Tmax_ACC_R", "Chuva_ACC_V" ,      "Tmax_R" , "Tmax_V"  ,  "Tmax_ACC_V" )]
+Chuva_ACC_V["Tmax_ACC_R"]<- c(media_Temporario1$Tmax_ACC_R)
+Chuva_ACC_V["Tmax_R"]<- c(media_Temporario1$Tmax_R)
+Chuva_ACC_V["Tmax_V"]<- c(media_Temporario1$Tmax_V)
+Chuva_ACC_V["Tmax_ACC_V"]<- c(media_Temporario1$Tmax_ACC_V)
+Chuva_ACC_V["FLO"] = predict(modelo_GAM_Nordeste,Chuva_ACC_V)
+
+Tmax_R<- Temporario[Temporario$GENOTIPO %in% c("AA"),c("GENOTIPO","Tmax_ACC_R", "Chuva_ACC_V" ,      "Tmax_R" , "Tmax_V"  ,  "Tmax_ACC_V" )]
+Tmax_R["Tmax_ACC_R"]<- c(media_Temporario1$Tmax_ACC_R)
+Tmax_R["Chuva_ACC_V"]<- c(media_Temporario1$Chuva_ACC_V)
+Tmax_R["Tmax_V"]<- c(media_Temporario1$Tmax_V)
+Tmax_R["Tmax_ACC_V"]<- c(media_Temporario1$Tmax_ACC_V)
+Tmax_R["FLO"] = predict(modelo_GAM_Nordeste,Tmax_R)
+
+Tmax_V<- Temporario[Temporario$GENOTIPO %in% c("AA"),c("GENOTIPO","Tmax_ACC_R", "Chuva_ACC_V" ,      "Tmax_R" , "Tmax_V"  ,  "Tmax_ACC_V" )]
+Tmax_V["Tmax_ACC_R"]<- c(media_Temporario1$Tmax_ACC_R)
+Tmax_V["Chuva_ACC_V"]<- c(media_Temporario1$Chuva_ACC_V)
+Tmax_V["Tmax_R"]<- c(media_Temporario1$Tmax_R)
+Tmax_V["Tmax_ACC_V"]<- c(media_Temporario1$Tmax_ACC_V)
+Tmax_V["FLO"] = predict(modelo_GAM_Nordeste,Tmax_V)
+
+Tmax_ACC_V<- Temporario[Temporario$GENOTIPO %in% c("AA"),c("GENOTIPO","Tmax_ACC_R", "Chuva_ACC_V" ,      "Tmax_R" , "Tmax_V"  ,  "Tmax_ACC_V" )]
+Tmax_ACC_V["Tmax_ACC_R"]<- c(media_Temporario1$Tmax_ACC_R)
+Tmax_ACC_V["Chuva_ACC_V"]<- c(media_Temporario1$Chuva_ACC_V)
+Tmax_ACC_V["Tmax_R"]<- c(media_Temporario1$Tmax_R)
+Tmax_ACC_V["Tmax_V"]<- c(media_Temporario1$Tmax_V)
+Tmax_ACC_V["FLO"] = predict(modelo_GAM_Nordeste,Tmax_ACC_V)
+
+
+
+a=Tmax_ACC_R
+b=Chuva_ACC_V
+c=Tmax_R
+d=Tmax_V
+e=Tmax_ACC_V
+
+intercepto <- mean(Temporario$FLO_M)
+a$crescimento = as.factor(ifelse(a$FLO > intercepto, yes = 1, no = 0))
+b$crescimento = as.factor(ifelse(b$FLO > intercepto, yes = 1, no = 0))
+c$crescimento = as.factor(ifelse(c$FLO > intercepto, yes = 1, no = 0))
+d$crescimento = as.factor(ifelse(d$FLO > intercepto, yes = 1, no = 0))
+e$crescimento = as.factor(ifelse(e$FLO > intercepto, yes = 1, no = 0))
+
+
+test1<-ggplot(a, mapping = aes(x=Tmax_ACC_R, y=FLO))+
+  geom_point( mapping =aes(color = crescimento))+
+ geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
+  labs(x= "Tmax_ACC_R (ºC)" , y="Flowering (DAE)")+
+  guides(fill = FALSE) +
+  scale_color_manual(values = c("firebrick", "dodgerblue4"))+
+  theme_classic()+
+    theme(legend.position = "none")
+
+
+test2<-ggplot(b, mapping = aes(x=Chuva_ACC_V, y=FLO))+
+  geom_point( mapping =aes(color = crescimento))+
+ geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
+  labs(x= "Rainfall_ACC_V (mm)" , y="Flowering (DAE)")+
+  guides(fill = FALSE) +
+  scale_color_manual(values = c("dodgerblue4"))+
+  theme_classic()+
+    theme(legend.position = "none")
+
+
+test3<-ggplot(c, mapping = aes(x=Tmax_R, y=FLO))+
+  geom_point( mapping =aes(color = crescimento))+
+ geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
+  labs(x= "Tmax_R (ºC)" , y="Flowering (DAE)")+
+  guides(fill = FALSE) +
+  scale_color_manual(values = c("dodgerblue4"))+
+  theme_classic()+
+    theme(legend.position = "none")
+
+test4<-ggplot(d, mapping = aes(x=Tmax_V, y=FLO))+
+  geom_point( mapping =aes(color = crescimento))+
+ geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
+  labs(x= "Tmax_V (ºC)" , y="Flowering (DAE)")+
+  guides(fill = FALSE) +
+  scale_color_manual(values = c("firebrick", "dodgerblue4"))+
+  theme_classic()+
+    theme(legend.position = "none")
+
+test5<-ggplot(e, mapping = aes(x=Tmax_ACC_V, y=FLO))+
+  geom_point( mapping =aes(color = crescimento))+
+  geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
+  labs(x= "Tmax_ACC_V (ºC)" , y="Flowering (DAE)")+
+  guides(fill = FALSE) +
+  scale_color_manual(values = c("firebrick", "dodgerblue4"))+
+  theme_classic()+
+    theme(legend.position = "none")
+```
+
+# Figura 16
+```{r}
+((test4|test3|test5)/(test1|test2))+plot_annotation(tag_levels = 'A', tag_prefix = '(', tag_suffix = ')')+  plot_annotation (  caption =  '--- Flowering average' )
+
+```
