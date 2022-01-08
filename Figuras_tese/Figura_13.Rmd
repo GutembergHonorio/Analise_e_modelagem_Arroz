@@ -155,7 +155,7 @@ d=Chuva_ACC_R
 e=longitude
 f=Rad_ACC
 
-intercepto <- media_FLO
+  intercepto <- mean(Temporario$FLO_M)
 a$crescimento = as.factor(ifelse(a$FLO > intercepto, yes = 1, no = 0))
 b$crescimento = as.factor(ifelse(b$FLO > intercepto, yes = 1, no = 0))
 c$crescimento = as.factor(ifelse(c$FLO > intercepto, yes = 1, no = 0))
