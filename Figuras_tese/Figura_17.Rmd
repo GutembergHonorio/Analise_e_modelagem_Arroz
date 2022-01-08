@@ -1,0 +1,134 @@
+---
+title: "Figura 17"
+author: "Gutemberg Resende Honorio Filho"
+date: "08/01/2022"
+output: html_document
+---
+
+# Pacotes
+
+```{r}
+
+if(!require(tidyverse)) install.packages("tidyverse")
+if(!require(patchwork)) install.packages("patchwork")
+if(!require(mgcViz)) install.packages("mgcViz")
+if(!require(ggeffects)) install.packages("ggeffects")
+
+#gam
+if(!require(mgcv)) install.packages("mgcv")
+
+```
+
+
+# Dados atualizados
+
+
+```{r Diretório} 
+
+
+# DIRETÓRIO DOS DADOS 
+
+Tabelabruta<- read.csv("d:/Users/Cristiane Resende/Desktop/Gutemberg Honorio/Mestrado/Repositorio_4/Analise_e_modelagem_Arroz/Merge_1980_2018.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE) # tabela com os dados originais
+
+# criando coluna com macrorregiões
+
+Tabelabruta<- mutate(Tabelabruta,REGIAO = case_when(UF == 'GO'| UF == 'DF' |UF == 'MS' | UF == 'MT' ~ 'Midwest',
+                              UF == 'AL'| UF == 'BA' |UF == 'CE' | UF == 'MA' | UF == 'PB' | UF == 'PE' | UF == 'PI' | UF == 'RN' | UF == 'SE' ~ 'Northeast',
+                              UF == 'AC' | UF == 'AM' | UF == 'AP' | UF == 'PA' | UF == 'RO' | UF == 'RR' | UF == 'TO' ~ 'North',
+                              UF == 'ES' | UF == 'MG' | UF == 'SP' | UF == 'RJ' ~ 'Southeast',
+                              UF == 'RS' | UF == 'SC' | UF == 'PR' ~ 'South'))
+
+# Tabelas acessório
+
+TabelabrutaIRR = subset(Tabelabruta, SIST_CULT == "IRRIGATED") # Somente Irrigado
+TabelabrutaTA = subset(Tabelabruta, SIST_CULT == "UPLAND") # Somente Terras altas
+
+# Filtrando os dados
+
+
+IRR<-TabelabrutaIRR %>% mutate(Genotype =GENOTIPO, UR_Media=(umidade_Media),UR_V=	(umidade_V), UR_fld_m=	(umidade_fld_m),	UR_R=	(umidade_R), Graus_dia_ciclo=(graus_dia_ciclo), Graus_dia_FLO=(graus_dia_FLO+graus_dia_IP))
+
+IRR <- select(IRR,latitude, longitude, Genotype, ID_ENSAIO,ano, Altitude, REGIAO, UF, FLO_E, Tmax_Maxima ,Tmax_fld_m ,	Tmax_R,	Tmax_ACC_R, Tmax_Minima,	Tmax_Media,Tmax_V ,Tmax_ACC_V,	Tmin_Maxima,Tmin_Minima ,	Tmin_Media ,	Tmin_V ,	Tmin_ACC_V , Tmin_fld_m ,	Tmin_R,	Tmin_ACC_R , Chuva_ACC ,	Chuva_ACC_V, Chuva_ACC_R, Rad_ACC_R ,	Rad_ACC ,	Rad_ACC_V, UR_Media, UR_V, UR_fld_m,	UR_R, Graus_dia_ciclo, Graus_dia_FLO, ano)
+
+
+#rm(TabelabrutaIRR,TabelabrutaTA,Tabelabruta)
+
+# Removendo os genótipos que não serão estudados
+
+IRR = IRR[IRR$Genotype %in% c("ALIANCA",	"AVAXI CL",	"BR IRGA 409",	"BR IRGA 410",	"BR IRGA 412",	"BR IRGA 414",	"BRS 7 TAIM",	"BRS A701 CL",	"BRS A702 CL",	"BRS A704",	"BRS ALVORADA",	"BRS BIGUA",	"BRS CATIANA",	"BRS CIRAD 302",	"BRS FORMOSO",	"BRS FRONTEIRA",	"BRS GUARA",	"BRS JABURU",	"BRS JACANA",	"BRS PAMPA",	"BRS PAMPEIRA",	"BRS PELOTA",	"BRS QUERENCIA",	"BRS SINUELO CL",	"BRS TROPICAL",	"BRSMG RUBELITA",	"CICA 8",	"CT8452",	"DIAMANTE",	"EEA34",	"EMPASC 101",	"EMPASC 102",	"EPAGRI 108",	"EPAGRI 109",	"EPAGRI97-01",	"EPAGRI97-05",	"EPAGRI97-06",	"H6",	"H7 CL",	"IAC1289",	"IAC1298",	"IAC1299",	"IAC1307",	"IAC1311",	"IAPAR 58",	"IRGA 417",	"IRGA 422 CL",	"IRGA 424",	"IRGA 424 RI",	"IRGA 425",	"IRGA 426",	"IRGA 427",	"IRGA 428",	"IRGA 429",	"IRGA 430",	"IRGA97-05",	"IRGA97-10",	"IRGA97-11",	"IRGA97-28",	"JAVAE",	"JEQUITIBA",	"MARAJO",	"METICA 1",	"MOXOTO",	"OUROMINAS",	"PR267",	"PR268",	"PR306",	"PR331",	"PR349",	"PR380",	"PR498",	"PR631",	"PR67",	"PUITA INTA CL",	"RORAIMA",	"SAO FRANCISCO",	"SC138",	"SC173",	"SC237",	"SC240",	"SC250",	"SCS 112",	"SCS 114 ANDOSAN",	"SCS 116 SATORU",	"SCS 121 CL",	"SCSBRS 111",	"SCSBRS 113 TIO TAKA",	"SCSBRS PIRACEMA",	"SG11551",	"URUCUI"),]
+IRR = IRR[IRR$UF!="MT",]
+
+# Filtrando e gerando médias
+
+IRR_Medio<- IRR %>% group_by(ID_ENSAIO, Genotype, REGIAO) %>% summarise(  FLO_M= mean(FLO_E),  latitude= mean(latitude), longitude = mean(longitude), altitude = mean(Altitude), Tmax_Max = mean(Tmax_Maxima) ,Tmax_FLO= mean(Tmax_fld_m ),	Tmax_R= mean( Tmax_R),	Tmax_ACC_R= mean(Tmax_ACC_R ), Tmax_Min= mean(Tmax_Minima ),	Tmax_M= mean( Tmax_Media),Tmax_V = mean(Tmax_V ),Tmax_ACC_V= mean(Tmax_ACC_V ),	Tmin_Max= mean(Tmin_Maxima ),Tmin_Min = mean(Tmin_Minima ),	Tmin_M = mean(Tmin_Media ),	Tmin_V = mean(Tmin_V ),	Tmin_ACC_V = mean(Tmin_ACC_V ), Tmin_FLO = mean( Tmin_fld_m),	Tmin_R= mean(Tmin_R ),	Tmin_ACC_R = mean(Tmin_ACC_R ), Rainfall_ACC = mean(Chuva_ACC ),	Rainfall_ACC_V= mean(Chuva_ACC_V ), Rainfall_ACC_R= mean(Chuva_ACC_R ), Rad_ACC_R = mean(Rad_ACC_R ),	Rad_ACC = mean(Rad_ACC ),	Rad_ACC_V= mean(Rad_ACC_V ), HU_M= mean( UR_Media), HU_V= mean( UR_V), HU_FLO= mean(UR_fld_m ),	HU_R= mean(UR_R ), Degree_days_cycle= mean(Graus_dia_ciclo ), Degree_days_FLO= mean(Graus_dia_FLO ))
+
+
+
+# separando por macrorregião
+
+Centro_oeste<- subset(IRR_Medio, (REGIAO == "Midwest")) # filtrando por região
+Norte<- subset(IRR_Medio, (REGIAO == "North")) # filtrando por região
+Nordeste<- subset(IRR_Medio, (REGIAO == "Northeast")) # filtrando por região
+Sul<- subset(IRR_Medio, (REGIAO == "South")) # filtrando por região
+Sudeste<- subset(IRR_Medio, (REGIAO == "Southeast")) # filtrando por região
+
+```
+
+
+# Entrada 
+
+# Figura 
+
+```{r}
+viz <- getViz(modelo_GAM_Centro_oeste)
+trt<-plot(viz, allTerms = F) +
+  l_ciPoly()+
+    l_fitLine(colour = "blue") + l_rug(mapping = aes(x=x, y=y)) +
+    geom_hline(yintercept = 0, linetype = 2, alpha=0.4)+
+    theme_classic()
+trt[["plots"]][[1]][["ggObj"]][["labels"]][["x"]]<-c("Tmax_min (ºC)")
+trt[["plots"]][[1]][["ggObj"]][["labels"]][["title"]]<-c("(D)")
+
+trt[["plots"]][[2]][["ggObj"]][["labels"]][["x"]]<-c("Tmin_ACC_R (ºC)")
+trt[["plots"]][[2]][["ggObj"]][["labels"]][["title"]]<-c("(E)")
+
+trt[["plots"]][[3]][["ggObj"]][["labels"]][["x"]]<-c("Rad_ACC (MJ/m²)")
+trt[["plots"]][[3]][["ggObj"]][["labels"]][["title"]]<-c("(F)")
+
+trt[["plots"]][[4]][["ggObj"]][["labels"]][["x"]]<-c("Gegree_day_FLO (ºC)")
+trt[["plots"]][[4]][["ggObj"]][["labels"]][["title"]]<-c("(G)")
+
+
+print(trt, pages = 1)
+
+
+```
+
+
+
+```{r}
+
+mydf <- ggpredict(modelo_GAM_Centro_oeste, terms = "Tmin_R")
+a<-ggplot(mydf, aes(x, predicted)) +
+  geom_line(color = "blue") +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .1)+
+  labs(y = "Florescimento (DAE)",  x ="Tmin_R (ºC)", title = "(A)")+
+  theme_classic()
+
+mydf <- ggpredict(modelo_GAM_Centro_oeste, terms = "Tmin_V")
+b<-ggplot(mydf, aes(x, predicted)) +
+  geom_line(color = "blue") +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .1)+
+  labs(y = "Florescimento (DAE)",  x ="Tmin_V (ºC)", title = "(B)")+
+  theme_classic()
+
+mydf <- ggpredict(modelo_GAM_Centro_oeste, terms = "Tmin_ACC_V")
+c<-ggplot(mydf, aes(x, predicted)) +
+  geom_line(color = "blue") +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .1)+
+  labs(y = "Florescimento (DAE)",  x ="Tmin_ACC_V (ºC)", title = "(C)")+
+  theme_classic()
+
+
+a+b+c
+```
