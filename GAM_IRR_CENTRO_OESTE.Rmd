@@ -170,7 +170,7 @@ summary(modelo_GAM_CENTRO_OESTE)
 ```
 ```{r}
 par(mfrow = c(2, 2))
-gam.check(modelo_GAM_CENTRO_OESTE, old.style = T)
+gam.check(modelo_GAM_Centro_oeste, old.style = T)
 ```
 
 ```{r}

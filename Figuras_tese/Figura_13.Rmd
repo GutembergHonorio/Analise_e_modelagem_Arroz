@@ -149,73 +149,99 @@ Rad_ACC["FLO"] = predict(modelo_GAM_Norte,Rad_ACC)
 
 
 a=Tmin_Maxima
+  a = a[a$Tmin_Maxima<=28,]
+
 b=Tmin_ACC_R
+  b = b[b$Tmin_ACC_R<=1300,]
+
 c=Tmin_ACC_V
+  c = c[c$Tmin_ACC_V<=1700,]
+  c = c[c$Tmin_ACC_V>=850,]
+
 d=Chuva_ACC_R
+  d = d[d$Chuva_ACC_R<=600,]
+  
+
 e=longitude
 f=Rad_ACC
+  f = f[f$Rad_ACC<=2800,]
+    f = f[f$Rad_ACC>=1800,]
 
-  intercepto <- mean(Temporario$FLO_M)
-a$crescimento = as.factor(ifelse(a$FLO > intercepto, yes = 1, no = 0))
-b$crescimento = as.factor(ifelse(b$FLO > intercepto, yes = 1, no = 0))
-c$crescimento = as.factor(ifelse(c$FLO > intercepto, yes = 1, no = 0))
-d$crescimento = as.factor(ifelse(d$FLO > intercepto, yes = 1, no = 0))
-e$crescimento = as.factor(ifelse(e$FLO > intercepto, yes = 1, no = 0))
-f$crescimento = as.factor(ifelse(f$FLO > intercepto, yes = 1, no = 0))
+
+
+#  intercepto <- mean(Temporario$FLO_M)
+#a$crescimento = as.factor(ifelse(a$FLO > intercepto, yes = 1, no = 0))
+#b$crescimento = as.factor(ifelse(b$FLO > intercepto, yes = 1, no = 0))
+#c$crescimento = as.factor(ifelse(c$FLO > intercepto, yes = 1, no = 0))
+#d$crescimento = as.factor(ifelse(d$FLO > intercepto, yes = 1, no = 0))
+#e$crescimento = as.factor(ifelse(e$FLO > intercepto, yes = 1, no = 0))
+#f$crescimento = as.factor(ifelse(f$FLO > intercepto, yes = 1, no = 0))
 
 
 
 test1<-ggplot(a, mapping = aes(x=Tmin_Maxima, y=FLO))+
-  geom_point( mapping =aes(color = crescimento))+
-  geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
+ geom_point( col ="dodgerblue4")+
+    scale_y_continuous(limits = c(70, 92))+
+  #  geom_point( mapping =aes(color = crescimento))+
+#  geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
   labs(x= "Tmin_Max (ºC)" , y="Flowering (DAE)")+
-  guides(fill = FALSE) +
-  scale_color_manual(values = c("firebrick", "dodgerblue4"))+
+#  guides(fill = FALSE) +
+#  scale_color_manual(values = c("firebrick", "dodgerblue4"))+
   theme_classic()+
     theme(legend.position = "none")
 
 test2<-ggplot(b, mapping = aes(x=Tmin_ACC_R, y=FLO))+
-  geom_point( mapping =aes(color = crescimento))+
-  geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
+  geom_point( col ="dodgerblue4")+
+    scale_y_continuous(limits = c(70, 92))+
+  # geom_point( mapping =aes(color = crescimento))+
+#geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
   labs(x= "Tmin_ACC_R (ºC)" , y="Flowering (DAE)")+
-  guides(fill = FALSE) +
-  scale_color_manual(values = c("firebrick", "dodgerblue4"))+
+  #guides(fill = FALSE) +
+  #scale_color_manual(values = c("firebrick", "dodgerblue4"))+
   theme_classic()+
     theme(legend.position = "none")
 
 test3<-ggplot(c, mapping = aes(x=Tmin_ACC_V, y=FLO))+
-  geom_point( mapping =aes(color = crescimento))+
-  geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
+ geom_point( col ="dodgerblue4")+
+    scale_y_continuous(limits = c(70, 92))+
+  #  geom_point( mapping =aes(color = crescimento))+
+#   geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
   labs(x= "Tmin_ACC_V (ºC)" , y="Flowering (DAE)")+
-  guides(fill = FALSE) +
-  scale_color_manual(values = c("firebrick", "dodgerblue4"))+
+#   guides(fill = FALSE) +
+#   scale_color_manual(values = c("firebrick", "dodgerblue4"))+
   theme_classic()+
     theme(legend.position = "none")
 
 test4<-ggplot(d, mapping = aes(x=Chuva_ACC_R, y=FLO))+
-  geom_point( mapping =aes(color = crescimento))+
-  geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
+ geom_point( col ="dodgerblue4")+
+    #scale_y_continuous(limits = c(70, 92))+
+  #   geom_point( mapping =aes(color = crescimento))+
+#   geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
   labs(x= "Rainfall_ACC_R (mm)" , y="Flowering (DAE)")+
-  guides(fill = FALSE) +
-  scale_color_manual(values = c("firebrick", "dodgerblue4"))+
+  # guides(fill = FALSE) +
+  # scale_color_manual(values = c("firebrick", "dodgerblue4"))+
   theme_classic()+
     theme(legend.position = "none")
 
 test5<-ggplot(e, mapping = aes(x=longitude, y=FLO))+
-  geom_point( mapping =aes(color = crescimento))+
-  geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
+ geom_point( col ="dodgerblue4")+
+    scale_y_continuous(limits = c(70, 92))+
+  #   geom_point( mapping =aes(color = crescimento))+
+#   geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
   labs(x= "Longitude" , y="Flowering (DAE)")+
-  guides(fill = FALSE) +
-  scale_color_manual(values = c("firebrick", "dodgerblue4"))+
+#   guides(fill = FALSE) +
+#   scale_color_manual(values = c("firebrick", "dodgerblue4"))+
   theme_classic()+
     theme(legend.position = "none")
 
 test6<-ggplot(f, mapping = aes(x=Rad_ACC, y=FLO))+
-  geom_point( mapping =aes(color = crescimento))+
-  geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
+ geom_point( col ="dodgerblue4")+
+    scale_y_continuous(limits = c(70, 92))+
+  #   geom_point( mapping =aes(color = crescimento))+
+#   geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
   labs(x= "Rad_ACC (MJ/m²)" , y="Flowering (DAE)")+
-  guides(fill = FALSE) +
-  scale_color_manual(values = c("firebrick", "dodgerblue4"))+
+#   guides(fill = FALSE) +
+#   scale_color_manual(values = c("firebrick", "dodgerblue4"))+
   theme_classic()+
     theme(legend.position = "none", )
 
@@ -227,6 +253,6 @@ test6<-ggplot(f, mapping = aes(x=Rad_ACC, y=FLO))+
 #Figura 13
 
 ```{r}
-((test1|test5|test4)/(test6|test2|test3))+plot_annotation(tag_levels = 'A', tag_prefix = '(', tag_suffix = ')')+  plot_annotation (  caption =  '--- Flowering average' )
+((test6|test4|test1)/(test2|test3))+plot_annotation(tag_levels = 'A', tag_prefix = '(', tag_suffix = ')')
 ```
 

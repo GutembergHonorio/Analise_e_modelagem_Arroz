@@ -556,6 +556,12 @@ p_Sul2<-ggplot(data = Temporario1, aes(x=  fct_reorder(variaveis, estimativas, .
 
 
 
+```{r}
+par(mfrow = c(2, 2))
+
+gam.check(modelo_GAM_Sul, old.style = T)
+
+```
 
 
 

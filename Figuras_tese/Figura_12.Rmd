@@ -170,90 +170,116 @@ Graus_dia_FLO["FLO"] = predict(modelo_GAM_Centro_oeste,Graus_dia_FLO)
 
 a=Tmin_V
 b=Tmin_ACC_V
+b=b[b$Tmin_ACC_V>= 850,]
 c=Tmin_R
+  c = c[c$Tmin_R<=23,]
+
 d=Tmax_Minima
+   d = d[d$Tmax_Minima>=22,]
+
 e=Tmin_ACC_R
+  e = e[e$Tmin_ACC_R>=550,]
+
 f=Rad_ACC
+  f = f[f$Rad_ACC<=3250,]
+
 g=Graus_dia_FLO
+  g = g[g$Graus_dia_FLO>=1350,]
+  g = g[g$Graus_dia_FLO<=1900,]
   
-intercepto <- media_FLO
-a$crescimento = as.factor(ifelse(a$FLO > intercepto, yes = 1, no = 0))
-b$crescimento = as.factor(ifelse(b$FLO > intercepto, yes = 1, no = 0))
-c$crescimento = as.factor(ifelse(c$FLO > intercepto, yes = 1, no = 0))
-d$crescimento = as.factor(ifelse(d$FLO > intercepto, yes = 1, no = 0))
-e$crescimento = as.factor(ifelse(e$FLO > intercepto, yes = 1, no = 0))
-f$crescimento = as.factor(ifelse(f$FLO > intercepto, yes = 1, no = 0))
-g$crescimento = as.factor(ifelse(g$FLO > intercepto, yes = 1, no = 0))
+#intercepto <- media_FLO
+#a$crescimento = as.factor(ifelse(a$FLO > intercepto, yes = 1, no = 0))
+#b$crescimento = as.factor(ifelse(b$FLO > intercepto, yes = 1, no = 0))
+#c$crescimento = as.factor(ifelse(c$FLO > intercepto, yes = 1, no = 0))
+#d$crescimento = as.factor(ifelse(d$FLO > intercepto, yes = 1, no = 0))
+#e$crescimento = as.factor(ifelse(e$FLO > intercepto, yes = 1, no = 0))
+#f$crescimento = as.factor(ifelse(f$FLO > intercepto, yes = 1, no = 0))
+#g$crescimento = as.factor(ifelse(g$FLO > intercepto, yes = 1, no = 0))
 
 
 
-test1<-ggplot(a, mapping = aes(x=Tmin_V, y=FLO))+
-  geom_point( mapping =aes(color = crescimento))+
-  geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
+test1<-ggplot(a, mapping = aes(x=Tmin_V, y=FLO) )+
+    geom_point( col ="dodgerblue4")+
+    scale_y_continuous(limits = c(78, 92))+
+    #geom_point( mapping =aes(color = crescimento))+
+    #geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
   labs(x= "Tmin_V (ºC)" , y="Flowering (DAE)")+
-  guides(fill = FALSE) +
-  scale_color_manual(values = c("firebrick", "dodgerblue4"))+
+  #guides(fill = FALSE) +
+  #scale_color_manual(values = c("firebrick", "dodgerblue4"))+
   theme_classic()+
     theme(legend.position = "none")
 
 test2<-ggplot(b, mapping = aes(x=Tmin_ACC_V, y=FLO))+
-  geom_point( mapping =aes(color = crescimento))+
-  geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
+  geom_point( col ="dodgerblue4")+
+    scale_y_continuous(limits = c(78, 92))+
+  #geom_point( mapping =aes(color = crescimento))+
+  #geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
   labs(x= "Tmin_ACC_V (ºC)" , y="Flowering (DAE)")+
-  guides(fill = FALSE) +
-  scale_color_manual(values = c("firebrick", "dodgerblue4"))+
+  #guides(fill = FALSE) +
+  #scale_color_manual(values = c("firebrick", "dodgerblue4"))+
   theme_classic()+
     theme(legend.position = "none")
 
-test3<-ggplot(c, mapping = aes(x=Tmin_R, y=FLO))+
-  geom_point( mapping =aes(color = crescimento))+
-  geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
+test3<-ggplot(c, mapping = aes(x= Tmin_R, y=FLO))+
+  geom_point( col ="dodgerblue4")+
+    scale_y_continuous(limits = c(78, 92))+
+  #geom_point( mapping =aes(color = crescimento))+
+  #geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
   labs(x= "Tmin_R (ºC)" , y="Flowering (DAE)")+
-  guides(fill = FALSE) +
-  scale_color_manual(values = c("firebrick", "dodgerblue4"))+
+  #guides(fill = FALSE) +
+  #scale_color_manual(values = c("firebrick", "dodgerblue4"))+
   theme_classic()+
     theme(legend.position = "none")
+
 
 test4<-ggplot(d, mapping = aes(x=Tmax_Minima, y=FLO))+
-  geom_point( mapping =aes(color = crescimento))+
-  geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
+  geom_point( col ="dodgerblue4")+
+    scale_y_continuous(limits = c(78, 92))+
+  #geom_point( mapping =aes(color = crescimento))+
+  #geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
   labs(x= "Tmax_Min (ºC)" , y="Flowering (DAE)")+
-  guides(fill = FALSE) +
-  scale_color_manual(values = c("firebrick", "dodgerblue4"))+
+  #guides(fill = FALSE) +
+  #scale_color_manual(values = c("firebrick", "dodgerblue4"))+
   theme_classic()+
     theme(legend.position = "none")
 
 test5<-ggplot(e, mapping = aes(x=Tmin_ACC_R, y=FLO))+
-  geom_point( mapping =aes(color = crescimento))+
-  geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
+  geom_point( col ="dodgerblue4")+
+    scale_y_continuous(limits = c(78, 92))+
+  #geom_point( mapping =aes(color = crescimento))+
+  #geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
   labs(x= "Tmin_ACC_R (ºC)" , y="Flowering (DAE)")+
-  guides(fill = FALSE) +
-  scale_color_manual(values = c("firebrick", "dodgerblue4"))+
+  #guides(fill = FALSE) +
+  #scale_color_manual(values = c("firebrick", "dodgerblue4"))+
   theme_classic()+
     theme(legend.position = "none")
 
 test6<-ggplot(f, mapping = aes(x=Rad_ACC, y=FLO))+
-  geom_point( mapping =aes(color = crescimento))+
-  geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
+  geom_point( col ="dodgerblue4")+
+    scale_y_continuous(limits = c(78, 92))+
+  #geom_point( mapping =aes(color = crescimento))+
+  #geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
   labs(x= "Rad_ACC (MJ/m²)" , y="Flowering (DAE)")+
-  guides(fill = FALSE) +
-  scale_color_manual(values = c("firebrick", "dodgerblue4"))+
+  #guides(fill = FALSE) +
+  #scale_color_manual(values = c("firebrick", "dodgerblue4"))+
   theme_classic()+
     theme(legend.position = "none")
 
 test7<-ggplot(g, mapping = aes(x=Graus_dia_FLO, y=FLO))+
-  geom_point( mapping =aes(color = crescimento))+
-  geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
+  geom_point( col ="dodgerblue4")+
+    scale_y_continuous(limits = c(78, 92))+
+  #geom_point( mapping =aes(color = crescimento))+
+  #geom_hline(yintercept = intercepto, alpha=0.8, linetype = 2)+
   labs(x= "Degree_days_FLO (ºC)" , y="Flowering (DAE)")+
-  guides(fill = FALSE) +
-  scale_color_manual(values = c("firebrick", "dodgerblue4"))+
+  #guides(fill = FALSE) +
+  #scale_color_manual(values = c("firebrick", "dodgerblue4"))+
   theme_classic()+
     theme(legend.position = "none")
 ```
 
 #Figura 12
 ```{r}
-((test1|test7|test6|test3)/(test4|test5|test2))+plot_annotation(tag_levels = 'A', tag_prefix = '(', tag_suffix = ')')
+((test6|test7|test1|test3)/(test5|test2|test4))+plot_annotation(tag_levels = 'A', tag_prefix = '(', tag_suffix = ')')
 
 
 ```

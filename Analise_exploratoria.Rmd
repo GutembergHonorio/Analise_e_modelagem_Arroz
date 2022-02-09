@@ -1308,7 +1308,22 @@ e/d/b
 ```{r}
 1335/37
 ```
+```{r}
+summary(IRR$longitude)
+```
 
 
+```{r}
+mean(Centro_oeste$FLO_M)
+```
+```{r}
+mean(Nordeste$FLO_M)
+```
 
+```{r}
+sd(Nordeste$FLO_M)
+```
+```{r}
+sd(Sul$FLO_M)
+```
 

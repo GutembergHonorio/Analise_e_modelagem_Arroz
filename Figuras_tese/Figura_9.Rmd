@@ -516,7 +516,7 @@ p_sudeste2<-ggplot(data = Temporario1, aes(x=  fct_reorder(variaveis, estimativa
 # Figura 9
 
 ```{r}
-(bb1|bb2|bb3|bb4|bb5)/(p_Centro_oeste2|p_Norte2|p_Sul2|p_sudeste2|p_nordeste2)
+(bb1|bb2|bb3|bb4|bb5)/(p_Centro_oeste2|p_Norte2|p_Sul2|p_sudeste2|p_nordeste2)+plot_annotation(tag_levels = 'A', tag_prefix = '(', tag_suffix = ')')
 
 ```
 
